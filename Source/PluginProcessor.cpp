@@ -19,11 +19,16 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
                            ),
     params(*this, nullptr, "AAFoaCreator", {
         std::make_unique<AudioParameterBool>("combinedW", "combined W channel", false, "",
-                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr)
+                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
+        std::make_unique<AudioParameterBool>("diffLowShelf", "differential low shelf", false, "",
+                                            [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr)
     })
 {
-    params.addParameterListener("AAFoaCreator", this);
+    params.addParameterListener("combinedW", this);
     isWCombined = params.getRawParameterValue("combinedW");
+    
+    params.addParameterListener("diffLowShelf", this);
+    doLowFrequencyDifferentialCompensation = params.getRawParameterValue("diffLowShelf");
     
 }
 
@@ -98,6 +103,12 @@ void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
 {
     foaChannelBuffer.setSize(4, samplesPerBlock);
     foaChannelBuffer.clear();
+    
+    // low frequency compensation IIR for differential z signal
+    dsp::ProcessSpec specLowShelf { sampleRate, static_cast<uint32> (samplesPerBlock), 1 };
+    iirLowShelf.prepare (specLowShelf);
+    iirLowShelf.reset();
+    setLowShelfCoefficients(sampleRate);
 }
 
 void AafoaCreatorAudioProcessor::releaseResources()
@@ -161,6 +172,14 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     FloatVectorOperations::subtract (writePointerZ, readPointerFront, numSamples);
     FloatVectorOperations::subtract (writePointerZ, readPointerBack, numSamples);
     
+    if (*doLowFrequencyDifferentialCompensation == 1.0f)
+    {
+        dsp::AudioBlock<float> lowShelfBlock(&writePointerZ, 1, numSamples);
+        dsp::ProcessContextReplacing<float> contextLowShelf(lowShelfBlock);
+        iirLowShelf.process(contextLowShelf);
+    }
+        
+    
     // apply sn3d weighting
     FloatVectorOperations::multiply(writePointerW, SN3D_WEIGHT_0, numSamples);
     FloatVectorOperations::multiply(writePointerX, SN3D_WEIGHT_1, numSamples);
@@ -207,6 +226,20 @@ void AafoaCreatorAudioProcessor::setStateInformation (const void* data, int size
 void AafoaCreatorAudioProcessor::parameterChanged (const String &parameterID, float newValue)
 {
     
+}
+
+void AafoaCreatorAudioProcessor::setLowShelfCoefficients(double sampleRate)
+{
+    const double wc2 = 4618.141200776995;
+    const double wc3 = 314.1592653589793;
+    const double T = 1 / sampleRate;
+    
+    float b0 = T/2 * (wc2 - wc3) + 1;
+    float b1 = -std::exp(-wc3 * T) * (1 - T/2 * (wc2 - wc3));
+    float a0 = 1.0f;
+    float a1 = -std::exp(-wc3 * T);
+    
+    *iirLowShelf.coefficients = dsp::IIR::Coefficients<float>(b0,b1,a0,a1);
 }
 
 //==============================================================================

@@ -39,6 +39,7 @@
         <MODULEPATH id="juce_gui_basics" path="../../Documents/JUCE-master/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../Documents/JUCE-master/modules"/>
         <MODULEPATH id="juce_opengl" path="../../Documents/JUCE-master/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../Documents/JUCE-master/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
     <VS2017 targetFolder="Builds/VisualStudio2017">
@@ -61,6 +62,7 @@
         <MODULEPATH id="juce_gui_basics" path="../../Documents/JUCE-master/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../Documents/JUCE-master/modules"/>
         <MODULEPATH id="juce_opengl" path="../../Documents/JUCE-master/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../Documents/JUCE-master/modules"/>
       </MODULEPATHS>
     </VS2017>
   </EXPORTFORMATS>
@@ -75,6 +77,7 @@
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_cryptography" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>

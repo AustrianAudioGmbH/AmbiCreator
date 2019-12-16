@@ -62,9 +62,15 @@ private:
     
     AudioBuffer<float> foaChannelBuffer;
     float* isWCombined;
+    float* doLowFrequencyDifferentialCompensation;
     
     static constexpr double SN3D_WEIGHT_0 = 0.282094791773878;
     static constexpr double SN3D_WEIGHT_1 = 0.488602511902920;
+    
+    // differential (z) compensation filter
+    dsp::IIR::Filter<float> iirLowShelf;
+    
+    void setLowShelfCoefficients(double sampleRate);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AafoaCreatorAudioProcessor)
 };
