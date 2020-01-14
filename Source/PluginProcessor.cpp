@@ -22,14 +22,16 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
                                              [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterBool>("diffLowShelf", "differential low shelf", false, "",
                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr)
-    })
+    }),
+    zFirCoeffBuffer(1, Z_FIR_LEN)
 {
     params.addParameterListener("combinedW", this);
     isWCombined = params.getRawParameterValue("combinedW");
     
     params.addParameterListener("diffLowShelf", this);
-    doLowFrequencyDifferentialCompensation = params.getRawParameterValue("diffLowShelf");
+    doDifferentialZEqualization = params.getRawParameterValue("diffLowShelf");
     
+    zFirCoeffBuffer.copyFrom(0, 0, DIFF_Z_EIGHT_EQ_COEFFS, Z_FIR_LEN);
 }
 
 AafoaCreatorAudioProcessor::~AafoaCreatorAudioProcessor()
@@ -109,6 +111,12 @@ void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     iirLowShelf.prepare (specLowShelf);
     iirLowShelf.reset();
     setLowShelfCoefficients(sampleRate);
+    
+    // prepare fir filter
+    dsp::ProcessSpec firSpec {sampleRate, static_cast<uint32>(samplesPerBlock), 1};
+    zFilterConv.prepare (firSpec); // must be called before loading an ir
+    zFilterConv.copyAndLoadImpulseResponseFromBuffer (zFirCoeffBuffer, FIR_SAMPLE_RATE, false, false, false, Z_FIR_LEN);
+    zFilterConv.reset();
 }
 
 void AafoaCreatorAudioProcessor::releaseResources()
@@ -172,11 +180,12 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     FloatVectorOperations::subtract (writePointerZ, readPointerFront, numSamples);
     FloatVectorOperations::subtract (writePointerZ, readPointerBack, numSamples);
     
-    if (*doLowFrequencyDifferentialCompensation == 1.0f)
+    if (*doDifferentialZEqualization == 1.0f)
     {
-        dsp::AudioBlock<float> lowShelfBlock(&writePointerZ, 1, numSamples);
-        dsp::ProcessContextReplacing<float> contextLowShelf(lowShelfBlock);
-        iirLowShelf.process(contextLowShelf);
+        dsp::AudioBlock<float> zEqualizationBlock(&writePointerZ, 1, numSamples);
+        dsp::ProcessContextReplacing<float> zEqualizationContext(zEqualizationBlock);
+        iirLowShelf.process(zEqualizationContext);
+        zFilterConv.process(zEqualizationContext);
     }
         
     
@@ -230,8 +239,8 @@ void AafoaCreatorAudioProcessor::parameterChanged (const String &parameterID, fl
 
 void AafoaCreatorAudioProcessor::setLowShelfCoefficients(double sampleRate)
 {
-    const double wc2 = 4618.141200776995;
-    const double wc3 = 314.1592653589793;
+    const double wc2 = 8418.486563916398;
+    const double wc3 = 62.831853071795862;
     const double T = 1 / sampleRate;
     
     float b0 = T/2 * (wc2 - wc3) + 1;
