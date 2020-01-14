@@ -20,18 +20,23 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
     params(*this, nullptr, "AAFoaCreator", {
         std::make_unique<AudioParameterBool>("combinedW", "combined W channel", false, "",
                                              [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
-        std::make_unique<AudioParameterBool>("diffLowShelf", "differential low shelf", false, "",
+        std::make_unique<AudioParameterBool>("diffEqualization", "differential z equalization", false, "",
                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr)
     }),
-    zFirCoeffBuffer(1, Z_FIR_LEN)
+    currentSampleRate(48000), zFirCoeffBuffer(1, Z_FIR_LEN)
 {
     params.addParameterListener("combinedW", this);
     isWCombined = params.getRawParameterValue("combinedW");
     
-    params.addParameterListener("diffLowShelf", this);
-    doDifferentialZEqualization = params.getRawParameterValue("diffLowShelf");
+    params.addParameterListener("diffEqualization", this);
+    doDifferentialZEqualization = params.getRawParameterValue("diffEqualization");
     
     zFirCoeffBuffer.copyFrom(0, 0, DIFF_Z_EIGHT_EQ_COEFFS, Z_FIR_LEN);
+    
+    firLatencySec = (static_cast<float>(Z_FIR_LEN) / 2 - 1) / FIR_SAMPLE_RATE;
+    
+    for (auto& delay : delays)
+        delay.setDelayTime (firLatencySec);
 }
 
 AafoaCreatorAudioProcessor::~AafoaCreatorAudioProcessor()
@@ -103,20 +108,35 @@ void AafoaCreatorAudioProcessor::changeProgramName (int index, const String& new
 //==============================================================================
 void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    currentSampleRate = sampleRate;
+    
     foaChannelBuffer.setSize(4, samplesPerBlock);
     foaChannelBuffer.clear();
     
     // low frequency compensation IIR for differential z signal
-    dsp::ProcessSpec specLowShelf { sampleRate, static_cast<uint32> (samplesPerBlock), 1 };
-    iirLowShelf.prepare (specLowShelf);
+    //dsp::ProcessSpec spec { sampleRate, static_cast<uint32> (samplesPerBlock), 1 };
+    dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.numChannels = 1;
+    spec.maximumBlockSize = samplesPerBlock;
+    
+    iirLowShelf.prepare (spec);
     iirLowShelf.reset();
     setLowShelfCoefficients(sampleRate);
     
     // prepare fir filter
-    dsp::ProcessSpec firSpec {sampleRate, static_cast<uint32>(samplesPerBlock), 1};
-    zFilterConv.prepare (firSpec); // must be called before loading an ir
+    zFilterConv.prepare (spec); // must be called before loading an ir
     zFilterConv.copyAndLoadImpulseResponseFromBuffer (zFirCoeffBuffer, FIR_SAMPLE_RATE, false, false, false, Z_FIR_LEN);
     zFilterConv.reset();
+    
+    // set delay time for w,x,y according to z fir delay
+    for (auto& delay : delays)
+        delay.prepare (spec);
+
+    // set delay compensation
+    if (*doDifferentialZEqualization)
+        setLatencySamples(static_cast<int>(firLatencySec * sampleRate));
+    
 }
 
 void AafoaCreatorAudioProcessor::releaseResources()
@@ -186,6 +206,19 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
         dsp::ProcessContextReplacing<float> zEqualizationContext(zEqualizationBlock);
         iirLowShelf.process(zEqualizationContext);
         zFilterConv.process(zEqualizationContext);
+        
+        // delay w, x and y accordingly
+        dsp::AudioBlock<float> wDelayBlock(&writePointerW, 1, numSamples);
+        dsp::ProcessContextReplacing<float> wDelayContext(wDelayBlock);
+        delays[0].process(wDelayContext);
+        
+        dsp::AudioBlock<float> xDelayBlock(&writePointerX, 1, numSamples);
+        dsp::ProcessContextReplacing<float> xDelayContext(xDelayBlock);
+        delays[1].process(xDelayContext);
+        
+        dsp::AudioBlock<float> yDelayBlock(&writePointerY, 1, numSamples);
+        dsp::ProcessContextReplacing<float> yDelayContext(yDelayBlock);
+        delays[2].process(yDelayContext);
     }
         
     
@@ -234,7 +267,18 @@ void AafoaCreatorAudioProcessor::setStateInformation (const void* data, int size
 //==============================================================================
 void AafoaCreatorAudioProcessor::parameterChanged (const String &parameterID, float newValue)
 {
-    
+    if (parameterID == "diffEqualization")
+    {
+        if (newValue == 0)
+        {
+            setLatencySamples(0);
+        }
+        else
+        {
+            // set delay compensation
+            setLatencySamples(static_cast<int>(firLatencySec * currentSampleRate));
+        }
+    }
 }
 
 void AafoaCreatorAudioProcessor::setLowShelfCoefficients(double sampleRate)

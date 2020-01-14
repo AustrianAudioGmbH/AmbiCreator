@@ -8,6 +8,9 @@
               pluginCode="AAFC" pluginVST3Category="Spatial" pluginAAXCategory="0"
               pluginAUMainType="'aufx'" aaxIdentifier="at.aa.foacreator">
   <MAINGROUP id="LLStlP" name="AAFoaCreator">
+    <GROUP id="{E0985C42-F2D7-AE83-3158-6E7E144CB981}" name="resources">
+      <FILE id="Tj580k" name="Delay.h" compile="0" resource="0" file="resources/Delay.h"/>
+    </GROUP>
     <GROUP id="{E9C6351E-7703-134A-6A95-40615BDFA8E0}" name="Source">
       <FILE id="KRNlAI" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
