@@ -1,13 +1,3 @@
-/*
-  ==============================================================================
-
-    This file was auto-generated!
-
-    It contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
-
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
@@ -19,11 +9,14 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
                            ),
     params(*this, nullptr, "AAFoaCreator", {
         std::make_unique<AudioParameterBool>("combinedW", "combined W channel", false, "",
-                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
+                                            [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterBool>("diffEqualization", "differential z equalization", false, "",
+                                            [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
+        std::make_unique<AudioParameterBool>("coincEqualization", "omni and eight diffuse-field equalization", false, "",
                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr)
     }),
-    currentSampleRate(48000), zFirCoeffBuffer(1, Z_FIR_LEN)
+    currentSampleRate(48000), zFirCoeffBuffer(1, FIR_LEN),
+    coincEightFirCoeffBuffer(1, FIR_LEN), coincOmniFirCoeffBuffer(1, FIR_LEN)
 {
     params.addParameterListener("combinedW", this);
     isWCombined = params.getRawParameterValue("combinedW");
@@ -31,9 +24,14 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
     params.addParameterListener("diffEqualization", this);
     doDifferentialZEqualization = params.getRawParameterValue("diffEqualization");
     
-    zFirCoeffBuffer.copyFrom(0, 0, DIFF_Z_EIGHT_EQ_COEFFS, Z_FIR_LEN);
+    params.addParameterListener("coincEqualization", this);
+    doCoincPatternEqualization = params.getRawParameterValue("coincEqualization");
     
-    firLatencySec = (static_cast<float>(Z_FIR_LEN) / 2 - 1) / FIR_SAMPLE_RATE;
+    zFirCoeffBuffer.copyFrom(0, 0, DIFF_Z_EIGHT_EQ_COEFFS, FIR_LEN);
+    coincEightFirCoeffBuffer.copyFrom(0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
+    coincOmniFirCoeffBuffer.copyFrom(0, 0, COINC_OMNI_EQ_COEFFS, FIR_LEN);
+    
+    firLatencySec = (static_cast<float>(FIR_LEN) / 2 - 1) / FIR_SAMPLE_RATE;
     
     for (auto& delay : delays)
         delay.setDelayTime (firLatencySec);
@@ -124,10 +122,19 @@ void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     iirLowShelf.reset();
     setLowShelfCoefficients(sampleRate);
     
-    // prepare fir filter
+    // prepare fir filters
     zFilterConv.prepare (spec); // must be called before loading an ir
-    zFilterConv.copyAndLoadImpulseResponseFromBuffer (zFirCoeffBuffer, FIR_SAMPLE_RATE, false, false, false, Z_FIR_LEN);
+    zFilterConv.copyAndLoadImpulseResponseFromBuffer (zFirCoeffBuffer, FIR_SAMPLE_RATE, false, false, false, FIR_LEN);
     zFilterConv.reset();
+    coincXEightFilterConv.prepare (spec); // must be called before loading an ir
+    coincXEightFilterConv.copyAndLoadImpulseResponseFromBuffer (coincEightFirCoeffBuffer, FIR_SAMPLE_RATE, false, false, false, FIR_LEN);
+    coincXEightFilterConv.reset();
+    coincYEightFilterConv.prepare (spec); // must be called before loading an ir
+    coincYEightFilterConv.copyAndLoadImpulseResponseFromBuffer (coincEightFirCoeffBuffer, FIR_SAMPLE_RATE, false, false, false, FIR_LEN);
+    coincYEightFilterConv.reset();
+    coincOmniFilterConv.prepare (spec); // must be called before loading an ir
+    coincOmniFilterConv.copyAndLoadImpulseResponseFromBuffer (coincOmniFirCoeffBuffer, FIR_SAMPLE_RATE, false, false, false, FIR_LEN);
+    coincOmniFilterConv.reset();
     
     // set delay time for w,x,y according to z fir delay
     for (auto& delay : delays)
@@ -206,7 +213,24 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
         dsp::ProcessContextReplacing<float> zEqualizationContext(zEqualizationBlock);
         iirLowShelf.process(zEqualizationContext);
         zFilterConv.process(zEqualizationContext);
+    }
+    
+    if (*doCoincPatternEqualization == 1.0f)
+    {
+        dsp::AudioBlock<float> wEqualizationBlock(&writePointerW, 1, numSamples);
+        dsp::ProcessContextReplacing<float> wEqualizationContext(wEqualizationBlock);
+        coincOmniFilterConv.process(wEqualizationContext);
         
+        dsp::AudioBlock<float> xEqualizationBlock(&writePointerX, 1, numSamples);
+        dsp::ProcessContextReplacing<float> xEqualizationContext(xEqualizationBlock);
+        coincXEightFilterConv.process(xEqualizationContext);
+        
+        dsp::AudioBlock<float> yEqualizationBlock(&writePointerY, 1, numSamples);
+        dsp::ProcessContextReplacing<float> yEqualizationContext(yEqualizationBlock);
+        coincYEightFilterConv.process(yEqualizationContext);
+    }
+    else
+    {
         // delay w, x and y accordingly
         dsp::AudioBlock<float> wDelayBlock(&writePointerW, 1, numSamples);
         dsp::ProcessContextReplacing<float> wDelayContext(wDelayBlock);
