@@ -307,12 +307,12 @@ void AafoaCreatorAudioProcessor::parameterChanged (const String &parameterID, fl
 
 void AafoaCreatorAudioProcessor::setLowShelfCoefficients(double sampleRate)
 {
-    const double wc2 = 8418.486563916398;
+    const double wc2 = 8418.4865639164;
     const double wc3 = 62.831853071795862;
     const double T = 1 / sampleRate;
     
-    float b0 = T/2 * (wc2 - wc3) + 1;
-    float b1 = -std::exp(-wc3 * T) * (1 - T/2 * (wc2 - wc3));
+    float b0 = T / 4 * (wc2 - wc3) + 0.5f;
+    float b1 = -0.5f * std::exp(-wc3 * T) * (1 - T / 2 * (wc2 - wc3));
     float a0 = 1.0f;
     float a1 = -std::exp(-wc3 * T);
     
