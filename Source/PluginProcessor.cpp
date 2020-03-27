@@ -141,7 +141,7 @@ void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
         delay.prepare (spec);
 
     // set delay compensation
-    if (*doDifferentialZEqualization)
+    if (doDifferentialZEqualization->load() == 1.0f)
         setLatencySamples(static_cast<int>(firLatencySec * sampleRate));
     
 }
@@ -185,7 +185,7 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     FloatVectorOperations::copy (writePointerW, readPointerFront, numSamples);
     FloatVectorOperations::add (writePointerW, readPointerBack, numSamples);
     
-    if (*isWCombined == 1.0f)
+    if (isWCombined->load() == 1.0f)
     {
         // W: add omni signal from second mic
         FloatVectorOperations::add (writePointerW, readPointerLeft, numSamples);
@@ -207,7 +207,7 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     FloatVectorOperations::subtract (writePointerZ, readPointerFront, numSamples);
     FloatVectorOperations::subtract (writePointerZ, readPointerBack, numSamples);
     
-    if (*doDifferentialZEqualization == 1.0f)
+    if (doDifferentialZEqualization->load() == 1.0f)
     {
         dsp::AudioBlock<float> zEqualizationBlock(&writePointerZ, 1, numSamples);
         dsp::ProcessContextReplacing<float> zEqualizationContext(zEqualizationBlock);
@@ -215,7 +215,7 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
         zFilterConv.process(zEqualizationContext);
     }
     
-    if (*doCoincPatternEqualization == 1.0f)
+    if (doCoincPatternEqualization->load() == 1.0f)
     {
         dsp::AudioBlock<float> wEqualizationBlock(&writePointerW, 1, numSamples);
         dsp::ProcessContextReplacing<float> wEqualizationContext(wEqualizationBlock);

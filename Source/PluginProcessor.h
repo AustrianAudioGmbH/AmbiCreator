@@ -52,9 +52,11 @@ private:
     AudioProcessorValueTreeState params;
     
     AudioBuffer<float> foaChannelBuffer;
-    float* isWCombined;
-    float* doDifferentialZEqualization;
-    float* doCoincPatternEqualization;
+    
+    std::atomic<float> *isWCombined;
+    std::atomic<float> *doDifferentialZEqualization;
+    std::atomic<float> *doCoincPatternEqualization;
+    
     float firLatencySec;
     double currentSampleRate;
     
