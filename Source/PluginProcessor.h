@@ -52,16 +52,19 @@ private:
     AudioProcessorValueTreeState params;
     
     AudioBuffer<float> foaChannelBuffer;
+    AudioBuffer<float> rotatorBuffer;
     
     bool isWCombined;
     bool doDifferentialZEqualization;
     bool doCoincPatternEqualization;
     int channelOrder;
-    float outGain;
-    float previousOutGain;
-    float zGain;
-    float previousZGain;
-    float horRotation;
+    float outGainLin;
+    float previousOutGainLin;
+    float zGainLin;
+    float previousZGainLin;
+    float horRotationDeg;
+    float previousCosPhi;
+    float previousSinPhi;
     
     float firLatencySec;
     double currentSampleRate;
@@ -81,10 +84,10 @@ private:
     AudioBuffer<float> coincOmniFirCoeffBuffer;
     dsp::Convolution coincOmniFilterConv;
     
-    void setLowShelfCoefficients(double sampleRate);
-    
     static const int FIR_LEN = 2048;
     static const int FIR_SAMPLE_RATE = 48000;
+    static constexpr float MIN_Z_GAIN_DB = -40.0f;
+    static constexpr float GAIN_TO_ZERO_THRESH_DB = 1.0f;
     
     enum eChannelOrder
     {
@@ -99,6 +102,9 @@ private:
         Z = 2,
         X = 3
     };
+    
+    void setLowShelfCoefficients(double sampleRate);
+    void ambiRotateAroundZ(AudioBuffer<float>* ambiBuffer);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AafoaCreatorAudioProcessor)
 };

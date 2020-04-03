@@ -16,12 +16,12 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterInt>("channelOrder", "channel order", eChannelOrder::ACN, eChannelOrder::FUMA, 0, "",
                                             [](int value, int maximumStringLength) {return (value == eChannelOrder::ACN) ? "ACN (WYZX)" : "FuMa (WXYZ)";}, nullptr),
-        std::make_unique<AudioParameterFloat>("outGain", "output gain", NormalisableRange<float>(-40.0f, 10.0f, 0.1f),
+        std::make_unique<AudioParameterFloat>("outGainDb", "output gain", NormalisableRange<float>(-40.0f, 10.0f, 0.1f),
                                               0.0f, "dB", AudioProcessorParameter::genericParameter,
                                               [](float value, int maximumStringLength) { return String(value, 1); }, nullptr),
-        std::make_unique<AudioParameterFloat>("zGain", "z gain", NormalisableRange<float>(-20.0f, 10.0f, 0.1f),
+        std::make_unique<AudioParameterFloat>("zGainDb", "z gain", NormalisableRange<float>(MIN_Z_GAIN_DB, 10.0f, 0.1f),
                                               0.0f, "dB", AudioProcessorParameter::genericParameter,
-                                              [](float value, int maximumStringLength) { return (value > -19.5f) ? String(value, 1) : "-inf"; }, nullptr),
+                                              [](float value, int maximumStringLength) { return (value > MIN_Z_GAIN_DB + GAIN_TO_ZERO_THRESH_DB) ? String(value, 1) : "-inf"; }, nullptr),
         std::make_unique<AudioParameterFloat>("horRotation", "horizontal rotation", NormalisableRange<float>(-180.0f, 180.0f, 1.0f),
                                               0.0f, "deg", AudioProcessorParameter::genericParameter,
                                               [](float value, int maximumStringLength) { return String(value, 1); }, nullptr)
@@ -33,16 +33,16 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
     doDifferentialZEqualization = static_cast<bool>(params.getParameterAsValue("diffEqualization").getValue());
     doCoincPatternEqualization  = static_cast<bool>(params.getParameterAsValue("coincEqualization").getValue());
     channelOrder                = static_cast<int>(params.getParameterAsValue("channelOrder").getValue());
-    outGain                     = static_cast<float>(params.getParameterAsValue("outGain").getValue());
-    zGain                       = static_cast<float>(params.getParameterAsValue("zGain").getValue());
-    horRotation                 = static_cast<float>(params.getParameterAsValue("horRotation").getValue());
+    outGainLin                  = Decibels::decibelsToGain(static_cast<float>(params.getParameterAsValue("outGainDb").getValue()));
+    zGainLin                    = Decibels::decibelsToGain(static_cast<float>(params.getParameterAsValue("zGainDb").getValue()));
+    horRotationDeg              = static_cast<float>(params.getParameterAsValue("horRotation").getValue());
     
     params.addParameterListener("combinedW", this);
     params.addParameterListener("diffEqualization", this);
     params.addParameterListener("coincEqualization", this);
     params.addParameterListener("channelOrder", this);
-    params.addParameterListener("outGain", this);
-    params.addParameterListener("zGain", this);
+    params.addParameterListener("outGainDb", this);
+    params.addParameterListener("zGainDb", this);
     params.addParameterListener("horRotation", this);
     
     zFirCoeffBuffer.copyFrom(0, 0, DIFF_Z_EIGHT_EQ_COEFFS, FIR_LEN);
@@ -129,8 +129,13 @@ void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     foaChannelBuffer.setSize(4, samplesPerBlock);
     foaChannelBuffer.clear();
     
-    previousOutGain = outGain;
-    previousZGain = zGain;
+    rotatorBuffer.setSize(2, samplesPerBlock);
+    rotatorBuffer.clear();
+    
+    previousOutGainLin = outGainLin;
+    previousZGainLin = zGainLin;
+    previousCosPhi = std::cosf(degreesToRadians(horRotationDeg));
+    previousSinPhi =  std::sinf(degreesToRadians(horRotationDeg));
     
     // low frequency compensation IIR for differential z signal
     //dsp::ProcessSpec spec { sampleRate, static_cast<uint32> (samplesPerBlock), 1 };
@@ -275,10 +280,15 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     FloatVectorOperations::multiply(writePointerZ, SN3D_WEIGHT_1, numSamples);
     
     // apply z gain
-    foaChannelBuffer.applyGainRamp(eChannelOrderACN::Z, 0, numSamples, previousZGain, zGain);
+    foaChannelBuffer.applyGainRamp(eChannelOrderACN::Z, 0, numSamples, previousZGainLin, zGainLin);
+    previousZGainLin = zGainLin;
     
     // apply output gain to all channels
-    foaChannelBuffer.applyGainRamp(0, numSamples, previousOutGain, outGain);
+    foaChannelBuffer.applyGainRamp(0, numSamples, previousOutGainLin, outGainLin);
+    previousOutGainLin = outGainLin;
+    
+    // rotate
+    ambiRotateAroundZ(&foaChannelBuffer);
     
     // write to output
     buffer.clear();
@@ -357,17 +367,21 @@ void AafoaCreatorAudioProcessor::parameterChanged (const String &parameterID, fl
     else if (parameterID == "channelOrder") {
         channelOrder = (static_cast<int>(newValue) == eChannelOrder::FUMA) ? eChannelOrder::FUMA : eChannelOrder::ACN;
     }
-    else if (parameterID == "outGain") {
-        outGain = newValue;
+    else if (parameterID == "outGainDb") {
+        outGainLin = Decibels::decibelsToGain(newValue);
     }
-    else if (parameterID == "zGain") {
-        zGain = newValue;
+    else if (parameterID == "zGainDb") {
+        if (newValue < MIN_Z_GAIN_DB + GAIN_TO_ZERO_THRESH_DB)
+            zGainLin = 0.0f;
+        else
+            zGainLin = Decibels::decibelsToGain(newValue);
     }
     else if (parameterID == "horRotation") {
-        horRotation = newValue;
+        horRotationDeg = newValue;
     }
 }
 
+//========================= CUSTOM METHODS =====================================
 void AafoaCreatorAudioProcessor::setLowShelfCoefficients(double sampleRate)
 {
     const double wc2 = 8418.4865639164;
@@ -380,6 +394,27 @@ void AafoaCreatorAudioProcessor::setLowShelfCoefficients(double sampleRate)
     float a1 = -std::exp(-wc3 * T);
     
     *iirLowShelf.coefficients = dsp::IIR::Coefficients<float>(b0,b1,a0,a1);
+}
+
+void AafoaCreatorAudioProcessor::ambiRotateAroundZ(AudioBuffer<float>* ambiBuffer) {
+    auto numSamples = ambiBuffer->getNumSamples();
+    jassert(numSamples == rotatorBuffer.getNumSamples());
+    
+    float cosPhi = std::cosf(degreesToRadians(horRotationDeg));
+    float sinPhi = std::sinf(degreesToRadians(horRotationDeg));
+    
+    // write result to rotator buffer, it holds Y in channel 0 and X in channel 1
+    rotatorBuffer.clear();
+    rotatorBuffer.addFromWithRamp(0, 0, ambiBuffer->getReadPointer(eChannelOrderACN::Y), numSamples, previousCosPhi, cosPhi);
+    rotatorBuffer.addFromWithRamp(0, 0, ambiBuffer->getReadPointer(eChannelOrderACN::X), numSamples, previousSinPhi, sinPhi);
+    rotatorBuffer.addFromWithRamp(1, 0, ambiBuffer->getReadPointer(eChannelOrderACN::Y), numSamples, -previousSinPhi, -sinPhi);
+    rotatorBuffer.addFromWithRamp(1, 0, ambiBuffer->getReadPointer(eChannelOrderACN::X), numSamples, previousCosPhi, cosPhi);
+ 
+    ambiBuffer->copyFrom (eChannelOrderACN::Y, 0, rotatorBuffer, 0, 0, numSamples);
+    ambiBuffer->copyFrom (eChannelOrderACN::X, 0, rotatorBuffer, 1, 0, numSamples);
+    
+    previousCosPhi = cosPhi;
+    previousSinPhi = sinPhi;
 }
 
 //==============================================================================
