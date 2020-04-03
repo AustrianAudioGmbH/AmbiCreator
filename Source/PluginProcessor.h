@@ -56,6 +56,7 @@ private:
     std::atomic<float> *isWCombined;
     std::atomic<float> *doDifferentialZEqualization;
     std::atomic<float> *doCoincPatternEqualization;
+    std::atomic<float> *channelOrder;
     
     float firLatencySec;
     double currentSampleRate;
@@ -79,6 +80,12 @@ private:
     
     static const int FIR_LEN = 2048;
     static const int FIR_SAMPLE_RATE = 48000;
+    
+    enum eChannelOrder
+    {
+        ACN = 0,
+        FUMA = 1
+    };
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AafoaCreatorAudioProcessor)
 };

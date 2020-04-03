@@ -13,7 +13,9 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
         std::make_unique<AudioParameterBool>("diffEqualization", "differential z equalization", false, "",
                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterBool>("coincEqualization", "omni and eight diffuse-field equalization", false, "",
-                                            [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr)
+                                            [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
+        std::make_unique<AudioParameterInt>("channelOrder", "channel order", eChannelOrder::ACN, eChannelOrder::FUMA, 0, "",
+                                            [](bool value, int maximumStringLength) {return (value == eChannelOrder::ACN) ? "ACN (WYZX)" : "FuMa (WXYZ)";}, nullptr)
     }),
     currentSampleRate(48000), zFirCoeffBuffer(1, FIR_LEN),
     coincEightFirCoeffBuffer(1, FIR_LEN), coincOmniFirCoeffBuffer(1, FIR_LEN)
@@ -26,6 +28,9 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
     
     params.addParameterListener("coincEqualization", this);
     doCoincPatternEqualization = params.getRawParameterValue("coincEqualization");
+    
+    params.addParameterListener("channelOrder", this);
+    channelOrder = params.getRawParameterValue("channelOrder");
     
     zFirCoeffBuffer.copyFrom(0, 0, DIFF_Z_EIGHT_EQ_COEFFS, FIR_LEN);
     coincEightFirCoeffBuffer.copyFrom(0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
@@ -176,6 +181,7 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     const float* readPointerLeft = buffer.getReadPointer (2);
     const float* readPointerRight = buffer.getReadPointer (3);
     
+    // internally everything is in ACN order
     float* writePointerW = foaChannelBuffer.getWritePointer (0);
     float* writePointerX = foaChannelBuffer.getWritePointer (3);
     float* writePointerY = foaChannelBuffer.getWritePointer (1);
@@ -257,8 +263,21 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     
     if (buffer.getNumChannels() == 4 && totalNumOutputChannels == 4 && totalNumInputChannels == 4)
     {
-        for (int out = 0; out < 4; ++out)
-            buffer.copyFrom(out, 0, foaChannelBuffer, out, 0, numSamples);
+        if (channelOrder->load() == static_cast<float>(eChannelOrder::FUMA))
+        {
+            // reorder to fuma
+            buffer.copyFrom(0, 0, foaChannelBuffer, 0, 0, numSamples);
+            buffer.copyFrom(1, 0, foaChannelBuffer, 3, 0, numSamples);
+            buffer.copyFrom(2, 0, foaChannelBuffer, 1, 0, numSamples);
+            buffer.copyFrom(3, 0, foaChannelBuffer, 2, 0, numSamples);
+        }
+        else
+        {
+            // simply copy to output
+            for (int out = 0; out < 4; ++out)
+                buffer.copyFrom(out, 0, foaChannelBuffer, out, 0, numSamples);
+        }
+        
     }
     
 }
