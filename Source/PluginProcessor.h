@@ -53,10 +53,13 @@ private:
     
     AudioBuffer<float> foaChannelBuffer;
     
-    std::atomic<float> *isWCombined;
-    std::atomic<float> *doDifferentialZEqualization;
-    std::atomic<float> *doCoincPatternEqualization;
-    std::atomic<float> *channelOrder;
+    bool isWCombined;
+    bool doDifferentialZEqualization;
+    bool doCoincPatternEqualization;
+    int channelOrder;
+    float outGain;
+    float zGain;
+    float horRotation;
     
     float firLatencySec;
     double currentSampleRate;

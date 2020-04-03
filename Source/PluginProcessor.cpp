@@ -8,29 +8,42 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
                            .withOutput ("Output", AudioChannelSet::ambisonic(1), true)
                            ),
     params(*this, nullptr, "AAFoaCreator", {
-        std::make_unique<AudioParameterBool>("combinedW", "combined W channel", false, "",
+        std::make_unique<AudioParameterBool>("combinedW", "combined w channel", false, "",
                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterBool>("diffEqualization", "differential z equalization", false, "",
                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterBool>("coincEqualization", "omni and eight diffuse-field equalization", false, "",
                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterInt>("channelOrder", "channel order", eChannelOrder::ACN, eChannelOrder::FUMA, 0, "",
-                                            [](bool value, int maximumStringLength) {return (value == eChannelOrder::ACN) ? "ACN (WYZX)" : "FuMa (WXYZ)";}, nullptr)
+                                            [](bool value, int maximumStringLength) {return (value == eChannelOrder::ACN) ? "ACN (WYZX)" : "FuMa (WXYZ)";}, nullptr),
+        std::make_unique<AudioParameterFloat>("outGain", "output gain", NormalisableRange<float>(-40.0f, 10.0f, 0.1f),
+                                              0.0f, "dB", AudioProcessorParameter::genericParameter,
+                                              [](float value, int maximumStringLength) { return String(value, 1); }, nullptr),
+        std::make_unique<AudioParameterFloat>("zGain", "z gain", NormalisableRange<float>(-20.0f, 10.0f, 0.1f),
+                                              0.0f, "dB", AudioProcessorParameter::genericParameter,
+                                              [](float value, int maximumStringLength) { return (value > -19.5f) ? String(value, 1) : "-inf"; }, nullptr),
+        std::make_unique<AudioParameterFloat>("horRotation", "horizontal rotation", NormalisableRange<float>(-180.0f, 180.0f, 1.0f),
+                                              0.0f, "deg", AudioProcessorParameter::genericParameter,
+                                              [](float value, int maximumStringLength) { return String(value, 1); }, nullptr)
     }),
     currentSampleRate(48000), zFirCoeffBuffer(1, FIR_LEN),
     coincEightFirCoeffBuffer(1, FIR_LEN), coincOmniFirCoeffBuffer(1, FIR_LEN)
 {
+    isWCombined                 = static_cast<bool>(params.getParameterAsValue("combinedW").getValue());
+    doDifferentialZEqualization = static_cast<bool>(params.getParameterAsValue("diffEqualization").getValue());
+    doCoincPatternEqualization  = static_cast<bool>(params.getParameterAsValue("coincEqualization").getValue());
+    channelOrder                = static_cast<int>(params.getParameterAsValue("channelOrder").getValue());
+    outGain                     = static_cast<float>(params.getParameterAsValue("outGain").getValue());
+    zGain                       = static_cast<float>(params.getParameterAsValue("zGain").getValue());
+    horRotation                 = static_cast<float>(params.getParameterAsValue("horRotation").getValue());
+    
     params.addParameterListener("combinedW", this);
-    isWCombined = params.getRawParameterValue("combinedW");
-    
     params.addParameterListener("diffEqualization", this);
-    doDifferentialZEqualization = params.getRawParameterValue("diffEqualization");
-    
     params.addParameterListener("coincEqualization", this);
-    doCoincPatternEqualization = params.getRawParameterValue("coincEqualization");
-    
     params.addParameterListener("channelOrder", this);
-    channelOrder = params.getRawParameterValue("channelOrder");
+    params.addParameterListener("outGain", this);
+    params.addParameterListener("zGain", this);
+    params.addParameterListener("horRotation", this);
     
     zFirCoeffBuffer.copyFrom(0, 0, DIFF_Z_EIGHT_EQ_COEFFS, FIR_LEN);
     coincEightFirCoeffBuffer.copyFrom(0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
@@ -146,7 +159,7 @@ void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
         delay.prepare (spec);
 
     // set delay compensation
-    if (doDifferentialZEqualization->load() == 1.0f)
+    if (doDifferentialZEqualization)
         setLatencySamples(static_cast<int>(firLatencySec * sampleRate));
     
 }
@@ -191,7 +204,7 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     FloatVectorOperations::copy (writePointerW, readPointerFront, numSamples);
     FloatVectorOperations::add (writePointerW, readPointerBack, numSamples);
     
-    if (isWCombined->load() == 1.0f)
+    if (isWCombined)
     {
         // W: add omni signal from second mic
         FloatVectorOperations::add (writePointerW, readPointerLeft, numSamples);
@@ -213,7 +226,7 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     FloatVectorOperations::subtract (writePointerZ, readPointerFront, numSamples);
     FloatVectorOperations::subtract (writePointerZ, readPointerBack, numSamples);
     
-    if (doDifferentialZEqualization->load() == 1.0f)
+    if (doDifferentialZEqualization)
     {
         dsp::AudioBlock<float> zEqualizationBlock(&writePointerZ, 1, numSamples);
         dsp::ProcessContextReplacing<float> zEqualizationContext(zEqualizationBlock);
@@ -221,7 +234,7 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
         zFilterConv.process(zEqualizationContext);
     }
     
-    if (doCoincPatternEqualization->load() == 1.0f)
+    if (doCoincPatternEqualization)
     {
         dsp::AudioBlock<float> wEqualizationBlock(&writePointerW, 1, numSamples);
         dsp::ProcessContextReplacing<float> wEqualizationContext(wEqualizationBlock);
@@ -263,7 +276,7 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     
     if (buffer.getNumChannels() == 4 && totalNumOutputChannels == 4 && totalNumInputChannels == 4)
     {
-        if (channelOrder->load() == static_cast<float>(eChannelOrder::FUMA))
+        if (channelOrder == eChannelOrder::FUMA)
         {
             // reorder to fuma
             buffer.copyFrom(0, 0, foaChannelBuffer, 0, 0, numSamples);
@@ -310,17 +323,32 @@ void AafoaCreatorAudioProcessor::setStateInformation (const void* data, int size
 //==============================================================================
 void AafoaCreatorAudioProcessor::parameterChanged (const String &parameterID, float newValue)
 {
-    if (parameterID == "diffEqualization")
+    if (parameterID == "combinedW") {
+        isWCombined = (newValue == 1.0f);
+    }
+    else if (parameterID == "diffEqualization")
     {
-        if (newValue == 0)
-        {
+        doDifferentialZEqualization = (newValue == 1.0f);
+        
+        if (newValue == 0.0f)
             setLatencySamples(0);
-        }
-        else
-        {
-            // set delay compensation
+        else // set delay compensation
             setLatencySamples(static_cast<int>(firLatencySec * currentSampleRate));
-        }
+    }
+    else if (parameterID == "coincEqualization") {
+        doCoincPatternEqualization = (newValue == 1.0f);
+    }
+    else if (parameterID == "channelOrder") {
+        channelOrder = (static_cast<int>(newValue) == eChannelOrder::FUMA) ? eChannelOrder::FUMA : eChannelOrder::ACN;
+    }
+    else if (parameterID == "outGain") {
+        outGain = newValue;
+    }
+    else if (parameterID == "zGain") {
+        zGain = newValue;
+    }
+    else if (parameterID == "horRotation") {
+        horRotation = newValue;
     }
 }
 
