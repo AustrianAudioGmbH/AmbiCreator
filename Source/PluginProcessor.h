@@ -58,7 +58,9 @@ private:
     bool doCoincPatternEqualization;
     int channelOrder;
     float outGain;
+    float previousOutGain;
     float zGain;
+    float previousZGain;
     float horRotation;
     
     float firLatencySec;
@@ -88,6 +90,14 @@ private:
     {
         ACN = 0,
         FUMA = 1
+    };
+    
+    enum eChannelOrderACN
+    {
+        W = 0,
+        Y = 1,
+        Z = 2,
+        X = 3
     };
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AafoaCreatorAudioProcessor)

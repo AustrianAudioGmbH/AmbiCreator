@@ -15,7 +15,7 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
         std::make_unique<AudioParameterBool>("coincEqualization", "omni and eight diffuse-field equalization", false, "",
                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterInt>("channelOrder", "channel order", eChannelOrder::ACN, eChannelOrder::FUMA, 0, "",
-                                            [](bool value, int maximumStringLength) {return (value == eChannelOrder::ACN) ? "ACN (WYZX)" : "FuMa (WXYZ)";}, nullptr),
+                                            [](int value, int maximumStringLength) {return (value == eChannelOrder::ACN) ? "ACN (WYZX)" : "FuMa (WXYZ)";}, nullptr),
         std::make_unique<AudioParameterFloat>("outGain", "output gain", NormalisableRange<float>(-40.0f, 10.0f, 0.1f),
                                               0.0f, "dB", AudioProcessorParameter::genericParameter,
                                               [](float value, int maximumStringLength) { return String(value, 1); }, nullptr),
@@ -129,6 +129,9 @@ void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     foaChannelBuffer.setSize(4, samplesPerBlock);
     foaChannelBuffer.clear();
     
+    previousOutGain = outGain;
+    previousZGain = zGain;
+    
     // low frequency compensation IIR for differential z signal
     //dsp::ProcessSpec spec { sampleRate, static_cast<uint32> (samplesPerBlock), 1 };
     dsp::ProcessSpec spec;
@@ -195,10 +198,10 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     const float* readPointerRight = buffer.getReadPointer (3);
     
     // internally everything is in ACN order
-    float* writePointerW = foaChannelBuffer.getWritePointer (0);
-    float* writePointerX = foaChannelBuffer.getWritePointer (3);
-    float* writePointerY = foaChannelBuffer.getWritePointer (1);
-    float* writePointerZ = foaChannelBuffer.getWritePointer (2);
+    float* writePointerW = foaChannelBuffer.getWritePointer (eChannelOrderACN::W);
+    float* writePointerX = foaChannelBuffer.getWritePointer (eChannelOrderACN::X);
+    float* writePointerY = foaChannelBuffer.getWritePointer (eChannelOrderACN::Y);
+    float* writePointerZ = foaChannelBuffer.getWritePointer (eChannelOrderACN::Z);
 
     // W: take omni from mic 1
     FloatVectorOperations::copy (writePointerW, readPointerFront, numSamples);
@@ -271,6 +274,12 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     FloatVectorOperations::multiply(writePointerY, SN3D_WEIGHT_1, numSamples);
     FloatVectorOperations::multiply(writePointerZ, SN3D_WEIGHT_1, numSamples);
     
+    // apply z gain
+    foaChannelBuffer.applyGainRamp(eChannelOrderACN::Z, 0, numSamples, previousZGain, zGain);
+    
+    // apply output gain to all channels
+    foaChannelBuffer.applyGainRamp(0, numSamples, previousOutGain, outGain);
+    
     // write to output
     buffer.clear();
     
@@ -279,16 +288,18 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
         if (channelOrder == eChannelOrder::FUMA)
         {
             // reorder to fuma
-            buffer.copyFrom(0, 0, foaChannelBuffer, 0, 0, numSamples);
-            buffer.copyFrom(1, 0, foaChannelBuffer, 3, 0, numSamples);
-            buffer.copyFrom(2, 0, foaChannelBuffer, 1, 0, numSamples);
-            buffer.copyFrom(3, 0, foaChannelBuffer, 2, 0, numSamples);
+            buffer.copyFrom(0, 0, foaChannelBuffer, eChannelOrderACN::W, 0, numSamples);
+            buffer.copyFrom(1, 0, foaChannelBuffer, eChannelOrderACN::X, 0, numSamples);
+            buffer.copyFrom(2, 0, foaChannelBuffer, eChannelOrderACN::Y, 0, numSamples);
+            buffer.copyFrom(3, 0, foaChannelBuffer, eChannelOrderACN::Z, 0, numSamples);
         }
         else
         {
             // simply copy to output
-            for (int out = 0; out < 4; ++out)
-                buffer.copyFrom(out, 0, foaChannelBuffer, out, 0, numSamples);
+            buffer.copyFrom(0, 0, foaChannelBuffer, eChannelOrderACN::W, 0, numSamples);
+            buffer.copyFrom(1, 0, foaChannelBuffer, eChannelOrderACN::Y, 0, numSamples);
+            buffer.copyFrom(2, 0, foaChannelBuffer, eChannelOrderACN::Z, 0, numSamples);
+            buffer.copyFrom(3, 0, foaChannelBuffer, eChannelOrderACN::X, 0, numSamples);
         }
         
     }
