@@ -26,7 +26,8 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
                                               0.0f, "deg", AudioProcessorParameter::genericParameter,
                                               [](float value, int maximumStringLength) { return String(value, 1); }, nullptr)
     }),
-    currentSampleRate(48000), zFirCoeffBuffer(1, FIR_LEN),
+    firLatencySec((static_cast<float>(FIR_LEN) / 2 - 1) / FIR_SAMPLE_RATE),
+    currentSampleRate(48000), isBypassed(false), zFirCoeffBuffer(1, FIR_LEN),
     coincEightFirCoeffBuffer(1, FIR_LEN), coincOmniFirCoeffBuffer(1, FIR_LEN)
 {
     isWCombined                 = static_cast<bool>(params.getParameterAsValue("combinedW").getValue());
@@ -48,8 +49,6 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
     zFirCoeffBuffer.copyFrom(0, 0, DIFF_Z_EIGHT_EQ_COEFFS, FIR_LEN);
     coincEightFirCoeffBuffer.copyFrom(0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
     coincOmniFirCoeffBuffer.copyFrom(0, 0, COINC_OMNI_EQ_COEFFS, FIR_LEN);
-    
-    firLatencySec = (static_cast<float>(FIR_LEN) / 2 - 1) / FIR_SAMPLE_RATE;
     
     for (auto& delay : delays)
         delay.setDelayTime (firLatencySec);
@@ -167,9 +166,7 @@ void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
         delay.prepare (spec);
 
     // set delay compensation
-    if (doDifferentialZEqualization)
-        setLatencySamples(static_cast<int>(firLatencySec * sampleRate));
-    
+    updateLatency();
 }
 
 void AafoaCreatorAudioProcessor::releaseResources()
@@ -196,6 +193,11 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     jassert(buffer.getNumChannels() == 4 && totalNumOutputChannels == 4 && totalNumInputChannels == 4);
     
     int numSamples = buffer.getNumSamples();
+    
+    if (isBypassed) {
+        isBypassed = false;
+        updateLatency();
+    }
     
     const float* readPointerFront = buffer.getReadPointer (0);
     const float* readPointerBack = buffer.getReadPointer (1);
@@ -316,6 +318,19 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     
 }
 
+void AafoaCreatorAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
+{
+    if (!isBypassed) {
+        isBypassed = true;
+        updateLatency();
+    }
+    
+    jassert (getLatencySamples() == 0);
+
+    for (int ch = getMainBusNumInputChannels(); ch < getTotalNumOutputChannels(); ++ch)
+        buffer.clear (ch, 0, buffer.getNumSamples());
+}
+
 //==============================================================================
 bool AafoaCreatorAudioProcessor::hasEditor() const
 {
@@ -349,34 +364,37 @@ void AafoaCreatorAudioProcessor::setStateInformation (const void* data, int size
 //==============================================================================
 void AafoaCreatorAudioProcessor::parameterChanged (const String &parameterID, float newValue)
 {
-    if (parameterID == "combinedW") {
+    if (parameterID == "combinedW")
+    {
         isWCombined = (newValue == 1.0f);
     }
     else if (parameterID == "diffEqualization")
     {
         doDifferentialZEqualization = (newValue == 1.0f);
-        
-        if (newValue == 0.0f)
-            setLatencySamples(0);
-        else // set delay compensation
-            setLatencySamples(static_cast<int>(firLatencySec * currentSampleRate));
+        updateLatency();
     }
-    else if (parameterID == "coincEqualization") {
+    else if (parameterID == "coincEqualization")
+    {
         doCoincPatternEqualization = (newValue == 1.0f);
+        updateLatency();
     }
-    else if (parameterID == "channelOrder") {
+    else if (parameterID == "channelOrder")
+    {
         channelOrder = (static_cast<int>(newValue) == eChannelOrder::FUMA) ? eChannelOrder::FUMA : eChannelOrder::ACN;
     }
-    else if (parameterID == "outGainDb") {
+    else if (parameterID == "outGainDb")
+    {
         outGainLin = Decibels::decibelsToGain(newValue);
     }
-    else if (parameterID == "zGainDb") {
+    else if (parameterID == "zGainDb")
+    {
         if (newValue < MIN_Z_GAIN_DB + GAIN_TO_ZERO_THRESH_DB)
             zGainLin = 0.0f;
         else
             zGainLin = Decibels::decibelsToGain(newValue);
     }
-    else if (parameterID == "horRotation") {
+    else if (parameterID == "horRotation")
+    {
         horRotationDeg = newValue;
     }
 }
@@ -415,6 +433,20 @@ void AafoaCreatorAudioProcessor::ambiRotateAroundZ(AudioBuffer<float>* ambiBuffe
     
     previousCosPhi = cosPhi;
     previousSinPhi = sinPhi;
+}
+
+void AafoaCreatorAudioProcessor::updateLatency() {
+    if (isBypassed)
+    {
+        setLatencySamples(0);
+    }
+    else
+    {
+        if (doDifferentialZEqualization || doCoincPatternEqualization)
+            setLatencySamples(static_cast<int>(firLatencySec * currentSampleRate));
+        else // set delay compensation
+            setLatencySamples(0);
+    }
 }
 
 //==============================================================================

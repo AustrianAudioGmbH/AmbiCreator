@@ -20,6 +20,7 @@ public:
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
 
     void processBlock (AudioBuffer<float>&, MidiBuffer&) override;
+    void processBlockBypassed (AudioBuffer<float>&, MidiBuffer&) override;
 
     //==============================================================================
     AudioProcessorEditor* createEditor() override;
@@ -66,8 +67,10 @@ private:
     float previousCosPhi;
     float previousSinPhi;
     
-    float firLatencySec;
+    const float firLatencySec;
     double currentSampleRate;
+    
+    bool isBypassed;
     
     static constexpr double SN3D_WEIGHT_0 = 0.282094791773878;
     static constexpr double SN3D_WEIGHT_1 = 0.488602511902920;
@@ -105,6 +108,7 @@ private:
     
     void setLowShelfCoefficients(double sampleRate);
     void ambiRotateAroundZ(AudioBuffer<float>* ambiBuffer);
+    void updateLatency();
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AafoaCreatorAudioProcessor)
 };
