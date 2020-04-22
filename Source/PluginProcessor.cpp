@@ -134,7 +134,7 @@ void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     previousOutGainLin = outGainLin;
     previousZGainLin = zGainLin;
     previousCosPhi = std::cosf(degreesToRadians(horRotationDeg));
-    previousSinPhi =  std::sinf(degreesToRadians(horRotationDeg));
+    previousSinPhi = std::sinf(degreesToRadians(horRotationDeg));
     
     // low frequency compensation IIR for differential z signal
     //dsp::ProcessSpec spec { sampleRate, static_cast<uint32> (samplesPerBlock), 1 };
@@ -177,9 +177,17 @@ void AafoaCreatorAudioProcessor::releaseResources()
 
 bool AafoaCreatorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-    if (layouts.getMainOutputChannelSet() != AudioChannelSet::ambisonic(1)
-     && layouts.getMainOutputChannelSet() != AudioChannelSet::discreteChannels(4))
+    if (layouts.getMainInputChannelSet() != AudioChannelSet::ambisonic(1)
+        && layouts.getMainInputChannelSet() != AudioChannelSet::discreteChannels(4))
+    {
         return false;
+    }
+    
+    if (layouts.getMainOutputChannelSet() != AudioChannelSet::ambisonic(1)
+        && layouts.getMainOutputChannelSet() != AudioChannelSet::discreteChannels(4))
+    {
+        return false;
+    }
     
     return true;
 }

@@ -59,7 +59,7 @@ public:
     {
         spec = specs;
 
-        delayInSamples = delay * specs.sampleRate;
+        delayInSamples = roundToInt(delay * specs.sampleRate);
 
         buffer.setSize(specs.numChannels, specs.maximumBlockSize + delayInSamples);
         buffer.clear();

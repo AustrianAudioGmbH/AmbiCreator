@@ -9,6 +9,21 @@
               pluginAUMainType="'aufx'" aaxIdentifier="at.aa.foacreator">
   <MAINGROUP id="LLStlP" name="AAFoaCreator">
     <GROUP id="{E0985C42-F2D7-AE83-3158-6E7E144CB981}" name="resources">
+      <GROUP id="{757F4BFD-1D8A-3EB7-0EAA-66E76F0AFCD5}" name="customComponents">
+        <FILE id="bq0l4q" name="DirSlider.h" compile="0" resource="0" file="resources/customComponents/DirSlider.h"/>
+        <FILE id="Q3gNZn" name="ImgPaths.h" compile="0" resource="0" file="resources/customComponents/ImgPaths.h"/>
+        <FILE id="vyw0bc" name="MuteSoloButton.h" compile="0" resource="0"
+              file="resources/customComponents/MuteSoloButton.h"/>
+        <FILE id="zKARuk" name="ReverseSlider.h" compile="0" resource="0" file="resources/customComponents/ReverseSlider.h"/>
+        <FILE id="rtAB32" name="SimpleLabel.h" compile="0" resource="0" file="resources/customComponents/SimpleLabel.h"/>
+        <FILE id="NBA7BI" name="TitleBar.h" compile="0" resource="0" file="resources/customComponents/TitleBar.h"/>
+        <FILE id="gOw0jP" name="TitleBarPaths.h" compile="0" resource="0" file="resources/customComponents/TitleBarPaths.h"/>
+      </GROUP>
+      <GROUP id="{EC3099AA-88F8-1C70-9AA3-A3E186EF3EB6}" name="lookAndFeel">
+        <FILE id="Wf28l5" name="AA_LaF.h" compile="0" resource="0" file="resources/lookAndFeel/AA_LaF.h"/>
+        <FILE id="eHlpJA" name="BinaryFonts.cpp" compile="1" resource="0" file="resources/lookAndFeel/BinaryFonts.cpp"/>
+        <FILE id="wxMDfS" name="BinaryFonts.h" compile="0" resource="0" file="resources/lookAndFeel/BinaryFonts.h"/>
+      </GROUP>
       <FILE id="Tj580k" name="Delay.h" compile="0" resource="0" file="resources/Delay.h"/>
     </GROUP>
     <GROUP id="{E9C6351E-7703-134A-6A95-40615BDFA8E0}" name="Source">
