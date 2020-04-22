@@ -1,32 +1,51 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../resources/customComponents/ImgPaths.h"
 
 //==============================================================================
 AafoaCreatorAudioProcessorEditor::AafoaCreatorAudioProcessorEditor (AafoaCreatorAudioProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
-    setSize (400, 300);
+    setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
+    setLookAndFeel (&globalLaF);
+    
+    addAndMakeVisible (&title);
+    title.setTitle (String("AustrianAudio"),String("FOACreator"));
+    title.setFont (globalLaF.avenirMedium,globalLaF.avenirRegular);
+    
+    addAndMakeVisible (&footer);
+    
+    arrayImage = ImageCache::getFromMemory (arrayPng, arrayPngSize);
 }
 
 AafoaCreatorAudioProcessorEditor::~AafoaCreatorAudioProcessorEditor()
 {
+    setLookAndFeel (nullptr);
 }
 
 //==============================================================================
 void AafoaCreatorAudioProcessorEditor::paint (Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
-
-    g.setColour (Colours::white);
-    g.setFont (15.0f);
-    g.drawFittedText ("Hello World!", getLocalBounds(), Justification::centred, 1);
+    g.fillAll (globalLaF.ClBackground);
+    g.drawImage(arrayImage, arrayImageArea, RectanglePlacement::centred);
 }
 
 void AafoaCreatorAudioProcessorEditor::resized()
 {
-    // This is generally where you'll want to lay out the positions of any
-    // subcomponents in your editor..
+    const int leftRightMargin = 30;
+    const int headerHeight = 60;
+    const int footerHeight = 25;
+    
+    Rectangle<int> area (getLocalBounds());
+    
+    Rectangle<int> footerArea (area.removeFromBottom(footerHeight));
+    footer.setBounds (footerArea);
+    
+    area.removeFromLeft(leftRightMargin);
+    area.removeFromRight(leftRightMargin);
+    Rectangle<int> headerArea = area.removeFromTop(headerHeight);
+    title.setTitleCentreX (headerArea.getCentreX());
+    title.setBounds (headerArea);
+    
+    arrayImageArea = area.removeFromLeft(200).toFloat();
 }

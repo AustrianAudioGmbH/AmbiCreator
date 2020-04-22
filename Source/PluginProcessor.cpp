@@ -177,6 +177,8 @@ void AafoaCreatorAudioProcessor::releaseResources()
 
 bool AafoaCreatorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
+    // TODO: WARN USER IF WRONG LAYOUT
+    
     if (layouts.getMainInputChannelSet() != AudioChannelSet::ambisonic(1)
         && layouts.getMainInputChannelSet() != AudioChannelSet::discreteChannels(4))
     {

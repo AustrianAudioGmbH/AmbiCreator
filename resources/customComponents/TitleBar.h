@@ -526,7 +526,6 @@ class  Footer :  public Component
 public:
     Footer() : Component()
     {
-        addAndMakeVisible(&iemLogo);
     };
     ~Footer() {};
 
@@ -548,12 +547,10 @@ public:
 
     void resized () override
     {
-        iemLogo.setBounds(0, 0, 40, getHeight());
-
     }
 
 private:
-    IEMLogo iemLogo;
+    
 };
 
 #ifdef JUCE_OSC_H_INCLUDED
