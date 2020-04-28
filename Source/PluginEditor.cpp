@@ -3,8 +3,8 @@
 #include "../resources/customComponents/ImgPaths.h"
 
 //==============================================================================
-AafoaCreatorAudioProcessorEditor::AafoaCreatorAudioProcessorEditor (AafoaCreatorAudioProcessor& p)
-    : AudioProcessorEditor (&p), processor (p)
+AafoaCreatorAudioProcessorEditor::AafoaCreatorAudioProcessorEditor (AafoaCreatorAudioProcessor& p, AudioProcessorValueTreeState& vts)
+    : AudioProcessorEditor (&p), processor (p), valueTreeState(vts)
 {
     setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
     setLookAndFeel (&globalLaF);
@@ -16,6 +16,44 @@ AafoaCreatorAudioProcessorEditor::AafoaCreatorAudioProcessorEditor (AafoaCreator
     addAndMakeVisible (&footer);
     
     arrayImage = ImageCache::getFromMemory (arrayPng, arrayPngSize);
+    
+    // add labels
+    addAndMakeVisible (&lbSlOutGain);
+    lbSlOutGain.setText("output gain");
+    
+    addAndMakeVisible (&lbSlZGain);
+    lbSlZGain.setText("z gain");
+    
+    addAndMakeVisible (&lbSlHorizontalRotation);
+    lbSlHorizontalRotation.setText("horizontal rotation");
+    
+    // add sliders
+    const int slTbWidth = 60;
+    const int slTbHeight = 15;
+    
+    addAndMakeVisible (&slOutGain);
+    slAttOutGain.reset(new ReverseSlider::SliderAttachment (valueTreeState, "outGainDb", slOutGain));
+    slOutGain.setSliderStyle (Slider::LinearHorizontal);
+    slOutGain.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
+    slOutGain.setColour (Slider::thumbColourId, Colours::black);
+    slOutGain.setTextBoxStyle (Slider::TextBoxBelow, false, slTbWidth, slTbHeight);
+    slOutGain.addListener (this);
+    
+    addAndMakeVisible (&slHorizontalRotation);
+    slAttHorizontalRotation.reset(new ReverseSlider::SliderAttachment (valueTreeState, "horRotation", slHorizontalRotation));
+    slHorizontalRotation.setSliderStyle (Slider::LinearHorizontal);
+    slHorizontalRotation.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
+    slHorizontalRotation.setColour (Slider::thumbColourId, Colours::black);
+    slHorizontalRotation.setTextBoxStyle (Slider::TextBoxBelow, false, slTbWidth, slTbHeight);
+    slHorizontalRotation.addListener (this);
+    
+    addAndMakeVisible (&slZGain);
+    slAttZGain.reset(new ReverseSlider::SliderAttachment (valueTreeState, "zGainDb", slZGain));
+    slZGain.setSliderStyle (Slider::LinearHorizontal);
+    slZGain.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
+    slZGain.setColour (Slider::thumbColourId, Colours::black);
+    slZGain.setTextBoxStyle (Slider::TextBoxBelow, false, slTbWidth, slTbHeight);
+    slZGain.addListener (this);
 }
 
 AafoaCreatorAudioProcessorEditor::~AafoaCreatorAudioProcessorEditor()
@@ -35,6 +73,11 @@ void AafoaCreatorAudioProcessorEditor::resized()
     const int leftRightMargin = 30;
     const int headerHeight = 60;
     const int footerHeight = 25;
+    const int linearSliderWidth = 130;
+//    const int linearSliderHorizontalSpacing = 32;
+    const int linearSliderVerticalSpacing = 20;
+    const int linearSliderHeight = 40;
+    const int labelHeight = 20;
     
     Rectangle<int> area (getLocalBounds());
     
@@ -48,4 +91,30 @@ void AafoaCreatorAudioProcessorEditor::resized()
     title.setBounds (headerArea);
     
     arrayImageArea = area.removeFromLeft(200).toFloat();
+    
+    // -------- MAIN AREA ---------
+    Rectangle<int> sliderArea (area.removeFromLeft(linearSliderWidth));
+    sliderArea.removeFromTop(linearSliderVerticalSpacing);
+    lbSlOutGain.setBounds(sliderArea.removeFromTop(labelHeight));
+    slOutGain.setBounds(sliderArea.removeFromTop(linearSliderHeight));
+    
+    sliderArea.removeFromTop(linearSliderVerticalSpacing);
+    lbSlZGain.setBounds(sliderArea.removeFromTop(labelHeight));
+    slZGain.setBounds(sliderArea.removeFromTop(linearSliderHeight));
+    
+    sliderArea.removeFromTop(linearSliderVerticalSpacing);
+    lbSlHorizontalRotation.setBounds(sliderArea.removeFromTop(labelHeight));
+    slHorizontalRotation.setBounds(sliderArea.removeFromTop(linearSliderHeight));
+}
+
+void AafoaCreatorAudioProcessorEditor::sliderValueChanged (Slider* slider) {
+    
+}
+
+void AafoaCreatorAudioProcessorEditor::buttonClicked (Button* button) {
+    
+}
+
+void AafoaCreatorAudioProcessorEditor::comboBoxChanged (ComboBox* cb) {
+    
 }

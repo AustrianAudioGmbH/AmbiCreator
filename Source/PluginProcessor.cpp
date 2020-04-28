@@ -10,11 +10,11 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
     params(*this, nullptr, "AAFoaCreator", {
         std::make_unique<AudioParameterBool>("combinedW", "combined w channel", false, "",
                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
-        std::make_unique<AudioParameterBool>("diffEqualization", "differential z equalization", false, "",
+        std::make_unique<AudioParameterBool>("diffEqualization", "differential z equalization", true, "",
                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
-        std::make_unique<AudioParameterBool>("coincEqualization", "omni and eight diffuse-field equalization", false, "",
+        std::make_unique<AudioParameterBool>("coincEqualization", "omni and eight diffuse-field equalization", true, "",
                                             [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
-        std::make_unique<AudioParameterInt>("channelOrder", "channel order", eChannelOrder::ACN, eChannelOrder::FUMA, 0, "",
+        std::make_unique<AudioParameterInt>("channelOrder", "channel order", eChannelOrder::ACN, eChannelOrder::FUMA, eChannelOrder::ACN, "",
                                             [](int value, int maximumStringLength) {return (value == eChannelOrder::ACN) ? "ACN (WYZX)" : "FuMa (WXYZ)";}, nullptr),
         std::make_unique<AudioParameterFloat>("outGainDb", "output gain", NormalisableRange<float>(-40.0f, 10.0f, 0.1f),
                                               0.0f, "dB", AudioProcessorParameter::genericParameter,
@@ -23,7 +23,7 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
                                               0.0f, "dB", AudioProcessorParameter::genericParameter,
                                               [](float value, int maximumStringLength) { return (value > MIN_Z_GAIN_DB + GAIN_TO_ZERO_THRESH_DB) ? String(value, 1) : "-inf"; }, nullptr),
         std::make_unique<AudioParameterFloat>("horRotation", "horizontal rotation", NormalisableRange<float>(-180.0f, 180.0f, 1.0f),
-                                              0.0f, "deg", AudioProcessorParameter::genericParameter,
+                                              0.0f, String (CharPointer_UTF8 ("°")), AudioProcessorParameter::genericParameter,
                                               [](float value, int maximumStringLength) { return String(value, 1); }, nullptr)
     }),
     firLatencySec((static_cast<float>(FIR_LEN) / 2 - 1) / FIR_SAMPLE_RATE),
@@ -349,7 +349,7 @@ bool AafoaCreatorAudioProcessor::hasEditor() const
 
 AudioProcessorEditor* AafoaCreatorAudioProcessor::createEditor()
 {
-    return new AafoaCreatorAudioProcessorEditor (*this);
+    return new AafoaCreatorAudioProcessorEditor (*this, params);
 }
 
 //==============================================================================
