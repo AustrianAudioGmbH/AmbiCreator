@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../resources/irs.h"
 
 //==============================================================================
 AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
@@ -286,10 +287,10 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
         
     
     // apply sn3d weighting
-    FloatVectorOperations::multiply(writePointerW, SN3D_WEIGHT_0, numSamples);
-    FloatVectorOperations::multiply(writePointerX, SN3D_WEIGHT_1, numSamples);
-    FloatVectorOperations::multiply(writePointerY, SN3D_WEIGHT_1, numSamples);
-    FloatVectorOperations::multiply(writePointerZ, SN3D_WEIGHT_1, numSamples);
+    FloatVectorOperations::multiply(writePointerW, SQRT_ONE_OVER_4_PI, numSamples);
+    FloatVectorOperations::multiply(writePointerX, SQRT_ONE_OVER_4_PI, numSamples);
+    FloatVectorOperations::multiply(writePointerY, SQRT_ONE_OVER_4_PI, numSamples);
+    FloatVectorOperations::multiply(writePointerZ, SQRT_ONE_OVER_4_PI, numSamples);
     
     // apply z gain
     foaChannelBuffer.applyGainRamp(eChannelOrderACN::Z, 0, numSamples, previousZGainLin, zGainLin);

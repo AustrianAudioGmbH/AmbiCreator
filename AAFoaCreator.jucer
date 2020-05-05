@@ -24,6 +24,7 @@
         <FILE id="wxMDfS" name="BinaryFonts.h" compile="0" resource="0" file="resources/lookAndFeel/BinaryFonts.h"/>
       </GROUP>
       <FILE id="Tj580k" name="Delay.h" compile="0" resource="0" file="resources/Delay.h"/>
+      <FILE id="tyCdtv" name="irs.h" compile="0" resource="0" file="resources/irs.h"/>
     </GROUP>
     <GROUP id="{E9C6351E-7703-134A-6A95-40615BDFA8E0}" name="Source">
       <FILE id="KRNlAI" name="PluginProcessor.cpp" compile="1" resource="0"
