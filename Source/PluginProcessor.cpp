@@ -180,14 +180,12 @@ bool AafoaCreatorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layo
 {
     // TODO: WARN USER IF WRONG LAYOUT
     
-    if (layouts.getMainInputChannelSet() != AudioChannelSet::ambisonic(1)
-        && layouts.getMainInputChannelSet() != AudioChannelSet::discreteChannels(4))
+    if (layouts.getMainInputChannels() != 4)
     {
         return false;
     }
     
-    if (layouts.getMainOutputChannelSet() != AudioChannelSet::ambisonic(1)
-        && layouts.getMainOutputChannelSet() != AudioChannelSet::discreteChannels(4))
+    if (layouts.getMainOutputChannels() != 4)
     {
         return false;
     }
