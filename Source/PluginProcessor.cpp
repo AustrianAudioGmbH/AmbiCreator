@@ -10,22 +10,22 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
                            ),
     params(*this, nullptr, "AAFoaCreator", {
         std::make_unique<AudioParameterBool>("combinedW", "combined w channel", false, "",
-                                            [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
+                                            [](bool value, int) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterBool>("diffEqualization", "differential z equalization", true, "",
-                                            [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
+                                            [](bool value, int) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterBool>("coincEqualization", "omni and eight diffuse-field equalization", true, "",
-                                            [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr),
+                                            [](bool value, int) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterInt>("channelOrder", "channel order", eChannelOrder::ACN, eChannelOrder::FUMA, eChannelOrder::ACN, "",
-                                            [](int value, int maximumStringLength) {return (value == eChannelOrder::ACN) ? "ACN (WYZX)" : "FuMa (WXYZ)";}, nullptr),
+                                            [](int value, int) {return (value == eChannelOrder::ACN) ? "ACN (WYZX)" : "FuMa (WXYZ)";}, nullptr),
         std::make_unique<AudioParameterFloat>("outGainDb", "output gain", NormalisableRange<float>(-40.0f, 10.0f, 0.1f),
                                               0.0f, "dB", AudioProcessorParameter::genericParameter,
-                                              [](float value, int maximumStringLength) { return String(value, 1); }, nullptr),
+                                              [](float value, int) { return String(value, 1); }, nullptr),
         std::make_unique<AudioParameterFloat>("zGainDb", "z gain", NormalisableRange<float>(MIN_Z_GAIN_DB, 10.0f, 0.1f),
                                               0.0f, "dB", AudioProcessorParameter::genericParameter,
-                                              [](float value, int maximumStringLength) { return (value > MIN_Z_GAIN_DB + GAIN_TO_ZERO_THRESH_DB) ? String(value, 1) : "-inf"; }, nullptr),
+                                              [](float value, int) { return (value > MIN_Z_GAIN_DB + GAIN_TO_ZERO_THRESH_DB) ? String(value, 1) : "-inf"; }, nullptr),
         std::make_unique<AudioParameterFloat>("horRotation", "horizontal rotation", NormalisableRange<float>(-180.0f, 180.0f, 1.0f),
                                               0.0f, String (CharPointer_UTF8 ("°")), AudioProcessorParameter::genericParameter,
-                                              [](float value, int maximumStringLength) { return String(value, 1); }, nullptr)
+                                              [](float value, int) { return String(value, 1); }, nullptr)
     }),
     firLatencySec((static_cast<float>(FIR_LEN) / 2 - 1) / FIR_SAMPLE_RATE),
     currentSampleRate(48000), isBypassed(false), zFirCoeffBuffer(1, FIR_LEN),
@@ -108,16 +108,16 @@ int AafoaCreatorAudioProcessor::getCurrentProgram()
     return 0;
 }
 
-void AafoaCreatorAudioProcessor::setCurrentProgram (int index)
+void AafoaCreatorAudioProcessor::setCurrentProgram (int)
 {
 }
 
-const String AafoaCreatorAudioProcessor::getProgramName (int index)
+const String AafoaCreatorAudioProcessor::getProgramName (int)
 {
     return {};
 }
 
-void AafoaCreatorAudioProcessor::changeProgramName (int index, const String& newName)
+void AafoaCreatorAudioProcessor::changeProgramName (int, const String&)
 {
 }
 
@@ -142,7 +142,7 @@ void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate;
     spec.numChannels = 1;
-    spec.maximumBlockSize = samplesPerBlock;
+    spec.maximumBlockSize = static_cast<uint32>(samplesPerBlock);
     
     iirLowShelf.prepare (spec);
     iirLowShelf.reset();
@@ -195,7 +195,7 @@ bool AafoaCreatorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layo
     return true;
 }
 
-void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
+void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer&)
 {
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
@@ -249,7 +249,7 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     
     if (doDifferentialZEqualization)
     {
-        dsp::AudioBlock<float> zEqualizationBlock(&writePointerZ, 1, numSamples);
+        dsp::AudioBlock<float> zEqualizationBlock(&writePointerZ, 1, static_cast<size_t>(numSamples));
         dsp::ProcessContextReplacing<float> zEqualizationContext(zEqualizationBlock);
         iirLowShelf.process(zEqualizationContext);
         zFilterConv.process(zEqualizationContext);
@@ -257,40 +257,40 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     
     if (doCoincPatternEqualization)
     {
-        dsp::AudioBlock<float> wEqualizationBlock(&writePointerW, 1, numSamples);
+        dsp::AudioBlock<float> wEqualizationBlock(&writePointerW, 1, static_cast<size_t>(numSamples));
         dsp::ProcessContextReplacing<float> wEqualizationContext(wEqualizationBlock);
         coincOmniFilterConv.process(wEqualizationContext);
         
-        dsp::AudioBlock<float> xEqualizationBlock(&writePointerX, 1, numSamples);
+        dsp::AudioBlock<float> xEqualizationBlock(&writePointerX, 1, static_cast<size_t>(numSamples));
         dsp::ProcessContextReplacing<float> xEqualizationContext(xEqualizationBlock);
         coincXEightFilterConv.process(xEqualizationContext);
         
-        dsp::AudioBlock<float> yEqualizationBlock(&writePointerY, 1, numSamples);
+        dsp::AudioBlock<float> yEqualizationBlock(&writePointerY, 1, static_cast<size_t>(numSamples));
         dsp::ProcessContextReplacing<float> yEqualizationContext(yEqualizationBlock);
         coincYEightFilterConv.process(yEqualizationContext);
     }
     else
     {
         // delay w, x and y accordingly
-        dsp::AudioBlock<float> wDelayBlock(&writePointerW, 1, numSamples);
+        dsp::AudioBlock<float> wDelayBlock(&writePointerW, 1, static_cast<size_t>(numSamples));
         dsp::ProcessContextReplacing<float> wDelayContext(wDelayBlock);
         delays[0].process(wDelayContext);
         
-        dsp::AudioBlock<float> xDelayBlock(&writePointerX, 1, numSamples);
+        dsp::AudioBlock<float> xDelayBlock(&writePointerX, 1, static_cast<size_t>(numSamples));
         dsp::ProcessContextReplacing<float> xDelayContext(xDelayBlock);
         delays[1].process(xDelayContext);
         
-        dsp::AudioBlock<float> yDelayBlock(&writePointerY, 1, numSamples);
+        dsp::AudioBlock<float> yDelayBlock(&writePointerY, 1, static_cast<size_t>(numSamples));
         dsp::ProcessContextReplacing<float> yDelayContext(yDelayBlock);
         delays[2].process(yDelayContext);
     }
         
     
     // apply sn3d weighting
-    FloatVectorOperations::multiply(writePointerW, SQRT_ONE_OVER_4_PI, numSamples);
-    FloatVectorOperations::multiply(writePointerX, SQRT_ONE_OVER_4_PI, numSamples);
-    FloatVectorOperations::multiply(writePointerY, SQRT_ONE_OVER_4_PI, numSamples);
-    FloatVectorOperations::multiply(writePointerZ, SQRT_ONE_OVER_4_PI, numSamples);
+    FloatVectorOperations::multiply(writePointerW, static_cast<float>(SQRT_ONE_OVER_4_PI), numSamples);
+    FloatVectorOperations::multiply(writePointerX, static_cast<float>(SQRT_ONE_OVER_4_PI), numSamples);
+    FloatVectorOperations::multiply(writePointerY, static_cast<float>(SQRT_ONE_OVER_4_PI), numSamples);
+    FloatVectorOperations::multiply(writePointerZ, static_cast<float>(SQRT_ONE_OVER_4_PI), numSamples);
     
     // apply z gain
     foaChannelBuffer.applyGainRamp(eChannelOrderACN::Z, 0, numSamples, previousZGainLin, zGainLin);
@@ -329,7 +329,7 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     
 }
 
-void AafoaCreatorAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
+void AafoaCreatorAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer&)
 {
     if (!isBypassed) {
         isBypassed = true;
@@ -417,10 +417,10 @@ void AafoaCreatorAudioProcessor::setLowShelfCoefficients(double sampleRate)
     const double wc3 = 62.831853071795862;
     const double T = 1 / sampleRate;
     
-    float b0 = T / 4 * (wc2 - wc3) + 0.5f;
-    float b1 = -0.5f * std::exp(-wc3 * T) * (1 - T / 2 * (wc2 - wc3));
+    float b0 = static_cast<float>(T / 4 * (wc2 - wc3) + 0.5f);
+    float b1 = static_cast<float>(-0.5f * std::exp(-wc3 * T) * (1 - T / 2 * (wc2 - wc3)));
     float a0 = 1.0f;
-    float a1 = -std::exp(-wc3 * T);
+    float a1 = static_cast<float>(-std::exp(-wc3 * T));
     
     *iirLowShelf.coefficients = dsp::IIR::Coefficients<float>(b0,b1,a0,a1);
 }
