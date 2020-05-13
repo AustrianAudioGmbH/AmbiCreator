@@ -3,12 +3,12 @@
 #include "../resources/irs.h"
 
 //==============================================================================
-AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
+AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     AudioProcessor (BusesProperties()
                            .withInput  ("Input",  AudioChannelSet::ambisonic(1), true)
                            .withOutput ("Output", AudioChannelSet::ambisonic(1), true)
                            ),
-    params(*this, nullptr, "AAFoaCreator", {
+    params(*this, nullptr, "AmbiCreator", {
         std::make_unique<AudioParameterBool>("combinedW", "combined w channel", false, "",
                                             [](bool value, int) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterBool>("diffEqualization", "differential z equalization", true, "",
@@ -55,17 +55,17 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
         delay.setDelayTime (firLatencySec);    
 }
 
-AafoaCreatorAudioProcessor::~AafoaCreatorAudioProcessor()
+AmbiCreatorAudioProcessor::~AmbiCreatorAudioProcessor()
 {
 }
 
 //==============================================================================
-const String AafoaCreatorAudioProcessor::getName() const
+const String AmbiCreatorAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool AafoaCreatorAudioProcessor::acceptsMidi() const
+bool AmbiCreatorAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -74,7 +74,7 @@ bool AafoaCreatorAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool AafoaCreatorAudioProcessor::producesMidi() const
+bool AmbiCreatorAudioProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -83,7 +83,7 @@ bool AafoaCreatorAudioProcessor::producesMidi() const
    #endif
 }
 
-bool AafoaCreatorAudioProcessor::isMidiEffect() const
+bool AmbiCreatorAudioProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -92,37 +92,37 @@ bool AafoaCreatorAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double AafoaCreatorAudioProcessor::getTailLengthSeconds() const
+double AmbiCreatorAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int AafoaCreatorAudioProcessor::getNumPrograms()
+int AmbiCreatorAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int AafoaCreatorAudioProcessor::getCurrentProgram()
+int AmbiCreatorAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void AafoaCreatorAudioProcessor::setCurrentProgram (int)
+void AmbiCreatorAudioProcessor::setCurrentProgram (int)
 {
 }
 
-const String AafoaCreatorAudioProcessor::getProgramName (int)
+const String AmbiCreatorAudioProcessor::getProgramName (int)
 {
     return {};
 }
 
-void AafoaCreatorAudioProcessor::changeProgramName (int, const String&)
+void AmbiCreatorAudioProcessor::changeProgramName (int, const String&)
 {
 }
 
 //==============================================================================
-void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void AmbiCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     currentSampleRate = sampleRate;
     
@@ -175,13 +175,13 @@ void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     updateLatency();
 }
 
-void AafoaCreatorAudioProcessor::releaseResources()
+void AmbiCreatorAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
-bool AafoaCreatorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool AmbiCreatorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
     if (layouts.getMainInputChannels() != 4 || layouts.getMainOutputChannels() != 4)
     {
@@ -191,7 +191,7 @@ bool AafoaCreatorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layo
     return true;
 }
 
-void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer&)
+void AmbiCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer&)
 {
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
@@ -349,7 +349,7 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     
 }
 
-void AafoaCreatorAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer&)
+void AmbiCreatorAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer&)
 {
     if (!isBypassed) {
         isBypassed = true;
@@ -363,24 +363,24 @@ void AafoaCreatorAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffe
 }
 
 //==============================================================================
-bool AafoaCreatorAudioProcessor::hasEditor() const
+bool AmbiCreatorAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-AudioProcessorEditor* AafoaCreatorAudioProcessor::createEditor()
+AudioProcessorEditor* AmbiCreatorAudioProcessor::createEditor()
 {
-    return new AafoaCreatorAudioProcessorEditor (*this, params);
+    return new AmbiCreatorAudioProcessorEditor (*this, params);
 }
 
 //==============================================================================
-void AafoaCreatorAudioProcessor::getStateInformation (MemoryBlock& destData)
+void AmbiCreatorAudioProcessor::getStateInformation (MemoryBlock& destData)
 {
     std::unique_ptr<XmlElement> xml (params.state.createXml());
     copyXmlToBinary (*xml, destData);
 }
 
-void AafoaCreatorAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void AmbiCreatorAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     std::unique_ptr<XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
     if (xmlState != nullptr)
@@ -393,7 +393,7 @@ void AafoaCreatorAudioProcessor::setStateInformation (const void* data, int size
 }
 
 //==============================================================================
-void AafoaCreatorAudioProcessor::parameterChanged (const String &parameterID, float newValue)
+void AmbiCreatorAudioProcessor::parameterChanged (const String &parameterID, float newValue)
 {
     if (parameterID == "combinedW")
     {
@@ -431,7 +431,7 @@ void AafoaCreatorAudioProcessor::parameterChanged (const String &parameterID, fl
 }
 
 //========================= CUSTOM METHODS =====================================
-void AafoaCreatorAudioProcessor::setLowShelfCoefficients(double sampleRate)
+void AmbiCreatorAudioProcessor::setLowShelfCoefficients(double sampleRate)
 {
     const double wc2 = 8418.4865639164;
     const double wc3 = 62.831853071795862;
@@ -445,7 +445,7 @@ void AafoaCreatorAudioProcessor::setLowShelfCoefficients(double sampleRate)
     *iirLowShelf.coefficients = dsp::IIR::Coefficients<float>(b0,b1,a0,a1);
 }
 
-void AafoaCreatorAudioProcessor::ambiRotateAroundZ(AudioBuffer<float>* ambiBuffer) {
+void AmbiCreatorAudioProcessor::ambiRotateAroundZ(AudioBuffer<float>* ambiBuffer) {
     auto numSamples = ambiBuffer->getNumSamples();
     jassert(numSamples == rotatorBuffer.getNumSamples());
     
@@ -466,7 +466,7 @@ void AafoaCreatorAudioProcessor::ambiRotateAroundZ(AudioBuffer<float>* ambiBuffe
     previousSinPhi = sinPhi;
 }
 
-void AafoaCreatorAudioProcessor::updateLatency() {
+void AmbiCreatorAudioProcessor::updateLatency() {
     if (isBypassed)
     {
         setLatencySamples(0);
@@ -484,5 +484,5 @@ void AafoaCreatorAudioProcessor::updateLatency() {
 // This creates new instances of the plugin..
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new AafoaCreatorAudioProcessor();
+    return new AmbiCreatorAudioProcessor();
 }

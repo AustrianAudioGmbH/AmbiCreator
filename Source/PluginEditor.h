@@ -16,11 +16,11 @@ typedef AudioProcessorValueTreeState::ComboBoxAttachment ComboBoxAttachment;
 //==============================================================================
 /**
 */
-class AafoaCreatorAudioProcessorEditor  : public AudioProcessorEditor, private Button::Listener, private ComboBox::Listener, private Slider::Listener, private Timer
+class AmbiCreatorAudioProcessorEditor  : public AudioProcessorEditor, private Button::Listener, private ComboBox::Listener, private Slider::Listener, private Timer
 {
 public:
-    AafoaCreatorAudioProcessorEditor (AafoaCreatorAudioProcessor&, AudioProcessorValueTreeState&);
-    ~AafoaCreatorAudioProcessorEditor();
+    AmbiCreatorAudioProcessorEditor (AmbiCreatorAudioProcessor&, AudioProcessorValueTreeState&);
+    ~AmbiCreatorAudioProcessorEditor();
 
     //==============================================================================
     void paint (Graphics&) override;
@@ -31,7 +31,7 @@ public:
     void sliderValueChanged (Slider* slider) override;
 
 private:
-    AafoaCreatorAudioProcessor& processor;
+    AmbiCreatorAudioProcessor& processor;
     AudioProcessorValueTreeState& valueTreeState;
     
     static const int EDITOR_WIDTH = 800;
@@ -66,5 +66,5 @@ private:
     
     void timerCallback() override;
     
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AafoaCreatorAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmbiCreatorAudioProcessorEditor)
 };

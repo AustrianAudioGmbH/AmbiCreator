@@ -3,7 +3,7 @@
 #include "../resources/customComponents/ImgPaths.h"
 
 //==============================================================================
-AafoaCreatorAudioProcessorEditor::AafoaCreatorAudioProcessorEditor (AafoaCreatorAudioProcessor& p, AudioProcessorValueTreeState& vts)
+AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAudioProcessor& p, AudioProcessorValueTreeState& vts)
     : AudioProcessorEditor (&p), processor (p), valueTreeState(vts)
 {
     setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
@@ -75,19 +75,19 @@ AafoaCreatorAudioProcessorEditor::AafoaCreatorAudioProcessorEditor (AafoaCreator
     startTimer (100);
 }
 
-AafoaCreatorAudioProcessorEditor::~AafoaCreatorAudioProcessorEditor()
+AmbiCreatorAudioProcessorEditor::~AmbiCreatorAudioProcessorEditor()
 {
     setLookAndFeel (nullptr);
 }
 
 //==============================================================================
-void AafoaCreatorAudioProcessorEditor::paint (Graphics& g)
+void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
 {
     g.fillAll (globalLaF.ClBackground);
     g.drawImage(arrayImage, arrayImageArea, RectanglePlacement::centred);
 }
 
-void AafoaCreatorAudioProcessorEditor::resized()
+void AmbiCreatorAudioProcessorEditor::resized()
 {
     const int leftRightMargin = 30;
     const int headerHeight = 60;
@@ -157,20 +157,20 @@ void AafoaCreatorAudioProcessorEditor::resized()
     }
 }
 
-void AafoaCreatorAudioProcessorEditor::sliderValueChanged (Slider* slider) {
+void AmbiCreatorAudioProcessorEditor::sliderValueChanged (Slider* slider) {
     
 }
 
-void AafoaCreatorAudioProcessorEditor::buttonClicked (Button* button) {
+void AmbiCreatorAudioProcessorEditor::buttonClicked (Button* button) {
     
 }
 
-void AafoaCreatorAudioProcessorEditor::comboBoxChanged (ComboBox* cb) {
+void AmbiCreatorAudioProcessorEditor::comboBoxChanged (ComboBox* cb) {
     if (cb == title.getOutputWidgetPtr()->getCbOutChOrder())
         updateOutputMeterLabelTexts();
 }
 
-void AafoaCreatorAudioProcessorEditor::updateOutputMeterLabelTexts()
+void AmbiCreatorAudioProcessorEditor::updateOutputMeterLabelTexts()
 {
     auto cb = title.getOutputWidgetPtr()->getCbOutChOrder();
     if (cb->getText() == "AmbiX")
@@ -185,7 +185,7 @@ void AafoaCreatorAudioProcessorEditor::updateOutputMeterLabelTexts()
     }
 }
 
-void AafoaCreatorAudioProcessorEditor::timerCallback()
+void AmbiCreatorAudioProcessorEditor::timerCallback()
 {
     for (int i = 0; i < 4; ++i)
     {

@@ -6,12 +6,12 @@
 //==============================================================================
 /**
 */
-class AafoaCreatorAudioProcessor  : public AudioProcessor, public AudioProcessorValueTreeState::Listener
+class AmbiCreatorAudioProcessor  : public AudioProcessor, public AudioProcessorValueTreeState::Listener
 {
 public:
     //==============================================================================
-    AafoaCreatorAudioProcessor();
-    ~AafoaCreatorAudioProcessor();
+    AmbiCreatorAudioProcessor();
+    ~AmbiCreatorAudioProcessor();
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
@@ -114,5 +114,5 @@ private:
     void ambiRotateAroundZ(AudioBuffer<float>* ambiBuffer);
     void updateLatency();
     
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AafoaCreatorAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmbiCreatorAudioProcessor)
 };
