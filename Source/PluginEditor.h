@@ -15,7 +15,7 @@ typedef AudioProcessorValueTreeState::ComboBoxAttachment ComboBoxAttachment;
 //==============================================================================
 /**
 */
-class AafoaCreatorAudioProcessorEditor  : public AudioProcessorEditor, private Button::Listener, private ComboBox::Listener, private Slider::Listener
+class AafoaCreatorAudioProcessorEditor  : public AudioProcessorEditor, private Button::Listener, private ComboBox::Listener, private Slider::Listener, private Timer
 {
 public:
     AafoaCreatorAudioProcessorEditor (AafoaCreatorAudioProcessor&, AudioProcessorValueTreeState&);
@@ -39,6 +39,7 @@ private:
     TitleBar<AALogo, NoIOWidget> title;
     Footer footer;
     LaF globalLaF;
+    TooltipWindow tooltipWindow;
     
     Image arrayImage;
     Rectangle<float> arrayImageArea;
@@ -47,6 +48,8 @@ private:
     std::unique_ptr<ReverseSlider::SliderAttachment> slAttOutGain, slAttHorizontalRotation, slAttZGain;
     
     SimpleLabel lbSlOutGain, lbSlHorizontalRotation, lbSlZGain;
+    
+    void timerCallback() override;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AafoaCreatorAudioProcessorEditor)
 };

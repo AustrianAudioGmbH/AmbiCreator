@@ -126,6 +126,11 @@ void AafoaCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
 {
     currentSampleRate = sampleRate;
     
+    if (getTotalNumInputChannels() != 4 || getTotalNumOutputChannels() != 4)
+        wrongBusConfiguration = true;
+    else
+        wrongBusConfiguration = false;
+    
     foaChannelBuffer.setSize(4, samplesPerBlock);
     foaChannelBuffer.clear();
     
@@ -177,15 +182,8 @@ void AafoaCreatorAudioProcessor::releaseResources()
 }
 
 bool AafoaCreatorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
-{
-    // TODO: WARN USER IF WRONG LAYOUT
-    
-    if (layouts.getMainInputChannels() != 4)
-    {
-        return false;
-    }
-    
-    if (layouts.getMainOutputChannels() != 4)
+{    
+    if (layouts.getMainInputChannels() != 4 || layouts.getMainOutputChannels() != 4)
     {
         return false;
     }
@@ -198,6 +196,9 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
+    
+    if (wrongBusConfiguration.get())
+        return;
     
     jassert(buffer.getNumChannels() == 4 && totalNumOutputChannels == 4 && totalNumInputChannels == 4);
     

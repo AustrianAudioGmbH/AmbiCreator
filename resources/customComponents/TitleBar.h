@@ -56,7 +56,7 @@
 #include "OSCStatus.h"
 #endif
 
-class  AlertSymbol :  public Component
+class  AlertSymbol :  public Component, public SettableTooltipClient
 {
 public:
     AlertSymbol() : Component()
@@ -352,13 +352,14 @@ public:
     TitleBar() : Component(), useTitlePath(true), centreSetExternally(false) {
         addAndMakeVisible(&inputWidget);
         addAndMakeVisible(&outputWidget);
+        addChildComponent(&alertSymbol);
+        
         titlePath.loadPathFromData (aaFontData, sizeof (aaFontData));
     };
     ~TitleBar() {};
 
     Tin* getInputWidgetPtr() { return &inputWidget; }
     Tout* getOutputWidgetPtr() { return &outputWidget; }
-
 
     void setTitle (String newBoldText, String newRegularText) {
         boldText = newBoldText;
@@ -379,6 +380,9 @@ public:
         inputWidget.setBounds(bounds.getX(), bounds.getY() + 10, leftWidth, leftWidth);
         outputWidget.setBounds(getLocalBounds().removeFromRight(rightWidth).reduced(0,15));
         
+        if (alert) // draw alert symbol over input widget
+            alertSymbol.setBounds(bounds.getX(), bounds.getY() + 10, leftWidth, leftWidth);
+        
         centreY = bounds.getY() + bounds.getHeight() * 0.5f;
         if (!centreSetExternally)
         {
@@ -391,6 +395,25 @@ public:
         inputWidget.setMaxSize(inputSize);
         outputWidget.setMaxSize(outputSize);
     }
+    
+    void showAlertSymbol (bool show)
+    {
+        alert = show;
+        alertSymbol.setVisible(show);
+        repaint();
+    }
+    
+    void setAlertMessage(String shortMessage, String longMessage)
+    {
+        shortAlertMessage = shortMessage;
+        longAlertMessage = longMessage;
+        alertSymbol.setTooltip(longMessage);
+    }
+    
+    bool isAlerting()
+    {
+        return alert;
+    }
 
     void paint (Graphics& g) override
     {
@@ -399,6 +422,12 @@ public:
         const float regularHeight = 30.f;
         const int leftWidth = inputWidget.getComponentSize();
         const int rightWidth = outputWidget.getComponentSize();
+        
+        g.setColour(Colours::yellow);
+        g.setFont(getLookAndFeel().getTypefaceForFont (Font(12.0f, 0)));
+        
+        if (alert)
+            g.drawText(shortAlertMessage, leftWidth + 2.0f, 0, bounds.getWidth(), bounds.getHeight(), Justification::centredLeft);
 
         boldFont.setHeight(boldHeight);
         regularFont.setHeight(regularHeight);
@@ -464,10 +493,15 @@ private:
     juce::String boldText = "Bold";
     juce::String regularText = "Regular";
     Path titlePath;
+    AlertSymbol alertSymbol;
+    juce::String shortAlertMessage = "";
+    juce::String longAlertMessage = "";
+    
     bool useTitlePath;
     float centreX;
     float centreY;
     bool centreSetExternally;
+    bool alert = true;
 };
 
 

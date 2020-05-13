@@ -12,8 +12,11 @@ AafoaCreatorAudioProcessorEditor::AafoaCreatorAudioProcessorEditor (AafoaCreator
     addAndMakeVisible (&title);
     title.setTitle (String("AustrianAudio"),String("FOACreator"));
     title.setFont (globalLaF.avenirMedium,globalLaF.avenirRegular);
+    title.showAlertSymbol(false);
     
     addAndMakeVisible (&footer);
+    tooltipWindow.setLookAndFeel (&globalLaF);
+    tooltipWindow.setMillisecondsBeforeTipAppears(500);
     
     arrayImage = ImageCache::getFromMemory (arrayPng, arrayPngSize);
     
@@ -54,6 +57,8 @@ AafoaCreatorAudioProcessorEditor::AafoaCreatorAudioProcessorEditor (AafoaCreator
     slZGain.setColour (Slider::thumbColourId, Colours::black);
     slZGain.setTextBoxStyle (Slider::TextBoxBelow, false, slTbWidth, slTbHeight);
     slZGain.addListener (this);
+    
+    startTimer (30);
 }
 
 AafoaCreatorAudioProcessorEditor::~AafoaCreatorAudioProcessorEditor()
@@ -89,6 +94,7 @@ void AafoaCreatorAudioProcessorEditor::resized()
     Rectangle<int> headerArea = area.removeFromTop(headerHeight);
     title.setTitleCentreX (headerArea.getCentreX());
     title.setBounds (headerArea);
+    title.setAlertMessage("Wrong Bus Configuration!", "Make sure to use a four-channel track configuration such 1st Order Ambisonics, Quadraphonics or LRCS");
     
     arrayImageArea = area.removeFromLeft(200).toFloat();
     
@@ -117,4 +123,12 @@ void AafoaCreatorAudioProcessorEditor::buttonClicked (Button* button) {
 
 void AafoaCreatorAudioProcessorEditor::comboBoxChanged (ComboBox* cb) {
     
+}
+
+void AafoaCreatorAudioProcessorEditor::timerCallback()
+{
+    if (processor.wrongBusConfiguration.get() != title.isAlerting())
+    {
+        title.showAlertSymbol(processor.wrongBusConfiguration.get());
+    }
 }
