@@ -51,6 +51,8 @@ public:
     Atomic<bool> wrongBusConfiguration = false;
     Atomic<bool> channelActive[4] = { true, true, true, true };
     Atomic<bool> isPlaying = false;
+    Atomic<float> inRms[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    Atomic<float> outRms[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 private:
     //==============================================================================
@@ -76,7 +78,8 @@ private:
     
     bool isBypassed;
     
-    static constexpr double SQRT_ONE_OVER_4_PI = 0.282094791773878;
+    // for n3d normalization multiply X,Y,Z by sqrt(3)
+    static constexpr double SQRT_THREE = 1.732050807568877;
     
     Delay delays[3];
     
@@ -95,8 +98,8 @@ private:
     
     enum eChannelOrder
     {
-        ACN = 0,
-        FUMA = 1
+        ACN = 0, // ACN implies AmbiX, SN3D normalization
+        FUMA = 1 // N3D normalization
     };
     
     enum eChannelOrderACN

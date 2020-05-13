@@ -344,6 +344,42 @@ private:
     Path DirectivityPath;
 };
 
+class ChannelOrderIOWidget : public IOWidget
+{
+public:
+    ChannelOrderIOWidget() : IOWidget() {
+        addAndMakeVisible(&cbOutChOrder);
+        cbOutChOrder.setJustificationType(Justification::centred);
+        cbOutChOrder.addSectionHeading("Output Config");
+        cbOutChOrder.addItem("AmbiX", 1);
+        cbOutChOrder.addItem("FUMA", 2);
+        cbOutChOrder.setBounds(0, 0, 100, 30);
+    };
+
+    ~ChannelOrderIOWidget() {};
+    
+    const int getComponentSize() override
+    {
+        return 110;
+    };
+
+    void setMaxSize (int maxPossibleOrder) override
+    {
+    };
+    
+    ComboBox* getCbOutChOrder()
+    {
+        return &cbOutChOrder;
+    };
+
+    void paint (Graphics& g) override
+    {
+    };
+
+private:
+    ComboBox cbOutChOrder;
+};
+
 // ======================================================== TITLEBAR =========================
 template <class Tin, class Tout>
 class  TitleBar :  public Component

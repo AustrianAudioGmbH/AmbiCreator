@@ -16,7 +16,7 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
         std::make_unique<AudioParameterBool>("coincEqualization", "omni and eight diffuse-field equalization", true, "",
                                             [](bool value, int) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterInt>("channelOrder", "channel order", eChannelOrder::ACN, eChannelOrder::FUMA, eChannelOrder::ACN, "",
-                                            [](int value, int) {return (value == eChannelOrder::ACN) ? "ACN (WYZX)" : "FuMa (WXYZ)";}, nullptr),
+                                            [](int value, int) {return (value == eChannelOrder::ACN) ? "AmbiX (WYZX)" : "FuMa (WXYZ)";}, nullptr),
         std::make_unique<AudioParameterFloat>("outGainDb", "output gain", NormalisableRange<float>(-40.0f, 10.0f, 0.1f),
                                               0.0f, "dB", AudioProcessorParameter::genericParameter,
                                               [](float value, int) { return String(value, 1); }, nullptr),
@@ -208,17 +208,18 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     jassert(buffer.getNumChannels() == 4 && totalNumOutputChannels == 4 && totalNumInputChannels == 4);
     
     int numSamples = buffer.getNumSamples();
+    
+    jassert(numSamples != 0);
     if (numSamples == 0)
         return;
     
-    jassert(numSamples != 0);
     
     for (int i = 0; i < buffer.getNumChannels(); ++i)
     {
-        float chRms = buffer.getRMSLevel (i, 0, numSamples);
+        inRms[i] = buffer.getRMSLevel (i, 0, numSamples);
         
         // cubase inputs a small noise when bypassing due to wrong channel layout
-        if (chRms < 0.000000001f)
+        if (inRms[i].get() < 0.000000001f)
             channelActive[i] = false;
         else
             channelActive[i] = true;
@@ -303,13 +304,6 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
         dsp::ProcessContextReplacing<float> yDelayContext(yDelayBlock);
         delays[2].process(yDelayContext);
     }
-        
-    
-    // apply sn3d weighting
-    FloatVectorOperations::multiply(writePointerW, static_cast<float>(SQRT_ONE_OVER_4_PI), numSamples);
-    FloatVectorOperations::multiply(writePointerX, static_cast<float>(SQRT_ONE_OVER_4_PI), numSamples);
-    FloatVectorOperations::multiply(writePointerY, static_cast<float>(SQRT_ONE_OVER_4_PI), numSamples);
-    FloatVectorOperations::multiply(writePointerZ, static_cast<float>(SQRT_ONE_OVER_4_PI), numSamples);
     
     // apply z gain
     foaChannelBuffer.applyGainRamp(eChannelOrderACN::Z, 0, numSamples, previousZGainLin, zGainLin);
@@ -329,7 +323,11 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     {
         if (channelOrder == eChannelOrder::FUMA)
         {
-            // reorder to fuma
+            // reorder and normalize for FUMA (N3D)
+            FloatVectorOperations::multiply(writePointerX, static_cast<float>(SQRT_THREE), numSamples);
+            FloatVectorOperations::multiply(writePointerY, static_cast<float>(SQRT_THREE), numSamples);
+            FloatVectorOperations::multiply(writePointerZ, static_cast<float>(SQRT_THREE), numSamples);
+            
             buffer.copyFrom(0, 0, foaChannelBuffer, eChannelOrderACN::W, 0, numSamples);
             buffer.copyFrom(1, 0, foaChannelBuffer, eChannelOrderACN::X, 0, numSamples);
             buffer.copyFrom(2, 0, foaChannelBuffer, eChannelOrderACN::Y, 0, numSamples);
@@ -337,7 +335,7 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
         }
         else
         {
-            // simply copy to output
+            // only reorder for AmbiX (ACN + SN3D) -> SN3D in FOA applies same weights to all components
             buffer.copyFrom(0, 0, foaChannelBuffer, eChannelOrderACN::W, 0, numSamples);
             buffer.copyFrom(1, 0, foaChannelBuffer, eChannelOrderACN::Y, 0, numSamples);
             buffer.copyFrom(2, 0, foaChannelBuffer, eChannelOrderACN::Z, 0, numSamples);
@@ -345,6 +343,9 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
         }
         
     }
+    
+    for (int i = 0; i < buffer.getNumChannels(); ++i)
+        outRms[i] = buffer.getRMSLevel (i, 0, numSamples);
     
 }
 

@@ -11,6 +11,7 @@
     <GROUP id="{E0985C42-F2D7-AE83-3158-6E7E144CB981}" name="resources">
       <GROUP id="{757F4BFD-1D8A-3EB7-0EAA-66E76F0AFCD5}" name="customComponents">
         <FILE id="Q3gNZn" name="ImgPaths.h" compile="0" resource="0" file="resources/customComponents/ImgPaths.h"/>
+        <FILE id="uxkab9" name="LevelMeter.h" compile="0" resource="0" file="resources/customComponents/LevelMeter.h"/>
         <FILE id="vyw0bc" name="MuteSoloButton.h" compile="0" resource="0"
               file="resources/customComponents/MuteSoloButton.h"/>
         <FILE id="zKARuk" name="ReverseSlider.h" compile="0" resource="0" file="resources/customComponents/ReverseSlider.h"/>
