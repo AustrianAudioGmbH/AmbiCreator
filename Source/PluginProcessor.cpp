@@ -52,7 +52,7 @@ AafoaCreatorAudioProcessor::AafoaCreatorAudioProcessor() :
     coincOmniFirCoeffBuffer.copyFrom(0, 0, COINC_OMNI_EQ_COEFFS, FIR_LEN);
     
     for (auto& delay : delays)
-        delay.setDelayTime (firLatencySec);
+        delay.setDelayTime (firLatencySec);    
 }
 
 AafoaCreatorAudioProcessor::~AafoaCreatorAudioProcessor()
@@ -182,7 +182,7 @@ void AafoaCreatorAudioProcessor::releaseResources()
 }
 
 bool AafoaCreatorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
-{    
+{
     if (layouts.getMainInputChannels() != 4 || layouts.getMainOutputChannels() != 4)
     {
         return false;
@@ -197,12 +197,32 @@ void AafoaCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     
+    auto playhead = getPlayHead();
+    juce::AudioPlayHead::CurrentPositionInfo posInfo;
+    playhead->getCurrentPosition(posInfo);
+    isPlaying = posInfo.isPlaying;
+    
     if (wrongBusConfiguration.get())
         return;
     
     jassert(buffer.getNumChannels() == 4 && totalNumOutputChannels == 4 && totalNumInputChannels == 4);
     
     int numSamples = buffer.getNumSamples();
+    if (numSamples == 0)
+        return;
+    
+    jassert(numSamples != 0);
+    
+    for (int i = 0; i < buffer.getNumChannels(); ++i)
+    {
+        float chRms = buffer.getRMSLevel (i, 0, numSamples);
+        
+        // cubase inputs a small noise when bypassing due to wrong channel layout
+        if (chRms < 0.000000001f)
+            channelActive[i] = false;
+        else
+            channelActive[i] = true;
+    }
     
     if (isBypassed) {
         isBypassed = false;

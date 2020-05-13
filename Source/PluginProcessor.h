@@ -49,6 +49,8 @@ public:
     void parameterChanged (const String &parameterID, float newValue) override;
     
     Atomic<bool> wrongBusConfiguration = false;
+    Atomic<bool> channelActive[4] = { true, true, true, true };
+    Atomic<bool> isPlaying = false;
 
 private:
     //==============================================================================

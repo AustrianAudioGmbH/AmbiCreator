@@ -49,6 +49,11 @@ private:
     
     SimpleLabel lbSlOutGain, lbSlHorizontalRotation, lbSlZGain;
     
+    const juce::String wrongBusConfigMessageShort = "Wrong Bus Configuration!";
+    const juce::String wrongBusConfigMessageLong = "Make sure to use a four-channel track configuration such 1st Order Ambisonics, Quadraphonics or LRCS.";
+    const juce::String inputInactiveMessageShort = "No four-channel input detected!";
+    const juce::String inputInactiveMessageLong = "Make sure to have an active input signal on all four input channels.";
+    
     void timerCallback() override;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AafoaCreatorAudioProcessorEditor)

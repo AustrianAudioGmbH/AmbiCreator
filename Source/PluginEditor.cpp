@@ -13,6 +13,7 @@ AafoaCreatorAudioProcessorEditor::AafoaCreatorAudioProcessorEditor (AafoaCreator
     title.setTitle (String("AustrianAudio"),String("FOACreator"));
     title.setFont (globalLaF.avenirMedium,globalLaF.avenirRegular);
     title.showAlertSymbol(false);
+    title.setAlertMessage(wrongBusConfigMessageShort, wrongBusConfigMessageLong);
     
     addAndMakeVisible (&footer);
     tooltipWindow.setLookAndFeel (&globalLaF);
@@ -58,7 +59,7 @@ AafoaCreatorAudioProcessorEditor::AafoaCreatorAudioProcessorEditor (AafoaCreator
     slZGain.setTextBoxStyle (Slider::TextBoxBelow, false, slTbWidth, slTbHeight);
     slZGain.addListener (this);
     
-    startTimer (30);
+    startTimer (100);
 }
 
 AafoaCreatorAudioProcessorEditor::~AafoaCreatorAudioProcessorEditor()
@@ -94,7 +95,6 @@ void AafoaCreatorAudioProcessorEditor::resized()
     Rectangle<int> headerArea = area.removeFromTop(headerHeight);
     title.setTitleCentreX (headerArea.getCentreX());
     title.setBounds (headerArea);
-    title.setAlertMessage("Wrong Bus Configuration!", "Make sure to use a four-channel track configuration such 1st Order Ambisonics, Quadraphonics or LRCS");
     
     arrayImageArea = area.removeFromLeft(200).toFloat();
     
@@ -127,8 +127,28 @@ void AafoaCreatorAudioProcessorEditor::comboBoxChanged (ComboBox* cb) {
 
 void AafoaCreatorAudioProcessorEditor::timerCallback()
 {
-    if (processor.wrongBusConfiguration.get() != title.isAlerting())
+    // show alert message if bus configuration is wrong, i.e. there are
+    // not 4 ins and outs
+    if (processor.wrongBusConfiguration.get())
     {
-        title.showAlertSymbol(processor.wrongBusConfiguration.get());
+        title.setAlertMessage(wrongBusConfigMessageShort, wrongBusConfigMessageLong);
+        title.showAlertSymbol(true);
+        return;
     }
+    
+    // also alert if the processor is playing, but some input channels remain silent
+    if (processor.isPlaying.get())
+    {        
+        for (auto& active : processor.channelActive)
+        {
+            if (!active.get())
+            {
+                title.setAlertMessage(inputInactiveMessageShort, inputInactiveMessageLong);
+                title.showAlertSymbol(true);
+                return;
+            }
+        }
+    }
+    
+    title.showAlertSymbol(false);
 }
