@@ -110,7 +110,6 @@ void AmbiCreatorAudioProcessorEditor::resized()
     area.removeFromLeft(leftRightMargin);
     area.removeFromRight(leftRightMargin);
     Rectangle<int> headerArea = area.removeFromTop(headerHeight);
-    title.setTitleCentreX (headerArea.getCentreX());
     title.setBounds (headerArea);
     
     arrayImageArea = area.removeFromLeft(200).toFloat();
