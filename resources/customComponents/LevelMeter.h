@@ -43,7 +43,8 @@ public:
         float labelHeight = labelWidth;
         auto labelBounds = bounds.removeFromBottom(labelHeight);
         g.setColour(Colours::white);
-        g.setFont(getLookAndFeel().getTypefaceForFont(Font(bounds.getHeight())));
+        g.setFont(getLookAndFeel().getTypefaceForFont(Font(labelHeight)));
+        g.setFont (labelHeight);
         g.drawText(labelText, labelBounds, Justification::centred);
         
         float labelMargin = 6.0f;

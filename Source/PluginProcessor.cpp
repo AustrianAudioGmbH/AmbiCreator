@@ -29,7 +29,8 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     }),
     firLatencySec((static_cast<float>(FIR_LEN) / 2 - 1) / FIR_SAMPLE_RATE),
     currentSampleRate(48000), isBypassed(false), zFirCoeffBuffer(1, FIR_LEN),
-    coincEightFirCoeffBuffer(1, FIR_LEN), coincOmniFirCoeffBuffer(1, FIR_LEN)
+    coincEightFirCoeffBuffer(1, FIR_LEN), coincOmniFirCoeffBuffer(1, FIR_LEN),
+    editorWidth(EDITOR_DEFAULT_WIDTH), editorHeight(EDITOR_DEFAULT_HEIGHT)
 {
     isWCombined                 = static_cast<bool>(params.getParameterAsValue("combinedW").getValue());
     doDifferentialZEqualization = static_cast<bool>(params.getParameterAsValue("diffEqualization").getValue());

@@ -34,14 +34,14 @@ private:
     AmbiCreatorAudioProcessor& processor;
     AudioProcessorValueTreeState& valueTreeState;
     
-    static const int EDITOR_WIDTH = 800;
-    static const int EDITOR_HEIGHT = 700;
+    ComponentBoundsConstrainer fixedAspectRatioConstrainer;
     
     TitleBar<AALogo, ChannelOrderIOWidget> title;
     Footer footer;
     LaF globalLaF;
     TooltipWindow tooltipWindow;
     
+    Path aaLogoBgPath;
     Image arrayImage;
     Rectangle<float> arrayImageArea;
     

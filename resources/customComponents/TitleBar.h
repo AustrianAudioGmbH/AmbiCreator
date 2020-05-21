@@ -148,7 +148,8 @@ public:
     void setMaxSize (int maxSize) override {};
     void paint (Graphics& g) override
     {
-        aaLogoPath.applyTransform (aaLogoPath.getTransformToScaleToFit (0, 0, 39, 39, true, Justification::centred));
+        const int size = getLocalBounds().getWidth();
+        aaLogoPath.applyTransform (aaLogoPath.getTransformToScaleToFit (0, 0, size, size, true, Justification::centred));
         // Colour AARed = Colour(155,35,35);
         g.setColour (Colours::white);
         g.strokePath (aaLogoPath, PathStrokeType (0.1f));
@@ -353,14 +354,13 @@ public:
         cbOutChOrder.addSectionHeading("Output Config");
         cbOutChOrder.addItem("AmbiX", 1);
         cbOutChOrder.addItem("FUMA", 2);
-        cbOutChOrder.setBounds(0, 0, 100, 30);
     };
 
     ~ChannelOrderIOWidget() {};
     
     const int getComponentSize() override
     {
-        return 110;
+        return 200;
     };
 
     void setMaxSize (int maxPossibleOrder) override
@@ -374,6 +374,12 @@ public:
 
     void paint (Graphics& g) override
     {
+    };
+    
+    void resized() override
+    {
+        auto bounds = getLocalBounds();
+        cbOutChOrder.setBounds(0, 0, bounds.getWidth(), bounds.getHeight());
     };
 
 private:
@@ -409,22 +415,29 @@ public:
 
     void resized () override
     {
-        const int leftWidth = inputWidget.getComponentSize();
-        const int rightWidth = outputWidget.getComponentSize();
         Rectangle<int> bounds = getLocalBounds();
-
-        inputWidget.setBounds(bounds.getX(), bounds.getY() + 10, leftWidth, leftWidth);
-        outputWidget.setBounds(getLocalBounds().removeFromRight(rightWidth).reduced(0,15));
+        const int currentWidth = bounds.getWidth();
+        const int currentHeight = bounds.getHeight();
+        const int inWidgetSize = 0.5f * currentHeight;
+        const int outWidgetWidth = 0.2f * currentWidth;
+        const int outWidgetHeight = 0.35f * currentHeight;
         
         if (alert) // draw alert symbol over input widget
-            alertSymbol.setBounds(bounds.getX(), bounds.getY() + 10, leftWidth, leftWidth);
+        {
+            alertSymbol.setBounds(bounds.getX(), bounds.getY() + 10, inWidgetSize, inWidgetSize);
+            alertSymbol.setCentreRelative(0.05f, 0.5f);
+        }
         
         centreY = bounds.getY() + bounds.getHeight() * 0.5f;
         if (!centreSetExternally)
         {
             centreX = bounds.getX() + bounds.getWidth() * 0.5f;
         }
-        repaint();
+        
+        inputWidget.setSize(inWidgetSize, inWidgetSize);
+        inputWidget.setCentreRelative(0.05f, 0.5f);
+        outputWidget.setSize(outWidgetWidth, outWidgetHeight);
+        outputWidget.setCentreRelative(0.9f, 0.5f);
     }
     void setMaxSize (int inputSize, int outputSize)
     {
@@ -454,16 +467,23 @@ public:
     void paint (Graphics& g) override
     {
         Rectangle<int> bounds = getLocalBounds();
-        const float boldHeight = 30.f;
-        const float regularHeight = 30.f;
-        const int leftWidth = inputWidget.getComponentSize();
-        const int rightWidth = outputWidget.getComponentSize();
+        const int currentWidth = bounds.getWidth();
+        const int currentHeight = bounds.getHeight();
+        const int inWidgetSize = 0.5f * currentHeight;
+        const int outWidgetWidth = 0.2f * currentWidth;
+        const int outWidgetHeight = 0.3f * currentHeight;
+        const int inWidgetRightBound = inputWidget.getRight();
+        const float boldHeight = 0.4f * currentHeight;
+        const float regularHeight = 0.4f * currentHeight;
+        const float alertTextHeight = currentHeight * 0.2f;
+        const float alertTextWidth = currentWidth * 0.15f;
         
         g.setColour(Colours::yellow);
         g.setFont(getLookAndFeel().getTypefaceForFont (Font(12.0f, 0)));
+        g.setFont(alertTextHeight);
         
         if (alert)
-            g.drawText(shortAlertMessage, leftWidth + 2.0f, 0, bounds.getWidth(), bounds.getHeight(), Justification::centredLeft);
+            g.drawFittedText(shortAlertMessage, inWidgetRightBound + 2.0f, 0.3f * currentHeight, alertTextWidth, alertTextHeight * 2, Justification::centredLeft, 2);
 
         boldFont.setHeight(boldHeight);
         regularFont.setHeight(regularHeight);
@@ -486,8 +506,8 @@ public:
         Rectangle<float> textArea (0, 0, boldWidth + regularWidth + hSpace, jmax(boldHeight, regularHeight));
         textArea.setCentre(centreX,centreY);
 
-        if (textArea.getX() < leftWidth) textArea.setX(leftWidth);
-        if (textArea.getRight() > bounds.getRight() - rightWidth) textArea.setRight(bounds.getRight() - rightWidth);
+        if (textArea.getX() < inWidgetSize) textArea.setX(inWidgetSize);
+        if (textArea.getRight() > bounds.getRight() - outWidgetWidth) textArea.setRight(bounds.getRight() - outWidgetWidth);
         
         g.setColour(Colours::white);
         if (useTitlePath)

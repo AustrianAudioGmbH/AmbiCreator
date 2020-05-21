@@ -48,11 +48,19 @@ public:
     //==============================================================================
     void parameterChanged (const String &parameterID, float newValue) override;
     
+    int getEditorWidth() {return editorWidth;}
+    void setEditorWidth(int width) {editorWidth = width;}
+    int getEditorHeight() {return editorHeight;}
+    void setEditorHeight(int height) {editorHeight = height;}
+    
     Atomic<bool> wrongBusConfiguration = false;
     Atomic<bool> channelActive[4] = { true, true, true, true };
     Atomic<bool> isPlaying = false;
     Atomic<float> inRms[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     Atomic<float> outRms[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    
+    static const int EDITOR_DEFAULT_WIDTH = 650;
+    static const int EDITOR_DEFAULT_HEIGHT = 500;
 
 private:
     //==============================================================================
@@ -95,6 +103,9 @@ private:
     
     static constexpr float MIN_Z_GAIN_DB = -40.0f;
     static constexpr float GAIN_TO_ZERO_THRESH_DB = 1.0f;
+    
+    int editorWidth;
+    int editorHeight;
     
     enum eChannelOrder
     {
