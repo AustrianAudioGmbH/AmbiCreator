@@ -377,6 +377,8 @@ AudioProcessorEditor* AmbiCreatorAudioProcessor::createEditor()
 //==============================================================================
 void AmbiCreatorAudioProcessor::getStateInformation (MemoryBlock& destData)
 {
+    params.state.setProperty("editorWidth", var(editorWidth), nullptr);
+    params.state.setProperty("editorHeight", var(editorHeight), nullptr);
     std::unique_ptr<XmlElement> xml (params.state.createXml());
     copyXmlToBinary (*xml, destData);
 }
@@ -389,6 +391,22 @@ void AmbiCreatorAudioProcessor::setStateInformation (const void* data, int sizeI
         if (xmlState->hasTagName (params.state.getType()))
         {
             params.state = ValueTree::fromXml (*xmlState);
+        }
+        if (params.state.hasProperty("editorWidth"))
+        {
+            Value val = params.state.getPropertyAsValue("editorWidth", nullptr);
+            if (val.getValue().toString() != "")
+            {
+                editorWidth = static_cast<int>(val.getValue());
+            }
+        }
+        if (params.state.hasProperty("editorHeight"))
+        {
+            Value val = params.state.getPropertyAsValue("editorHeight", nullptr);
+            if (val.getValue().toString() != "")
+            {
+                editorHeight = static_cast<int>(val.getValue());
+            }
         }
     }
 }
