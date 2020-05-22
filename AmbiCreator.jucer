@@ -38,6 +38,8 @@
             file="Source/PluginEditor.cpp"/>
       <FILE id="cHK36j" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
+    <FILE id="X93jFj" name="Ambisonic GUI OC818 Graphic White v1.3  small.png"
+          compile="0" resource="1" file="../../Downloads/AustrianSurround/graphics/Ambisonic GUI OC818 Graphic White v1.3  small.png"/>
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX">
