@@ -414,7 +414,7 @@ public:
                                      float maxSliderPos,
                                      const Slider::SliderStyle style, Slider& slider) override
     {
-        const float sliderRadius = 8.f; //getSliderThumbRadius (slider) - 5.0f;
+        const float sliderRadius = 0.35f * height;
         Path slbg;
         Path clbar;
 
@@ -547,7 +547,8 @@ public:
                                 float sliderPos, float minSliderPos, float maxSliderPos,
                                 const Slider::SliderStyle style, Slider& slider) override
     {
-        const float sliderRadius = 7.0f;
+//        const float sliderRadius = 7.0f;
+        const float sliderRadius = 0.35f * height;
 
         //bool isDownOrDragging = slider.isEnabled() && (slider.isMouseOverOrDragging() || slider.isMouseButtonDown());
         //Colour knobColour (slider.findColour (Slider::thumbColourId).withMultipliedSaturation ((slider.hasKeyboardFocus (false) || isDownOrDragging) ? 1.3f : 0.9f)

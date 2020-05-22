@@ -420,7 +420,7 @@ public:
         const int currentHeight = bounds.getHeight();
         const int inWidgetSize = 0.5f * currentHeight;
         const int outWidgetWidth = 0.2f * currentWidth;
-        const int outWidgetHeight = 0.35f * currentHeight;
+        const int outWidgetHeight = 0.3f * currentHeight;
         
         if (alert) // draw alert symbol over input widget
         {
