@@ -449,6 +449,7 @@ public:
     {
         alert = show;
         alertSymbol.setVisible(show);
+        resized();
         repaint();
     }
     

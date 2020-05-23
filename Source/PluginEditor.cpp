@@ -31,13 +31,13 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     
     // add labels
     addAndMakeVisible (&lbSlOutGain);
-    lbSlOutGain.setText("output gain");
+    lbSlOutGain.setText("Output Gain");
     
     addAndMakeVisible (&lbSlZGain);
-    lbSlZGain.setText("z gain");
+    lbSlZGain.setText("Z Gain");
     
     addAndMakeVisible (&lbSlHorizontalRotation);
-    lbSlHorizontalRotation.setText("horizontal rotation");
+    lbSlHorizontalRotation.setText("Horizontal Rotation");
     
     // add sliders
     addAndMakeVisible (&slOutGain);
