@@ -243,8 +243,8 @@ void AmbiCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
     float* writePointerZ = foaChannelBuffer.getWritePointer (eChannelOrderACN::Z);
 
     // W: take omni from mic 1
-    FloatVectorOperations::copy (writePointerW, readPointerFront, numSamples);
-    FloatVectorOperations::add (writePointerW, readPointerBack, numSamples);
+    FloatVectorOperations::copy (writePointerW, readPointerLeft, numSamples);
+    FloatVectorOperations::add (writePointerW, readPointerRight, numSamples);
     
     if (isWCombined)
     {
