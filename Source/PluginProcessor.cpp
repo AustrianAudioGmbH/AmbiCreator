@@ -9,12 +9,6 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
                            .withOutput ("Output", AudioChannelSet::ambisonic(1), true)
                            ),
     params(*this, nullptr, "AmbiCreator", {
-        std::make_unique<AudioParameterBool>("combinedW", "combined w channel", false, "",
-                                            [](bool value, int) {return (value) ? "on" : "off";}, nullptr),
-        std::make_unique<AudioParameterBool>("diffEqualization", "differential z equalization", true, "",
-                                            [](bool value, int) {return (value) ? "on" : "off";}, nullptr),
-        std::make_unique<AudioParameterBool>("coincEqualization", "omni and eight diffuse-field equalization", true, "",
-                                            [](bool value, int) {return (value) ? "on" : "off";}, nullptr),
         std::make_unique<AudioParameterInt>("channelOrder", "channel order", eChannelOrder::ACN, eChannelOrder::FUMA, eChannelOrder::ACN, "",
                                             [](int value, int) {return (value == eChannelOrder::ACN) ? "AmbiX (WYZX)" : "FuMa (WXYZ)";}, nullptr),
         std::make_unique<AudioParameterFloat>("outGainDb", "output gain", NormalisableRange<float>(-40.0f, 10.0f, 0.1f),
@@ -32,17 +26,11 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     coincEightFirCoeffBuffer(1, FIR_LEN), coincOmniFirCoeffBuffer(1, FIR_LEN),
     editorWidth(EDITOR_DEFAULT_WIDTH), editorHeight(EDITOR_DEFAULT_HEIGHT)
 {
-    isWCombined                 = static_cast<bool>(params.getParameterAsValue("combinedW").getValue());
-    doDifferentialZEqualization = static_cast<bool>(params.getParameterAsValue("diffEqualization").getValue());
-    doCoincPatternEqualization  = static_cast<bool>(params.getParameterAsValue("coincEqualization").getValue());
     channelOrder                = static_cast<int>(params.getParameterAsValue("channelOrder").getValue());
     outGainLin                  = Decibels::decibelsToGain(static_cast<float>(params.getParameterAsValue("outGainDb").getValue()));
     zGainLin                    = Decibels::decibelsToGain(static_cast<float>(params.getParameterAsValue("zGainDb").getValue()));
     horRotationDeg              = static_cast<float>(params.getParameterAsValue("horRotation").getValue());
     
-    params.addParameterListener("combinedW", this);
-    params.addParameterListener("diffEqualization", this);
-    params.addParameterListener("coincEqualization", this);
     params.addParameterListener("channelOrder", this);
     params.addParameterListener("outGainDb", this);
     params.addParameterListener("zGainDb", this);
@@ -51,9 +39,6 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     zFirCoeffBuffer.copyFrom(0, 0, DIFF_Z_EIGHT_EQ_COEFFS, FIR_LEN);
     coincEightFirCoeffBuffer.copyFrom(0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
     coincOmniFirCoeffBuffer.copyFrom(0, 0, COINC_OMNI_EQ_COEFFS, FIR_LEN);
-    
-    for (auto& delay : delays)
-        delay.setDelayTime (firLatencySec);    
 }
 
 AmbiCreatorAudioProcessor::~AmbiCreatorAudioProcessor()
@@ -167,10 +152,6 @@ void AmbiCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     coincOmniFilterConv.prepare (spec); // must be called before loading an ir
     coincOmniFilterConv.copyAndLoadImpulseResponseFromBuffer (coincOmniFirCoeffBuffer, FIR_SAMPLE_RATE, false, false, false, FIR_LEN);
     coincOmniFilterConv.reset();
-    
-    // set delay time for w,x,y according to z fir delay
-    for (auto& delay : delays)
-        delay.prepare (spec);
 
     // set delay compensation
     updateLatency();
@@ -246,14 +227,6 @@ void AmbiCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
     FloatVectorOperations::copy (writePointerW, readPointerLeft, numSamples);
     FloatVectorOperations::add (writePointerW, readPointerRight, numSamples);
     
-    if (isWCombined)
-    {
-        // W: add omni signal from second mic
-        FloatVectorOperations::add (writePointerW, readPointerLeft, numSamples);
-        FloatVectorOperations::add (writePointerW, readPointerRight, numSamples);
-        FloatVectorOperations::multiply(writePointerW, 0.5f, numSamples);
-    }
-    
     // X
     FloatVectorOperations::copy (writePointerX, readPointerFront, numSamples);
     FloatVectorOperations::subtract (writePointerX, readPointerBack, numSamples);
@@ -268,43 +241,24 @@ void AmbiCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
     FloatVectorOperations::subtract (writePointerZ, readPointerFront, numSamples);
     FloatVectorOperations::subtract (writePointerZ, readPointerBack, numSamples);
     
-    if (doDifferentialZEqualization)
-    {
-        dsp::AudioBlock<float> zEqualizationBlock(&writePointerZ, 1, static_cast<size_t>(numSamples));
-        dsp::ProcessContextReplacing<float> zEqualizationContext(zEqualizationBlock);
-        iirLowShelf.process(zEqualizationContext);
-        zFilterConv.process(zEqualizationContext);
-    }
+    // equalization of differential z channel
+    dsp::AudioBlock<float> zEqualizationBlock(&writePointerZ, 1, static_cast<size_t>(numSamples));
+    dsp::ProcessContextReplacing<float> zEqualizationContext(zEqualizationBlock);
+    iirLowShelf.process(zEqualizationContext);
+    zFilterConv.process(zEqualizationContext);
     
-    if (doCoincPatternEqualization)
-    {
-        dsp::AudioBlock<float> wEqualizationBlock(&writePointerW, 1, static_cast<size_t>(numSamples));
-        dsp::ProcessContextReplacing<float> wEqualizationContext(wEqualizationBlock);
-        coincOmniFilterConv.process(wEqualizationContext);
-        
-        dsp::AudioBlock<float> xEqualizationBlock(&writePointerX, 1, static_cast<size_t>(numSamples));
-        dsp::ProcessContextReplacing<float> xEqualizationContext(xEqualizationBlock);
-        coincXEightFilterConv.process(xEqualizationContext);
-        
-        dsp::AudioBlock<float> yEqualizationBlock(&writePointerY, 1, static_cast<size_t>(numSamples));
-        dsp::ProcessContextReplacing<float> yEqualizationContext(yEqualizationBlock);
-        coincYEightFilterConv.process(yEqualizationContext);
-    }
-    else
-    {
-        // delay w, x and y accordingly
-        dsp::AudioBlock<float> wDelayBlock(&writePointerW, 1, static_cast<size_t>(numSamples));
-        dsp::ProcessContextReplacing<float> wDelayContext(wDelayBlock);
-        delays[0].process(wDelayContext);
-        
-        dsp::AudioBlock<float> xDelayBlock(&writePointerX, 1, static_cast<size_t>(numSamples));
-        dsp::ProcessContextReplacing<float> xDelayContext(xDelayBlock);
-        delays[1].process(xDelayContext);
-        
-        dsp::AudioBlock<float> yDelayBlock(&writePointerY, 1, static_cast<size_t>(numSamples));
-        dsp::ProcessContextReplacing<float> yDelayContext(yDelayBlock);
-        delays[2].process(yDelayContext);
-    }
+    // equalization of coincident channels
+    dsp::AudioBlock<float> wEqualizationBlock(&writePointerW, 1, static_cast<size_t>(numSamples));
+    dsp::ProcessContextReplacing<float> wEqualizationContext(wEqualizationBlock);
+    coincOmniFilterConv.process(wEqualizationContext);
+    
+    dsp::AudioBlock<float> xEqualizationBlock(&writePointerX, 1, static_cast<size_t>(numSamples));
+    dsp::ProcessContextReplacing<float> xEqualizationContext(xEqualizationBlock);
+    coincXEightFilterConv.process(xEqualizationContext);
+    
+    dsp::AudioBlock<float> yEqualizationBlock(&writePointerY, 1, static_cast<size_t>(numSamples));
+    dsp::ProcessContextReplacing<float> yEqualizationContext(yEqualizationBlock);
+    coincYEightFilterConv.process(yEqualizationContext);
     
     // apply z gain
     foaChannelBuffer.applyGainRamp(eChannelOrderACN::Z, 0, numSamples, previousZGainLin, zGainLin);
@@ -414,21 +368,7 @@ void AmbiCreatorAudioProcessor::setStateInformation (const void* data, int sizeI
 //==============================================================================
 void AmbiCreatorAudioProcessor::parameterChanged (const String &parameterID, float newValue)
 {
-    if (parameterID == "combinedW")
-    {
-        isWCombined = (newValue == 1.0f);
-    }
-    else if (parameterID == "diffEqualization")
-    {
-        doDifferentialZEqualization = (newValue == 1.0f);
-        updateLatency();
-    }
-    else if (parameterID == "coincEqualization")
-    {
-        doCoincPatternEqualization = (newValue == 1.0f);
-        updateLatency();
-    }
-    else if (parameterID == "channelOrder")
+    if (parameterID == "channelOrder")
     {
         channelOrder = (static_cast<int>(newValue) == eChannelOrder::FUMA) ? eChannelOrder::FUMA : eChannelOrder::ACN;
     }
@@ -487,16 +427,9 @@ void AmbiCreatorAudioProcessor::ambiRotateAroundZ(AudioBuffer<float>* ambiBuffer
 
 void AmbiCreatorAudioProcessor::updateLatency() {
     if (isBypassed)
-    {
         setLatencySamples(0);
-    }
     else
-    {
-        if (doDifferentialZEqualization || doCoincPatternEqualization)
-            setLatencySamples(static_cast<int>(firLatencySec * currentSampleRate));
-        else // set delay compensation
-            setLatencySamples(0);
-    }
+        setLatencySamples(static_cast<int>(firLatencySec * currentSampleRate));
 }
 
 //==============================================================================

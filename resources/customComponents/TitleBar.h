@@ -472,7 +472,6 @@ public:
         const int currentHeight = bounds.getHeight();
         const int inWidgetSize = 0.5f * currentHeight;
         const int outWidgetWidth = 0.2f * currentWidth;
-        const int outWidgetHeight = 0.3f * currentHeight;
         const int inWidgetRightBound = inputWidget.getRight();
         const float boldHeight = 0.4f * currentHeight;
         const float regularHeight = 0.4f * currentHeight;

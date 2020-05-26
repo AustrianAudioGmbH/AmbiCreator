@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="Js3s6V" name="AmbiCreator" projectType="audioplug" jucerVersion="5.4.7"
-              version="0.0.5" companyName="Austrian Audio" companyCopyright="Austrian Audio"
+              version="0.0.6" companyName="Austrian Audio" companyCopyright="Austrian Audio"
               companyWebsite="www.austrian.audio" companyEmail="sayhello@austrianaudio.com"
               reportAppUsage="0" bundleIdentifier="at.aa.ambicreator" pluginFormats="buildAAX,buildAU,buildVST3"
               pluginCharacteristicsValue="pluginAAXDisableMultiMono" pluginManufacturerCode="-AA-"
@@ -26,7 +26,6 @@
         <FILE id="eHlpJA" name="BinaryFonts.cpp" compile="1" resource="0" file="resources/lookAndFeel/BinaryFonts.cpp"/>
         <FILE id="wxMDfS" name="BinaryFonts.h" compile="0" resource="0" file="resources/lookAndFeel/BinaryFonts.h"/>
       </GROUP>
-      <FILE id="Tj580k" name="Delay.h" compile="0" resource="0" file="resources/Delay.h"/>
       <FILE id="tyCdtv" name="irs.h" compile="0" resource="0" file="resources/irs.h"/>
     </GROUP>
     <GROUP id="{E9C6351E-7703-134A-6A95-40615BDFA8E0}" name="Source">

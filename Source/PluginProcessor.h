@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../resources/Delay.h"
 
 //==============================================================================
 /**
@@ -69,9 +68,6 @@ private:
     AudioBuffer<float> foaChannelBuffer;
     AudioBuffer<float> rotatorBuffer;
     
-    bool isWCombined;
-    bool doDifferentialZEqualization;
-    bool doCoincPatternEqualization;
     int channelOrder;
     float outGainLin;
     float previousOutGainLin;
@@ -88,9 +84,7 @@ private:
     
     // for n3d normalization multiply X,Y,Z by sqrt(3)
     static constexpr double SQRT_THREE = 1.732050807568877;
-    
-    Delay delays[3];
-    
+        
     // differential (z) compensation filters
     dsp::IIR::Filter<float> iirLowShelf;
     AudioBuffer<float> zFirCoeffBuffer;
