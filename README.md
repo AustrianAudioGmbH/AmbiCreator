@@ -4,6 +4,9 @@ Our open-source Ambisonics plug-in developed by [Thomas](https://github.com/thom
 AmbiCreator allows you to record first-order Ambisonics material by using two OC818 microphones stacked on top of each other.
 Installers for as VST3, AAX and AU available soon at [austrian.audio](https://austrian.audio/).
 
+Give it a listen [here](https://austrian.audio/austrian-audio-ambicreator/)!  
+You can find technical details in an AES e-Brief.
+
 ## Building AmbiCreator
 PolarDesigner is based on [JUCE](https://juce.com/). To build PolarDesigner, get a recent version of JUCE and open PolarDesigner.jucer in Projucer. Select an exporter of your choice (e.g. Visual Studio or XCode) to create and open a project file in your IDE.
 
