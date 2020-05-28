@@ -8,7 +8,7 @@ Give it a listen [here](https://austrian.audio/austrian-audio-ambicreator/)!
 You can find technical details in an AES e-Brief.
 
 ## Building AmbiCreator
-PolarDesigner is based on [JUCE](https://juce.com/). To build PolarDesigner, get a recent version of JUCE and open PolarDesigner.jucer in Projucer. Select an exporter of your choice (e.g. Visual Studio or XCode) to create and open a project file in your IDE.
+AmbiCreator is based on [JUCE](https://juce.com/). To build AmbiCreator, get a recent version of JUCE and open AmbiCreator.jucer in Projucer. Select an exporter of your choice (e.g. Visual Studio or XCode) to create and open a project file in your IDE.
 
 ## Requirements
 * For building AAX plugins you need to add the [AAX SDK](http://developer.avid.com/) location to your Projucer paths.
