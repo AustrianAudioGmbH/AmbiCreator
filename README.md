@@ -5,7 +5,7 @@ AmbiCreator allows you to record first-order Ambisonics material by using two OC
 Installers for as VST3, AAX and AU available soon at [austrian.audio](https://austrian.audio/).
 
 Give it a listen [here](https://austrian.audio/austrian-audio-ambicreator/)!  
-You can find technical details in an AES e-Brief.
+You can find technical details in an [AES e-Brief](http://www.aes.org/e-lib/browse.cfm?elib=20827).
 
 <img width="762" alt="AmbiCreator Screenshot" src="https://user-images.githubusercontent.com/18114953/83126715-86e93800-a0d9-11ea-854b-a5e3ed8d04b0.png">
 
