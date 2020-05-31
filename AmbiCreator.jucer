@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="Js3s6V" name="AmbiCreator" projectType="audioplug" jucerVersion="5.4.7"
-              version="0.0.6" companyName="Austrian Audio" companyCopyright="Austrian Audio"
+              version="0.1.0" companyName="Austrian Audio" companyCopyright="Austrian Audio"
               companyWebsite="www.austrian.audio" companyEmail="sayhello@austrianaudio.com"
               reportAppUsage="0" bundleIdentifier="at.aa.ambicreator" pluginFormats="buildAAX,buildAU,buildVST3"
               pluginCharacteristicsValue="pluginAAXDisableMultiMono" pluginManufacturerCode="-AA-"
