@@ -241,3 +241,16 @@ void AmbiCreatorAudioProcessorEditor::timerCallback()
     
     title.showAlertSymbol(false);
 }
+
+// implement this for AAX automation shortchut
+int AmbiCreatorAudioProcessorEditor::getControlParameterIndex (Component& control)
+{
+    if (&control == &slOutGain)
+        return 1;
+    else if (&control == &slHorizontalRotation)
+        return 2;
+    else if (&control == &slZGain)
+        return 3;
+    
+    return -1;
+}

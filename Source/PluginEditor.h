@@ -29,6 +29,8 @@ public:
     void buttonClicked (Button* button) override;
     void comboBoxChanged (ComboBox* cb) override;
     void sliderValueChanged (Slider* slider) override;
+    
+    int getControlParameterIndex (Component& control) override;
 
 private:
     AmbiCreatorAudioProcessor& processor;
