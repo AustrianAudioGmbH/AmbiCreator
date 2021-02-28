@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="Js3s6V" name="AmbiCreator" projectType="audioplug" jucerVersion="5.4.7"
-              version="0.1.0" companyName="Austrian Audio" companyCopyright="Austrian Audio"
+<JUCERPROJECT id="Js3s6V" name="AmbiCreator" projectType="audioplug" version="0.1.0"
+              companyName="Austrian Audio" companyCopyright="Austrian Audio"
               companyWebsite="www.austrian.audio" companyEmail="sayhello@austrianaudio.com"
               reportAppUsage="0" bundleIdentifier="at.aa.ambicreator" pluginFormats="buildAAX,buildAU,buildVST3"
               pluginCharacteristicsValue="pluginAAXDisableMultiMono" pluginManufacturerCode="-AA-"
               pluginCode="AAAC" pluginVST3Category="Spatial" pluginAAXCategory="512"
               pluginAUMainType="'aufx'" aaxIdentifier="at.aa.ambicreator" pluginName="AmbiCreator"
               pluginDesc="AmbiCreator" pluginManufacturer="Austrian Audio"
-              pluginRTASCategory="512" pluginVSTCategory="kPlugCategEffect">
+              pluginRTASCategory="512" pluginVSTCategory="kPlugCategEffect"
+              jucerFormatVersion="1">
   <MAINGROUP id="LLStlP" name="AmbiCreator">
     <GROUP id="{E0985C42-F2D7-AE83-3158-6E7E144CB981}" name="resources">
       <GROUP id="{757F4BFD-1D8A-3EB7-0EAA-66E76F0AFCD5}" name="customComponents">

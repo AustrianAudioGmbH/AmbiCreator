@@ -89,7 +89,8 @@ private:
     dsp::IIR::Filter<float> iirLowShelf;
     AudioBuffer<float> zFirCoeffBuffer;
     dsp::Convolution zFilterConv;
-    AudioBuffer<float> coincEightFirCoeffBuffer;
+    AudioBuffer<float> coincEightXFirCoeffBuffer;
+    AudioBuffer<float> coincEightYFirCoeffBuffer;
     dsp::Convolution coincXEightFilterConv;
     dsp::Convolution coincYEightFilterConv;
     AudioBuffer<float> coincOmniFirCoeffBuffer;

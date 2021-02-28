@@ -23,7 +23,7 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     }),
     firLatencySec((static_cast<float>(FIR_LEN) / 2 - 1) / FIR_SAMPLE_RATE),
     currentSampleRate(48000), isBypassed(false), zFirCoeffBuffer(1, FIR_LEN),
-    coincEightFirCoeffBuffer(1, FIR_LEN), coincOmniFirCoeffBuffer(1, FIR_LEN),
+    coincEightXFirCoeffBuffer(1, FIR_LEN), coincEightYFirCoeffBuffer(1, FIR_LEN), coincOmniFirCoeffBuffer(1, FIR_LEN),
     editorWidth(EDITOR_DEFAULT_WIDTH), editorHeight(EDITOR_DEFAULT_HEIGHT)
 {
     channelOrder                = static_cast<int>(params.getParameterAsValue("channelOrder").getValue());
@@ -37,7 +37,8 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     params.addParameterListener("horRotation", this);
     
     zFirCoeffBuffer.copyFrom(0, 0, DIFF_Z_EIGHT_EQ_COEFFS, FIR_LEN);
-    coincEightFirCoeffBuffer.copyFrom(0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
+    coincEightXFirCoeffBuffer.copyFrom(0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
+    coincEightYFirCoeffBuffer.copyFrom(0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
     coincOmniFirCoeffBuffer.copyFrom(0, 0, COINC_OMNI_EQ_COEFFS, FIR_LEN);
 }
 
@@ -141,16 +142,16 @@ void AmbiCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     
     // prepare fir filters
     zFilterConv.prepare (spec); // must be called before loading an ir
-    zFilterConv.copyAndLoadImpulseResponseFromBuffer (zFirCoeffBuffer, FIR_SAMPLE_RATE, false, false, false, FIR_LEN);
+    zFilterConv.loadImpulseResponse(std::move(zFirCoeffBuffer), FIR_SAMPLE_RATE, dsp::Convolution::Stereo::no, dsp::Convolution::Trim::no, dsp::Convolution::Normalise::no);
     zFilterConv.reset();
     coincXEightFilterConv.prepare (spec); // must be called before loading an ir
-    coincXEightFilterConv.copyAndLoadImpulseResponseFromBuffer (coincEightFirCoeffBuffer, FIR_SAMPLE_RATE, false, false, false, FIR_LEN);
+    coincXEightFilterConv.loadImpulseResponse(std::move(coincEightXFirCoeffBuffer), FIR_SAMPLE_RATE, dsp::Convolution::Stereo::no, dsp::Convolution::Trim::no, dsp::Convolution::Normalise::no);
     coincXEightFilterConv.reset();
     coincYEightFilterConv.prepare (spec); // must be called before loading an ir
-    coincYEightFilterConv.copyAndLoadImpulseResponseFromBuffer (coincEightFirCoeffBuffer, FIR_SAMPLE_RATE, false, false, false, FIR_LEN);
+    coincXEightFilterConv.loadImpulseResponse(std::move(coincEightYFirCoeffBuffer), FIR_SAMPLE_RATE, dsp::Convolution::Stereo::no, dsp::Convolution::Trim::no, dsp::Convolution::Normalise::no);
     coincYEightFilterConv.reset();
     coincOmniFilterConv.prepare (spec); // must be called before loading an ir
-    coincOmniFilterConv.copyAndLoadImpulseResponseFromBuffer (coincOmniFirCoeffBuffer, FIR_SAMPLE_RATE, false, false, false, FIR_LEN);
+    coincOmniFilterConv.loadImpulseResponse(std::move(coincOmniFirCoeffBuffer), FIR_SAMPLE_RATE, dsp::Convolution::Stereo::no, dsp::Convolution::Trim::no, dsp::Convolution::Normalise::no);
     coincOmniFilterConv.reset();
 
     // set delay compensation
