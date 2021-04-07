@@ -6,12 +6,11 @@
 AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAudioProcessor& p, AudioProcessorValueTreeState& vts)
     : AudioProcessorEditor (&p), processor (p), valueTreeState(vts)
 {
-//    setResizable (true, true);
-//    fixedAspectRatioConstrainer.setFixedAspectRatio (double(processor.EDITOR_DEFAULT_WIDTH) / processor.EDITOR_DEFAULT_HEIGHT);
-//    fixedAspectRatioConstrainer.setSizeLimits (processor.EDITOR_DEFAULT_WIDTH, processor.EDITOR_DEFAULT_HEIGHT, 2 * processor.EDITOR_DEFAULT_WIDTH, 2 * processor.EDITOR_DEFAULT_HEIGHT);
-//    setConstrainer (&fixedAspectRatioConstrainer);
-
-    setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
+    setResizable (true, true);
+    fixedAspectRatioConstrainer.setFixedAspectRatio (double(processor.EDITOR_DEFAULT_WIDTH) / processor.EDITOR_DEFAULT_HEIGHT);
+    fixedAspectRatioConstrainer.setSizeLimits (processor.EDITOR_DEFAULT_WIDTH, processor.EDITOR_DEFAULT_HEIGHT, 2 * processor.EDITOR_DEFAULT_WIDTH, 2 * processor.EDITOR_DEFAULT_HEIGHT);
+    setConstrainer (&fixedAspectRatioConstrainer);
+    setSize (processor.getEditorWidth(), processor.getEditorHeight());
     
     setLookAndFeel (&globalLaF);
     
@@ -173,8 +172,8 @@ void AmbiCreatorAudioProcessorEditor::resized()
 {
     const float currentWidth = getWidth();
     const float currentHeight = getHeight();
-//    processor.setEditorWidth(currentWidth);
-//    processor.setEditorHeight(currentHeight);
+    processor.setEditorWidth(currentWidth);
+    processor.setEditorHeight(currentHeight);
     
     const float leftRightMargin = 0.046f * currentWidth;
     const float topMargin = 0.01 * currentHeight;
