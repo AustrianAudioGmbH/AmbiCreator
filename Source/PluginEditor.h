@@ -95,7 +95,10 @@ private:
     const float titleLineX1End = 0.116f;
     const float titleLineX2Start = 0.186f;
     
+    SimpleLabel helpToolTip;
     
+    const juce::String helpText = {"left/right are seen from the recording side. front of upper mic should point towards the source."};
+    const juce::String helpTextLegacy = {"left/right are seen from the recording side. front of lower mic should point towards the source."};
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmbiCreatorAudioProcessorEditor)
 };

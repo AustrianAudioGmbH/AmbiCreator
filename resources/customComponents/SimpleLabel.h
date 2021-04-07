@@ -53,7 +53,7 @@
 //==============================================================================
 /*
 */
-class SimpleLabel    : public Component
+class SimpleLabel    : public Component, public SettableTooltipClient
 {
 public:
     SimpleLabel()

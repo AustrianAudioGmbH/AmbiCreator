@@ -135,6 +135,11 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     
     setAbButtonAlphaFromLayerState(eCurrentActiveLayer::layerA);
     
+    // help tooltip
+    addAndMakeVisible(&helpToolTip);
+    helpToolTip.setText("help", NotificationType::dontSendNotification);
+    helpToolTip.setTextColour(Colours::white.withAlpha(0.5f));
+    
     setModeDisplay(processor.isLegacyModeActive());
 }
 
@@ -154,10 +159,12 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
     if (processor.isLegacyModeActive())
     {
         g.drawImage(arrayLegacyImage, -40, 0, arrayImageArea.getWidth() + 100, currHeight + 40, 0, 0, arrayLegacyImage.getWidth(), arrayLegacyImage.getHeight());
+        helpToolTip.setTooltip(helpTextLegacy);
     }
     else
     {
         g.drawImageWithin(arrayImage, 30, 70, arrayImage.getWidth() / 2, arrayImage.getHeight() / 2, RectanglePlacement::onlyReduceInSize);
+        helpToolTip.setTooltip(helpText);
     }
     
     // background logo
@@ -203,6 +210,7 @@ void AmbiCreatorAudioProcessorEditor::resized()
     Rectangle<int> area (getLocalBounds());
     
     Rectangle<int> footerArea (area.removeFromBottom(footerHeight));
+    helpToolTip.setBounds(5, getHeight() - 30, 40, 15);
     footer.setBounds (footerArea);
     
     area.removeFromLeft(leftRightMargin);
