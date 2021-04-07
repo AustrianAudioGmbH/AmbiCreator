@@ -2,6 +2,12 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+enum eCurrentActiveLayer
+{
+    layerA = 1,
+    layerB = 2
+};
+
 //==============================================================================
 /**
 */
@@ -48,9 +54,13 @@ public:
     void parameterChanged (const String &parameterID, float newValue) override;
     
     int getEditorWidth() {return editorWidth;}
-    void setEditorWidth(int width) {editorWidth = width;}
+//    void setEditorWidth(int width) {editorWidth = width;}
     int getEditorHeight() {return editorHeight;}
-    void setEditorHeight(int height) {editorHeight = height;}
+//    void setEditorHeight(int height) {editorHeight = height;}
+    
+    bool isLegacyModeActive() { return legacyMode->load() > 0.5; }
+    void setAbLayer(int desiredLayer);
+    void changeAbLayerState();
     
     Atomic<bool> wrongBusConfiguration = false;
     Atomic<bool> channelActive[4] = { true, true, true, true };
@@ -67,6 +77,7 @@ private:
     
     AudioBuffer<float> foaChannelBuffer;
     AudioBuffer<float> rotatorBuffer;
+    AudioBuffer<float> legacyModeReorderBuffer;
     
     int channelOrder;
     float outGainLin;
@@ -119,6 +130,16 @@ private:
     void setLowShelfCoefficients(double sampleRate);
     void ambiRotateAroundZ(AudioBuffer<float>* ambiBuffer);
     void updateLatency();
+    
+    std::atomic<float>* legacyMode;
+    // AB Layer handling
+    Identifier nodeA = "layerA";
+    Identifier nodeB = "layerB";
+    Identifier allStates = "savedLayers";
+    ValueTree layerA;
+    ValueTree layerB;
+    ValueTree allValueTreeStates;
+    int abLayerState;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmbiCreatorAudioProcessor)
 };

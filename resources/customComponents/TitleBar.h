@@ -532,8 +532,26 @@ public:
         }
 
         g.setColour((Colours::white).withMultipliedAlpha(0.5));
-        g.drawLine(bounds.getX(),bounds.getY()+bounds.getHeight()-1, bounds.getX()+bounds.getWidth(), bounds.getY()+bounds.getHeight()-1);
+        
+        if (defaultLineBounds)
+        {
+            g.drawLine(bounds.getX(),bounds.getY()+bounds.getHeight()-1, bounds.getX()+bounds.getWidth(), bounds.getY()+bounds.getHeight()-1);
+        }
+        else
+        {
+            g.drawLine(bounds.getX() + x1Start,bounds.getY()+bounds.getHeight()-1, bounds.getX()+x1End, bounds.getY()+bounds.getHeight()-1);
+            g.drawLine(bounds.getX() + x2Start,bounds.getY()+bounds.getHeight()-1, bounds.getX()+bounds.getWidth(), bounds.getY()+bounds.getHeight()-1);
+        }
     };
+    
+    void setLineBounds (bool useDefaultBounds, int line1Start, int line1End, int line2Start)
+    {
+        defaultLineBounds = useDefaultBounds;
+        x1Start = line1Start;
+        x1End = line1End;
+        x2Start = line2Start;
+//        x2End = line2End;
+    }
     
     void setTitleCentreX(float x)
     {
@@ -558,6 +576,12 @@ private:
     float centreY;
     bool centreSetExternally;
     bool alert = true;
+    bool defaultLineBounds = true;
+    
+    int x1Start = 0;
+    int x1End = 0;
+    int x2Start = 0;
+    int x2End = 0;
 };
 
 

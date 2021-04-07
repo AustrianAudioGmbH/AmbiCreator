@@ -660,7 +660,7 @@ public:
         
         buttonArea.reduce(1.5f, 1.5f);
         
-        if (button.getButtonText() == "zero latency")
+        if (button.getButtonText() == "legacy mode")
         {
             g.setColour(backgroundColour.withMultipliedAlpha(button.getToggleState() ? 1.0f : 0.4f));
             
