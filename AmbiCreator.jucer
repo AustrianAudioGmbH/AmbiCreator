@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="Js3s6V" name="AmbiCreator" projectType="audioplug" version="0.1.0"
+<JUCERPROJECT id="Js3s6V" name="AmbiCreator" projectType="audioplug" version="2.0.0a"
               companyName="Austrian Audio" companyCopyright="Austrian Audio"
               companyWebsite="www.austrian.audio" companyEmail="sayhello@austrianaudio.com"
               reportAppUsage="0" bundleIdentifier="at.aa.ambicreator" pluginFormats="buildAAX,buildAU,buildVST3"
