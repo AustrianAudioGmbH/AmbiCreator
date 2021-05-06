@@ -1,0 +1,10 @@
+=== Major changes, features and updates ===
+
+This file lists the notable changes, new features and updates of the different plug-in versions. For more detailed information, see the git log.
+
+Version 2.0.0
+  - New microphone channel layout: Left/Right/Front/Back = 1/2/3/4
+  - "Legacy Mode" still provides the channel layout for previous versions: Left/Right/Front/Back = 3/4/1/2
+  - New gain slider Layout
+  - Added a help tooltip to provide assistance for the recording setup
+  - Added A/B layers for direct comparison of different settings

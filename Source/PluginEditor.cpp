@@ -163,7 +163,7 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
     }
     else
     {
-        g.drawImageWithin(arrayImage, 30, 70, arrayImage.getWidth() / 2, arrayImage.getHeight() / 2, RectanglePlacement::onlyReduceInSize);
+        g.drawImageWithin(arrayImage, 12, 1, arrayImage.getWidth() / 2, arrayImage.getHeight() / 2, RectanglePlacement::onlyReduceInSize);
         helpToolTip.setTooltip(helpText);
     }
     
@@ -221,11 +221,11 @@ void AmbiCreatorAudioProcessorEditor::resized()
     
     if (processor.isLegacyModeActive())
     {
-        title.setLineBounds(false, titleLineX1Start, titleLineX1End * currentWidth, titleLineX2Start * currentWidth);
+        title.setLineBounds(false, 0.0f, 0.116f * currentWidth, 0.186f * currentWidth);
     }
     else
     {
-        title.setLineBounds(true, 0, 0, 0);
+        title.setLineBounds(false, 0, 65, 138);
     }
     
     Rectangle<int> headerButtonArea = headerArea;
@@ -426,14 +426,14 @@ void AmbiCreatorAudioProcessorEditor::setModeDisplay(bool legacyModeActive)
         for (int i = 0; i < 4; ++i)
             inputMeter[i].setLabelText(inMeterLabelTextLegacy[i]);
         
-        title.setLineBounds(false, titleLineX1End, titleLineX1End * getLocalBounds().getWidth(), titleLineX2Start * getLocalBounds().getWidth());
+        title.setLineBounds(false, 0.0f, 0.116f * getLocalBounds().getWidth(), 0.186f * getLocalBounds().getWidth());
     }
     else
     {
         for (int i = 0; i < 4; ++i)
             inputMeter[i].setLabelText(inMeterLabelText[i]);
-        
-        title.setLineBounds(true, 0, 0, 0);
+
+        title.setLineBounds(false, 0, 65, 138);
     }
 
 }
