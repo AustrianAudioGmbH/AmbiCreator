@@ -382,9 +382,13 @@ void AmbiCreatorAudioProcessor::getStateInformation (MemoryBlock& destData)
     {
         layerA = params.copyState();
     }
-    if (abLayerState == eCurrentActiveLayer::layerB)
+    else if (abLayerState == eCurrentActiveLayer::layerB)
     {
         layerB = params.copyState();
+    }
+    else
+    {
+        layerA = params.copyState();
     }
     
 //    layerA.setProperty("editorWidth", var(editorWidth), nullptr);
@@ -438,13 +442,14 @@ void AmbiCreatorAudioProcessor::setStateInformation (const void* data, int sizeI
         if (xmlState->hasTagName (allValueTreeStates.getType()))
         {
             allValueTreeStates = ValueTree::fromXml (*xmlState);
-            params.replaceState(allValueTreeStates.getChild(1));
+            params.replaceState(allValueTreeStates.getChild(0));
+            layerB = allValueTreeStates.getChild(2).createCopy();
         }
         else if (xmlState->hasTagName (params.state.getType()))
         {
             params.state = ValueTree::fromXml (*xmlState);
         }
-        layerB = allValueTreeStates.getChild(2).createCopy();
+        
         
 //        if (params.state.hasProperty("editorWidth"))
 //        {
