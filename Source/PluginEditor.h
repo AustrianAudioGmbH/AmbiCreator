@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "../resources/lookAndFeel/AA_LaF.h"
 #include "../resources/customComponents/TitleBar.h"
