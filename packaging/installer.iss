@@ -1,5 +1,5 @@
 #define Version Trim(FileRead(FileOpen("..\VERSION")))
-#define ProductName 'AmbiCreator3'
+#define ProductName 'AmbiCreator'
 #define Publisher 'AustrianAudio'
 #define Year GetDateTimeString("yyyy","","")
 #define AC_BUILD_DIR GetEnv('AC_BUILD_DIR')
