@@ -12,18 +12,21 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     setConstrainer (&fixedAspectRatioConstrainer);
     setSize (processor.getEditorWidth(), processor.getEditorHeight());
     
-    setLookAndFeel (&globalLaF);
+    setLookAndFeel (&mainLaF);
     
     addAndMakeVisible (&title);
     title.setTitle (String("AustrianAudio"),String("AmbiCreator"));
-    title.setFont (globalLaF.aaMedium,globalLaF.aaRegular);
+
+//    title.setFont (mainLaF.aaMedium,mainLaF.aaRegular);
+    title.setFont (mainLaF.normalFont, mainLaF.normalFont);
+
     title.showAlertSymbol(false);
     title.setAlertMessage(wrongBusConfigMessageShort, wrongBusConfigMessageLong);
     cbAttOutChOrder.reset(new ComboBoxAttachment (valueTreeState, "channelOrder", *title.getOutputWidgetPtr()->getCbOutChOrder()));
     title.getOutputWidgetPtr()->getCbOutChOrder()->addListener(this);
     
     addAndMakeVisible (&footer);
-    tooltipWindow.setLookAndFeel (&globalLaF);
+    tooltipWindow.setLookAndFeel (&mainLaF);
     tooltipWindow.setMillisecondsBeforeTipAppears(500);
     
     arrayImage = ImageCache::getFromMemory (arrayPng, arrayPngSize);
@@ -44,31 +47,31 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     slAttOutGain.reset(new ReverseSlider::SliderAttachment (valueTreeState, "outGainDb", slOutGain));
     slOutGain.setSliderStyle (Slider::LinearHorizontal);
     slOutGain.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
-    slOutGain.setColour (Slider::thumbColourId, globalLaF.AARed);
+    slOutGain.setColour (Slider::thumbColourId, mainLaF.polarVisualizerRed);
     slOutGain.addListener (this);
     
     addAndMakeVisible (&slHorizontalRotation);
     slAttHorizontalRotation.reset(new ReverseSlider::SliderAttachment (valueTreeState, "horRotation", slHorizontalRotation));
     slHorizontalRotation.setSliderStyle (Slider::LinearHorizontal);
     slHorizontalRotation.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
-    slHorizontalRotation.setColour (Slider::thumbColourId, globalLaF.AARed);
+    slHorizontalRotation.setColour (Slider::thumbColourId, mainLaF.polarVisualizerRed);
     slHorizontalRotation.addListener (this);
     
     addAndMakeVisible (&slZGain);
     slAttZGain.reset(new ReverseSlider::SliderAttachment (valueTreeState, "zGainDb", slZGain));
     slZGain.setSliderStyle (Slider::LinearHorizontal);
     slZGain.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
-    slZGain.setColour (Slider::thumbColourId, globalLaF.AARed);
+    slZGain.setColour (Slider::thumbColourId, mainLaF.polarVisualizerRed);
     slZGain.addListener (this);
     
     for (int i = 0; i < 4; ++i)
     {
         addAndMakeVisible(&inputMeter[i]);
-        inputMeter[i].setColour(globalLaF.AARed);
+        inputMeter[i].setColour(mainLaF.polarVisualizerRed);
         inputMeter[i].setLabelText(inMeterLabelText[i]);
         
         addAndMakeVisible(&outputMeter[i]);
-        outputMeter[i].setColour(globalLaF.AARed);
+        outputMeter[i].setColour(mainLaF.polarVisualizerRed);
     }
     updateOutputMeterLabelTexts();
     
@@ -86,7 +89,7 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
     const int currHeight = getHeight();
     const int currWidth = getWidth();
     
-    g.fillAll (globalLaF.ClBackground);
+    g.fillAll (mainLaF.mainBackground);
     // g.drawImage(arrayImage, arrayImageArea, RectanglePlacement::centred);
     g.drawImage(arrayImage, -40, 0, arrayImageArea.getWidth() + 100, currHeight + 40, 0, 0, arrayImage.getWidth(), arrayImage.getHeight());
     

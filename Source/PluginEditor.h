@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include <JuceHeader.h>
+
 #include "PluginProcessor.h"
 
-#include "BinaryData.h"
-
+#include "../resources/lookAndFeel/AA_LaF.h"
 #include "../resources/lookAndFeel/MainLookAndFeel.h"
 
 #include "../resources/customComponents/TitleBar.h"
@@ -46,7 +46,7 @@ private:
     
     TitleBar<AALogo, ChannelOrderIOWidget> title;
     Footer footer;
-    MainLookAndFeel globalLaF;
+    MainLookAndFeel mainLaF;
     TooltipWindow tooltipWindow;
     
     Path aaLogoBgPath;
