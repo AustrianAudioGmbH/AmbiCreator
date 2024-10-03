@@ -141,7 +141,7 @@ target_include_directories(${PROJECT_NAME} INTERFACE ${juce_generated_headers_di
 #juce_add_binary_data("${PROJECT_NAME}")
 
 # Adds a BinaryData target for embedding assets into the binary
-include(Assets)
+#include(Assets)
 
 # MacOS only: Cleans up folder and target organization on Xcode.
 include(XcodePrettify)
