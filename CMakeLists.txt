@@ -82,7 +82,7 @@ juce_add_plugin("${PROJECT_NAME}"
     # Change me!
     # A unique four-character plugin id
     # Note: this must have at least one upper-case character
-	PLUGIN_CODE AAPD
+    PLUGIN_CODE AAAC
     FORMATS "${FORMATS}"
 
 
