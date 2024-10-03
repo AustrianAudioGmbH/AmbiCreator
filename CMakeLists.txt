@@ -96,7 +96,8 @@ juce_add_plugin("${PROJECT_NAME}"
 
 # This lets us use our code in both the JUCE targets and our Test target
 # Without running into ODR violations
-add_library(SharedCode INTERFACE)
+add_library(SharedCode INTERFACE
+        resources/lookAndFeel/MainLookAndFeel.h)
 
 # Sets the minimum macOS version
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")

@@ -2,12 +2,18 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PluginProcessor.h"
-#include "../resources/lookAndFeel/AA_LaF.h"
+
+#include "BinaryData.h"
+
+#include "../resources/lookAndFeel/MainLookAndFeel.h"
+
 #include "../resources/customComponents/TitleBar.h"
 #include "../resources/customComponents/SimpleLabel.h"
 #include "../resources/customComponents/MuteSoloButton.h"
 #include "../resources/customComponents/ReverseSlider.h"
 #include "../resources/customComponents/LevelMeter.h"
+
+
 
 typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
 typedef AudioProcessorValueTreeState::ButtonAttachment ButtonAttachment;
@@ -40,7 +46,7 @@ private:
     
     TitleBar<AALogo, ChannelOrderIOWidget> title;
     Footer footer;
-    LaF globalLaF;
+    MainLookAndFeel globalLaF;
     TooltipWindow tooltipWindow;
     
     Path aaLogoBgPath;
