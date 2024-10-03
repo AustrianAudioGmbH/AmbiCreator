@@ -92,13 +92,16 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
     g.fillAll (mainLaF.mainBackground);
     // g.drawImage(arrayImage, arrayImageArea, RectanglePlacement::centred);
     g.drawImage(arrayImage, -40, 0, arrayImageArea.getWidth() + 100, currHeight + 40, 0, 0, arrayImage.getWidth(), arrayImage.getHeight());
-    
+
+#ifdef AA_SHOW_LOGO
     // background logo
     aaLogoBgPath.applyTransform (aaLogoBgPath.getTransformToScaleToFit (0.4f * currWidth, 0.25f * currHeight,
                                                                         0.7f * currWidth, 0.7f * currWidth, true, Justification::centred));
     g.setColour (Colours::white.withAlpha(0.1f));
     g.strokePath (aaLogoBgPath, PathStrokeType (0.1f));
     g.fillPath (aaLogoBgPath);
+#endif
+
 }
 
 void AmbiCreatorAudioProcessorEditor::resized()
