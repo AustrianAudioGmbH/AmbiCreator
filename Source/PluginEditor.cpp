@@ -6,11 +6,12 @@
 AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAudioProcessor& p, AudioProcessorValueTreeState& vts)
     : AudioProcessorEditor (&p), processor (p), valueTreeState(vts)
 {
-    setResizable (true, true);
-    fixedAspectRatioConstrainer.setFixedAspectRatio (double(processor.EDITOR_DEFAULT_WIDTH) / processor.EDITOR_DEFAULT_HEIGHT);
-    fixedAspectRatioConstrainer.setSizeLimits (processor.EDITOR_DEFAULT_WIDTH, processor.EDITOR_DEFAULT_HEIGHT, 2 * processor.EDITOR_DEFAULT_WIDTH, 2 * processor.EDITOR_DEFAULT_HEIGHT);
-    setConstrainer (&fixedAspectRatioConstrainer);
-    setSize (processor.getEditorWidth(), processor.getEditorHeight());
+//    setResizable (true, true);
+//    fixedAspectRatioConstrainer.setFixedAspectRatio (double(processor.EDITOR_DEFAULT_WIDTH) / processor.EDITOR_DEFAULT_HEIGHT);
+//    fixedAspectRatioConstrainer.setSizeLimits (processor.EDITOR_DEFAULT_WIDTH, processor.EDITOR_DEFAULT_HEIGHT, 2 * processor.EDITOR_DEFAULT_WIDTH, 2 * processor.EDITOR_DEFAULT_HEIGHT);
+//    setConstrainer (&fixedAspectRatioConstrainer);
+
+    setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
     
     setLookAndFeel (&globalLaF);
     
@@ -135,6 +136,11 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
 
     setAbButtonAlphaFromLayerState(eCurrentActiveLayer::layerA);
 
+    // help tooltip
+    addAndMakeVisible(&helpToolTip);
+    helpToolTip.setText("help", NotificationType::dontSendNotification);
+    helpToolTip.setTextColour(Colours::white.withAlpha(0.5f));
+
     setModeDisplay(processor.isLegacyModeActive());
 }
 
@@ -154,10 +160,12 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
     if (processor.isLegacyModeActive())
     {
         g.drawImage(arrayLegacyImage, -40, 0, arrayImageArea.getWidth() + 100, currHeight + 40, 0, 0, arrayLegacyImage.getWidth(), arrayLegacyImage.getHeight());
+        helpToolTip.setTooltip(helpTextLegacy);
     }
     else
     {
-        g.drawImageWithin(arrayImage, 30, 70, arrayImage.getWidth() / 2, arrayImage.getHeight() / 2, RectanglePlacement::onlyReduceInSize);
+        g.drawImageWithin(arrayImage, 12, 1, arrayImage.getWidth() / 2, arrayImage.getHeight() / 2, RectanglePlacement::onlyReduceInSize);
+        helpToolTip.setTooltip(helpText);
     }
     
     // background logo
@@ -172,8 +180,8 @@ void AmbiCreatorAudioProcessorEditor::resized()
 {
     const float currentWidth = getWidth();
     const float currentHeight = getHeight();
-    processor.setEditorWidth(currentWidth);
-    processor.setEditorHeight(currentHeight);
+//    processor.setEditorWidth(currentWidth);
+//    processor.setEditorHeight(currentHeight);
     
     const float leftRightMargin = 0.046f * currentWidth;
     const float topMargin = 0.01 * currentHeight;
@@ -203,6 +211,7 @@ void AmbiCreatorAudioProcessorEditor::resized()
     Rectangle<int> area (getLocalBounds());
     
     Rectangle<int> footerArea (area.removeFromBottom(footerHeight));
+    helpToolTip.setBounds(5, getHeight() - 30, 40, 15);
     footer.setBounds (footerArea);
     
     area.removeFromLeft(leftRightMargin);
@@ -213,11 +222,11 @@ void AmbiCreatorAudioProcessorEditor::resized()
     
     if (processor.isLegacyModeActive())
     {
-        title.setLineBounds(false, titleLineX1Start, titleLineX1End * currentWidth, titleLineX2Start * currentWidth);
+        title.setLineBounds(false, 0.0f, 0.116f * currentWidth, 0.186f * currentWidth);
     }
     else
     {
-        title.setLineBounds(true, 0, 0, 0);
+        title.setLineBounds(false, 0, 65, 138);
     }
 
     Rectangle<int> headerButtonArea = headerArea;
@@ -418,14 +427,14 @@ void AmbiCreatorAudioProcessorEditor::setModeDisplay(bool legacyModeActive)
         for (int i = 0; i < 4; ++i)
             inputMeter[i].setLabelText(inMeterLabelTextLegacy[i]);
 
-        title.setLineBounds(false, titleLineX1End, titleLineX1End * getLocalBounds().getWidth(), titleLineX2Start * getLocalBounds().getWidth());
+        title.setLineBounds(false, 0.0f, 0.116f * getLocalBounds().getWidth(), 0.186f * getLocalBounds().getWidth());
     }
     else
     {
         for (int i = 0; i < 4; ++i)
             inputMeter[i].setLabelText(inMeterLabelText[i]);
 
-        title.setLineBounds(true, 0, 0, 0);
+        title.setLineBounds(false, 0, 65, 138);
     }
 
 }
