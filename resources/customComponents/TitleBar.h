@@ -63,14 +63,14 @@ public:
     {
         warningSign.loadPathFromData (WarningSignData, sizeof (WarningSignData));
         setBufferedToImage(true);
-    };
-    ~AlertSymbol() {};
+    }
+    ~AlertSymbol() override {}
     void paint (Graphics& g) override
     {
         warningSign.applyTransform(warningSign.getTransformToScaleToFit(getLocalBounds().toFloat(), true, Justification::centred));
         g.setColour(Colours::yellow);
         g.fillPath(warningSign);
-    };
+    }
 private:
     Path warningSign;
 };
@@ -82,11 +82,11 @@ public:
     {
         addChildComponent(alert);
         alert.setBounds(15, 15, 15, 15);
-    };
+    }
 
-    ~IOWidget() {};
+    ~IOWidget() override {}
     virtual const int getComponentSize() = 0;
-    virtual void setMaxSize (int maxSize) {};
+    virtual void setMaxSize (int maxSize) {}
 
     void setBusTooSmall (bool isBusTooSmall)
     {
@@ -107,10 +107,10 @@ private:
 class  NoIOWidget :  public IOWidget
 {
 public:
-    NoIOWidget() : IOWidget() {};
-    ~NoIOWidget() {};
+    NoIOWidget() : IOWidget() {}
+    ~NoIOWidget() override {}
     const int getComponentSize() override { return 0; }
-    //void paint (Graphics& g) override {};
+    //void paint (Graphics& g) override {}
 };
 
 class  BinauralIOWidget :  public IOWidget
@@ -119,18 +119,18 @@ public:
     BinauralIOWidget() : IOWidget() {
         BinauralPath.loadPathFromData (BinauralPathData, sizeof (BinauralPathData));
         setBufferedToImage(true);
-    };
+    }
 
-    ~BinauralIOWidget() {};
+    ~BinauralIOWidget() override {}
     const int getComponentSize() override { return 30; }
-    void setMaxSize (int maxSize) override {};
+    void setMaxSize (int maxSize) override {}
     void paint (Graphics& g) override
     {
         BinauralPath.applyTransform(BinauralPath.getTransformToScaleToFit(0, 0, 30, 30, true,Justification::centred));
         g.setColour((Colours::white).withMultipliedAlpha(0.5));
         g.fillPath(BinauralPath);
 
-    };
+    }
 
 private:
     Path BinauralPath;
@@ -141,11 +141,11 @@ class  AALogo :  public IOWidget
 public:
     AALogo() : IOWidget() {
         aaLogoPath.loadPathFromData (aaLogoData, sizeof (aaLogoData));
-    };
+    }
     
-    ~AALogo() {};
+    ~AALogo() override {}
     const int getComponentSize() override { return 40; }
-    void setMaxSize (int maxSize) override {};
+    void setMaxSize (int maxSize) override {}
     void paint (Graphics& g) override
     {
         const int size = getLocalBounds().getWidth();
@@ -155,7 +155,7 @@ public:
         g.strokePath (aaLogoPath, PathStrokeType (0.1f));
         g.fillPath (aaLogoPath);
         
-    };
+    }
     
 private:
     Path aaLogoPath;
@@ -180,8 +180,8 @@ public:
                 cbChannels->addItem(String(i), i+1);
             cbChannels->setBounds(35, 8, 70, 15);
         }
-    };
-    ~AudioChannelsIOWidget() {};
+    }
+    ~AudioChannelsIOWidget() {}
 
     const int getComponentSize() override { return selectable ? 110 : 75; }
 
@@ -255,7 +255,7 @@ public:
             g.setFont(15.0f);
             g.drawFittedText(displayTextIfNotSelectable, 35, 0, 40, 30, Justification::centredLeft, 2);
         }
-    };
+    }
 
 private:
     ScopedPointer<ComboBox> cbChannels;
@@ -300,9 +300,9 @@ public:
         cbNormalization.addItem("N3D", 1);
         cbNormalization.addItem("SN3D", 2);
         cbNormalization.setBounds(35, 0, 70, 15);
-    };
+    }
 
-    ~DirectivityIOWidget() {};
+    ~DirectivityIOWidget() override {}
 
     const int getComponentSize() override { return 110; }
 
@@ -337,7 +337,7 @@ public:
         DirectivityPath.applyTransform(DirectivityPath.getTransformToScaleToFit(0, 0, 30, 30, true,Justification::centred));
         g.setColour((Colours::white).withMultipliedAlpha(0.5));
         g.fillPath(DirectivityPath);
-    };
+    }
 
 private:
     String orderStrings[8];
@@ -354,33 +354,33 @@ public:
         cbOutChOrder.addSectionHeading("Output Config");
         cbOutChOrder.addItem("AmbiX", 1);
         cbOutChOrder.addItem("FUMA", 2);
-    };
+    }
 
-    ~ChannelOrderIOWidget() {};
+    ~ChannelOrderIOWidget() override {}
     
     const int getComponentSize() override
     {
         return 200;
-    };
+    }
 
     void setMaxSize (int maxPossibleOrder) override
     {
-    };
+    }
     
     ComboBox* getCbOutChOrder()
     {
         return &cbOutChOrder;
-    };
+    }
 
     void paint (Graphics& g) override
     {
-    };
+    }
     
     void resized() override
     {
         auto bounds = getLocalBounds();
         cbOutChOrder.setBounds(0, 0, bounds.getWidth(), bounds.getHeight());
-    };
+    }
 
 private:
     ComboBox cbOutChOrder;
@@ -397,8 +397,8 @@ public:
         addChildComponent(&alertSymbol);
         
         titlePath.loadPathFromData (aaFontData, sizeof (aaFontData));
-    };
-    ~TitleBar() {};
+    }
+    ~TitleBar() override {}
 
     Tin* getInputWidgetPtr() { return &inputWidget; }
     Tout* getOutputWidgetPtr() { return &outputWidget; }
@@ -418,9 +418,9 @@ public:
         Rectangle<int> bounds = getLocalBounds();
         const int currentWidth = bounds.getWidth();
         const int currentHeight = bounds.getHeight();
-        const int inWidgetSize = 0.5f * currentHeight;
-        const int outWidgetWidth = 0.2f * currentWidth;
-        const int outWidgetHeight = 0.3f * currentHeight;
+        const int inWidgetSize = (currentHeight / 2);
+        const int outWidgetWidth = (currentWidth / 5);
+        const int outWidgetHeight = (currentHeight / 3);
         
         if (alert) // draw alert symbol over input widget
         {
@@ -470,20 +470,20 @@ public:
         Rectangle<int> bounds = getLocalBounds();
         const int currentWidth = bounds.getWidth();
         const int currentHeight = bounds.getHeight();
-        const int inWidgetSize = 0.5f * currentHeight;
-        const int outWidgetWidth = 0.2f * currentWidth;
+        const int inWidgetSize = currentHeight / 2;
+        const int outWidgetWidth = currentWidth / 5;
         const int inWidgetRightBound = inputWidget.getRight();
-        const float boldHeight = 0.4f * currentHeight;
-        const float regularHeight = 0.4f * currentHeight;
-        const float alertTextHeight = currentHeight * 0.2f;
-        const float alertTextWidth = currentWidth * 0.15f;
+        const float boldHeight = 0.4f * (currentHeight * 1.0f);
+        const float regularHeight = 0.4f * (currentHeight * 1.0f);
+        const float alertTextHeight = (currentHeight / 5) * 1.0f;
+        const float alertTextWidth = (currentWidth / 8) * 1.0f;
         
         g.setColour(Colours::yellow);
         g.setFont(getLookAndFeel().getTypefaceForFont (Font(12.0f, 0)));
         g.setFont(alertTextHeight);
         
         if (alert)
-            g.drawFittedText(shortAlertMessage, inWidgetRightBound + 2.0f, 0.3f * currentHeight, alertTextWidth, alertTextHeight * 2, Justification::centredLeft, 2);
+            g.drawFittedText(shortAlertMessage, (int)(inWidgetRightBound + 2.0f), (int)(0.3f * currentHeight), (int)alertTextWidth, (int)(alertTextHeight * 2.0f), Justification::centredLeft, 2);
 
         boldFont.setHeight(boldHeight);
         regularFont.setHeight(regularHeight);
@@ -542,7 +542,7 @@ public:
             g.drawLine(bounds.getX() + x1Start,bounds.getY()+bounds.getHeight()-1, bounds.getX()+x1End, bounds.getY()+bounds.getHeight()-1);
             g.drawLine(bounds.getX() + x2Start,bounds.getY()+bounds.getHeight()-1, bounds.getX()+bounds.getWidth(), bounds.getY()+bounds.getHeight()-1);
         }
-    };
+    }
     
     void setLineBounds (bool useDefaultBounds, int line1Start, int line1End, int line2Start)
     {
@@ -593,7 +593,7 @@ public:
         IEMPath.loadPathFromData (IEMpathData, sizeof (IEMpathData));
 //        url = URL("https://plugins.iem.at/");
     }
-    ~IEMLogo() {};
+    ~IEMLogo() override {}
 
     void paint (Graphics& g) override
     {
@@ -640,8 +640,8 @@ class  Footer :  public Component
 public:
     Footer() : Component()
     {
-    };
-    ~Footer() {};
+    }
+    ~Footer() override {}
 
     void paint (Graphics& g) override
     {
@@ -657,7 +657,7 @@ public:
         versionString.append(JucePlugin_VersionString, 6);
 
         g.drawText(versionString, 0, 0, bounds.getWidth() - 8,bounds.getHeight()-2, Justification::bottomRight);
-    };
+    }
 
     void resized () override
     {

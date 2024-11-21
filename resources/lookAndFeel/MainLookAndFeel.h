@@ -17,6 +17,9 @@ using namespace juce;
 class MainLookAndFeel : public LookAndFeel_V4
 {
 public:
+    const Colour AARed = Colour(155,35,35);
+    const Colour ClBackground = Colour(0xFF2D2D2D);
+
     const Colour mainBackground = Colour(17, 18, 19);
     const Colour mainTextColor = Colour(255, 255, 255);
     const Colour mainTextDisabledColor = mainTextColor.withAlpha(0.4f);
@@ -48,12 +51,18 @@ public:
 
     Typeface::Ptr normalFont;
     Typeface::Ptr terminatorRegularFont, terminatorBoldFont;
+    Typeface::Ptr aaLight, aaRegular, aaMedium, terminator;
 
     MainLookAndFeel()
     {
         normalFont = Typeface::createSystemTypefaceFor(BinaryFonts::NunitoSansSemiBold_ttf, BinaryFonts::NunitoSansSemiBold_ttfSize);
         terminatorRegularFont = Typeface::createSystemTypefaceFor(BinaryFonts::InterRegular_ttf, BinaryFonts::InterRegular_ttfSize);
         terminatorBoldFont = Typeface::createSystemTypefaceFor(BinaryFonts::InterBold_ttf, BinaryFonts::InterBold_ttfSize);
+
+        aaLight = Typeface::createSystemTypefaceFor(BinaryFonts::NunitoSansLight_ttf, BinaryFonts::NunitoSansLight_ttfSize);
+        aaMedium = Typeface::createSystemTypefaceFor(BinaryFonts::NunitoSansRegular_ttf, BinaryFonts::NunitoSansRegular_ttfSize);
+        aaRegular = Typeface::createSystemTypefaceFor(BinaryFonts::NunitoSansSemiBold_ttf, BinaryFonts::NunitoSansSemiBold_ttfSize);
+        terminator = Typeface::createSystemTypefaceFor(BinaryFonts::terminator_ttf, BinaryFonts::terminator_ttfSize);
 
         setColour(ListBox::backgroundColourId, groupComponentBackgroundColor);
     }

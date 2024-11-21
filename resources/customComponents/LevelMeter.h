@@ -34,16 +34,16 @@ public:
         setLookAndFeel(&mainLaF);
 
     }
-    ~LevelMeter()
+    ~LevelMeter() override
     {
     }
 
     void paint (Graphics& g) override
     {
         auto bounds = getLocalBounds();
-        float labelWidth = bounds.getWidth();
+        float labelWidth = bounds.getWidth() * 1.0f;
         float labelHeight = labelWidth;
-        auto labelBounds = bounds.removeFromBottom(labelHeight);
+        auto labelBounds = bounds.removeFromBottom((int)labelHeight);
         g.setColour(Colours::white);
         g.setFont(getLookAndFeel().getTypefaceForFont(Font(labelHeight)));
         g.setFont (labelHeight);
@@ -52,7 +52,7 @@ public:
         g.drawText(labelText, labelBounds, Justification::centred);
         
         float labelMargin = 6.0f;
-        bounds.removeFromBottom(labelMargin);
+        bounds.removeFromBottom((int)labelMargin);
         g.setColour(mainLaF.mainTextInactiveColor);
         g.drawRoundedRectangle(bounds.toFloat(), 4.0f, 2.0f);
         

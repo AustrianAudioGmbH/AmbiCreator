@@ -2,6 +2,9 @@
 #include "PluginEditor.h"
 #include "../resources/irs.h"
 
+/* We use versionHint of ParameterID from now on - rigorously! */
+#define PD_PARAMETER_V1 1
+
 //==============================================================================
 AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     AudioProcessor (BusesProperties()
@@ -9,18 +12,13 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
                            .withOutput ("Output", AudioChannelSet::ambisonic(1), true)
                            ),
     params(*this, nullptr, "AmbiCreator", {
-        std::make_unique<AudioParameterInt>("channelOrder", "channel order", eChannelOrder::ACN, eChannelOrder::FUMA, eChannelOrder::ACN, "",
-                                            [](int value, int) {return (value == eChannelOrder::ACN) ? "AmbiX (WYZX)" : "FuMa (WXYZ)";}, nullptr),
-        std::make_unique<AudioParameterFloat>("outGainDb", "output gain", NormalisableRange<float>(-40.0f, 10.0f, 0.1f),
-                                              0.0f, "dB", AudioProcessorParameter::genericParameter,
-                                              [](float value, int) { return String(value, 1); }, nullptr),
-        std::make_unique<AudioParameterFloat>("zGainDb", "z gain", NormalisableRange<float>(MIN_Z_GAIN_DB, 10.0f, 0.1f),
-                                              0.0f, "dB", AudioProcessorParameter::genericParameter,
-                                              [](float value, int) { return (value > MIN_Z_GAIN_DB + GAIN_TO_ZERO_THRESH_DB) ? String(value, 1) : "-inf"; }, nullptr),
-        std::make_unique<AudioParameterFloat>("horRotation", "horizontal rotation", NormalisableRange<float>(-180.0f, 180.0f, 1.0f),
-                                              0.0f, String (CharPointer_UTF8 ("°")), AudioProcessorParameter::genericParameter,
-                                              [](float value, int) { return String(value, 1); }, nullptr),
-        std::make_unique<AudioParameterBool>("legacyMode", "Legacy Mode", false, "", [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr)
+
+        std::make_unique<AudioParameterInt>(ParameterID{"channelOrder",PD_PARAMETER_V1}, "channel order", eChannelOrder::ACN, eChannelOrder::FUMA, eChannelOrder::ACN, "", [](int value, int) {return (value == eChannelOrder::ACN) ? "AmbiX (WYZX)" : "FuMa (WXYZ)";}, nullptr),
+        std::make_unique<AudioParameterFloat>(ParameterID{"outGainDb", PD_PARAMETER_V1},"output gain", NormalisableRange<float>(-40.0f, 10.0f, 0.1f),0.0f, "dB", AudioProcessorParameter::genericParameter,[](float value, int) { return String(value, 1); }, nullptr),
+        std::make_unique<AudioParameterFloat>(ParameterID{"zGainDb", PD_PARAMETER_V1}, "z gain", NormalisableRange<float>(MIN_Z_GAIN_DB, 10.0f, 0.1f),0.0f, "dB", AudioProcessorParameter::genericParameter,[](float value, int) { return (value > MIN_Z_GAIN_DB + GAIN_TO_ZERO_THRESH_DB) ? String(value, 1) : "-inf"; }, nullptr),
+        std::make_unique<AudioParameterFloat>(ParameterID{"horRotation",PD_PARAMETER_V1}, "horizontal rotation", NormalisableRange<float>(-180.0f, 180.0f, 1.0f),0.0f, String (CharPointer_UTF8 ("°")), AudioProcessorParameter::genericParameter,[](float value, int) { return String(value, 1); }, nullptr),
+        std::make_unique<AudioParameterBool>(ParameterID{"legacyMode",PD_PARAMETER_V1}, "Legacy Mode", false, "", [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr)
+
     }),
     firLatencySec((static_cast<float>(FIR_LEN) / 2 - 1) / FIR_SAMPLE_RATE),
     currentSampleRate(48000), isBypassed(false), zFirCoeffBuffer(1, FIR_LEN),

@@ -16,7 +16,7 @@ class AmbiCreatorAudioProcessor  : public AudioProcessor, public AudioProcessorV
 public:
     //==============================================================================
     AmbiCreatorAudioProcessor();
-    ~AmbiCreatorAudioProcessor();
+    ~AmbiCreatorAudioProcessor() override;
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;

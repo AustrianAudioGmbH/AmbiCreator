@@ -13,18 +13,18 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
 
     setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
     
-    setLookAndFeel (&globalLaF);
+    setLookAndFeel (&mainLaF);
     
     addAndMakeVisible (&title);
     title.setTitle (String("AustrianAudio"),String("AmbiCreator"));
-    title.setFont (globalLaF.aaMedium,globalLaF.aaRegular);
+    title.setFont (mainLaF.aaMedium, mainLaF.aaRegular);
     title.showAlertSymbol(false);
     title.setAlertMessage(wrongBusConfigMessageShort, wrongBusConfigMessageLong);
     cbAttOutChOrder.reset(new ComboBoxAttachment (valueTreeState, "channelOrder", *title.getOutputWidgetPtr()->getCbOutChOrder()));
     title.getOutputWidgetPtr()->getCbOutChOrder()->addListener(this);
     
     addAndMakeVisible (&footer);
-    tooltipWindow.setLookAndFeel (&globalLaF);
+    tooltipWindow.setLookAndFeel (&mainLaF);
     tooltipWindow.setMillisecondsBeforeTipAppears(500);
     
     arrayLegacyImage = ImageCache::getFromMemory (arrayLegacyPng, arrayLegacyPngSize);
@@ -47,31 +47,31 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     slAttOutGain.reset(new ReverseSlider::SliderAttachment (valueTreeState, "outGainDb", slOutGain));
     slOutGain.setSliderStyle (Slider::LinearHorizontal);
     slOutGain.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
-    slOutGain.setColour (Slider::thumbColourId, globalLaF.AARed);
+    slOutGain.setColour (Slider::thumbColourId, mainLaF.AARed);
     slOutGain.addListener (this);
     
     addAndMakeVisible (&slHorizontalRotation);
     slAttHorizontalRotation.reset(new ReverseSlider::SliderAttachment (valueTreeState, "horRotation", slHorizontalRotation));
     slHorizontalRotation.setSliderStyle (Slider::LinearHorizontal);
     slHorizontalRotation.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
-    slHorizontalRotation.setColour (Slider::thumbColourId, globalLaF.AARed);
+    slHorizontalRotation.setColour (Slider::thumbColourId, mainLaF.AARed);
     slHorizontalRotation.addListener (this);
     
     addAndMakeVisible (&slZGain);
     slAttZGain.reset(new ReverseSlider::SliderAttachment (valueTreeState, "zGainDb", slZGain));
     slZGain.setSliderStyle (Slider::LinearHorizontal);
     slZGain.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
-    slZGain.setColour (Slider::thumbColourId, globalLaF.AARed);
+    slZGain.setColour (Slider::thumbColourId, mainLaF.AARed);
     slZGain.addListener (this);
     
     for (int i = 0; i < 4; ++i)
     {
         addAndMakeVisible(&inputMeter[i]);
-        inputMeter[i].setColour(globalLaF.AARed);
+        inputMeter[i].setColour(mainLaF.AARed);
         inputMeter[i].setLabelText(inMeterLabelText[i]);
         
         addAndMakeVisible(&outputMeter[i]);
-        outputMeter[i].setColour(globalLaF.AARed);
+        outputMeter[i].setColour(mainLaF.AARed);
     }
     updateOutputMeterLabelTexts();
     
@@ -94,14 +94,14 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     addAndMakeVisible(&slRotZGain);
     slAttRotZGain.reset(new SliderAttachment (valueTreeState, "zGainDb", slRotZGain));
     slRotZGain.setSliderStyle(Slider::Rotary);
-    slRotZGain.setColour(Slider::rotarySliderOutlineColourId, globalLaF.AARed);
+    slRotZGain.setColour(Slider::rotarySliderOutlineColourId, mainLaF.AARed);
     slRotZGain.setTextValueSuffix(" dB");
     slRotZGain.addListener(this);
 
     addAndMakeVisible(&slRotOutGain);
     slAttRotOutGain.reset(new SliderAttachment (valueTreeState, "outGainDb", slRotOutGain));
     slRotOutGain.setSliderStyle(Slider::Rotary);
-    slRotOutGain.setColour(Slider::rotarySliderOutlineColourId, globalLaF.AARed);
+    slRotOutGain.setColour(Slider::rotarySliderOutlineColourId, mainLaF.AARed);
     slRotOutGain.setTextValueSuffix(" dB");
     slRotOutGain.addListener(this);
 
@@ -155,11 +155,11 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
     const int currHeight = getHeight();
     const int currWidth = getWidth();
     
-    g.fillAll (globalLaF.ClBackground);
+    g.fillAll (mainLaF.ClBackground);
     // g.drawImage(arrayImage, arrayImageArea, RectanglePlacement::centred);
     if (processor.isLegacyModeActive())
     {
-        g.drawImage(arrayLegacyImage, -40, 0, arrayImageArea.getWidth() + 100, currHeight + 40, 0, 0, arrayLegacyImage.getWidth(), arrayLegacyImage.getHeight());
+        g.drawImage(arrayLegacyImage, -40, 0, (int)(arrayImageArea.getWidth() + 100.0f), currHeight + 40, 0, 0, arrayLegacyImage.getWidth(), arrayLegacyImage.getHeight());
         helpToolTip.setTooltip(helpTextLegacy);
     }
     else
@@ -169,8 +169,8 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
     }
     
     // background logo
-    aaLogoBgPath.applyTransform (aaLogoBgPath.getTransformToScaleToFit (0.4f * currWidth, 0.25f * currHeight,
-                                                                        0.7f * currWidth, 0.7f * currWidth, true, Justification::centred));
+    aaLogoBgPath.applyTransform (aaLogoBgPath.getTransformToScaleToFit ((0.4f * currWidth), (0.25f * currHeight),
+                                                                        (0.7f * currWidth), (0.7f * currWidth), true, Justification::centred));
     g.setColour (Colours::white.withAlpha(0.1f));
     g.strokePath (aaLogoBgPath, PathStrokeType (0.1f));
     g.fillPath (aaLogoBgPath);
@@ -184,7 +184,7 @@ void AmbiCreatorAudioProcessorEditor::resized()
 //    processor.setEditorHeight(currentHeight);
     
     const float leftRightMargin = 0.046f * currentWidth;
-    const float topMargin = 0.01 * currentHeight;
+    const float topMargin = 0.01f * currentHeight;
     const int headerHeight = 60;
     const float footerHeight = 0.05f * currentHeight;
     const float linearSliderWidth = 0.246f * currentWidth;
@@ -210,19 +210,19 @@ void AmbiCreatorAudioProcessorEditor::resized()
 
     Rectangle<int> area (getLocalBounds());
     
-    Rectangle<int> footerArea (area.removeFromBottom(footerHeight));
+    Rectangle<int> footerArea (area.removeFromBottom((int)footerHeight));
     helpToolTip.setBounds(5, getHeight() - 30, 40, 15);
     footer.setBounds (footerArea);
     
-    area.removeFromLeft(leftRightMargin);
-    area.removeFromRight(leftRightMargin);
+    area.removeFromLeft((int)leftRightMargin);
+    area.removeFromRight((int)leftRightMargin);
     Rectangle<int> headerArea = area.removeFromTop(headerHeight);
     title.setBounds (headerArea);
 //    title.toFront(false);
     
     if (processor.isLegacyModeActive())
     {
-        title.setLineBounds(false, 0.0f, 0.116f * currentWidth, 0.186f * currentWidth);
+        title.setLineBounds(false, 0.0f, (int)(0.116f * currentWidth), (int)(0.186f * currentWidth));
     }
     else
     {
@@ -230,42 +230,42 @@ void AmbiCreatorAudioProcessorEditor::resized()
     }
 
     Rectangle<int> headerButtonArea = headerArea;
-    headerButtonArea.removeFromRight(leftRightMargin/8);
-    headerButtonArea.removeFromTop(headerHeight/2 - buttonHeight/2);
-    headerButtonArea.removeFromBottom(headerHeight/2 - buttonHeight/2);
-    tbLegacyMode.setBounds(headerButtonArea.removeFromRight(legacyButtonWidth));
-    headerButtonArea.removeFromRight(2 * horizontalButtonSpacing);
-    tbAbLayer[1].setBounds(headerButtonArea.removeFromRight(buttonHeight));
-    headerButtonArea.removeFromRight(2 * horizontalButtonSpacing);
-    tbAbLayer[0].setBounds(headerButtonArea.removeFromRight(buttonHeight));
+    headerButtonArea.removeFromRight((int)(leftRightMargin/8.0f));
+    headerButtonArea.removeFromTop((int)(headerHeight/2.0f - buttonHeight/2.0f));
+    headerButtonArea.removeFromBottom((int)(headerHeight/2.0f - buttonHeight/2.0f));
+    tbLegacyMode.setBounds(headerButtonArea.removeFromRight((int)legacyButtonWidth));
+    headerButtonArea.removeFromRight((int)(2.0f * horizontalButtonSpacing));
+    tbAbLayer[1].setBounds(headerButtonArea.removeFromRight((int)buttonHeight));
+    headerButtonArea.removeFromRight((int)(2.0f * horizontalButtonSpacing));
+    tbAbLayer[0].setBounds(headerButtonArea.removeFromRight((int)buttonHeight));
 
-    area.removeFromTop(topMargin);
-    arrayImageArea = area.removeFromLeft(arrayWidth).toFloat();
+    area.removeFromTop((int)topMargin);
+    arrayImageArea = area.removeFromLeft((int)arrayWidth).toFloat();
     
     // -------- MAIN AREA ---------
     const float contentWidth = 8 * meterWidth + 2 * meterToSliderSpacing + 8 * meterSpacing + linearSliderWidth;
-    const float mainMarginLeft = (area.getWidth() - contentWidth) / 2;
+    const float mainMarginLeft = ((int)area.getWidth() - contentWidth) / 2.0f;
     
-    area.removeFromLeft(mainMarginLeft);
+    area.removeFromLeft(mainMarginLeft * 1.0f);
     
-    Rectangle<int> inMeterArea = area.removeFromLeft(4 * meterWidth + 4 * meterSpacing).withHeight(meterHeight);
-    inMeterArea = inMeterArea.withCentre(Point<int> (inMeterArea.getCentreX(), int(area.getHeight() * 0.6f)));
+    Rectangle<int> inMeterArea = area.removeFromLeft((int)(4.0f * meterWidth + 4.0f * meterSpacing)).withHeight((int)meterHeight);
+    inMeterArea = inMeterArea.withCentre(Point<int> (inMeterArea.getCentreX(), (int)(area.getHeight() * 0.6f)));
     
     for (int i = 0; i < 4; ++i)
     {
-        inputMeter[i].setBounds(inMeterArea.removeFromLeft(meterWidth));
-        inMeterArea.removeFromLeft(meterSpacing);
+        inputMeter[i].setBounds(inMeterArea.removeFromLeft((int)meterWidth));
+        inMeterArea.removeFromLeft((int)meterSpacing);
     }
-    area.removeFromLeft(meterToSliderSpacing);
+    area.removeFromLeft((int)meterToSliderSpacing);
     
-    Rectangle<int> sliderArea = area.removeFromLeft(linearSliderWidth).withHeight(3 * linearSliderVerticalSpacing + 3 * labelHeight + 3 * linearSliderHeight);
-    sliderArea = sliderArea.withCentre(Point<int> (sliderArea.getCentreX(), int(area.getHeight() * 0.55f)));
+    Rectangle<int> sliderArea = area.removeFromLeft((int)linearSliderWidth).withHeight((int)(3.0f * linearSliderVerticalSpacing + 3.0f * labelHeight + 3.0f * linearSliderHeight));
+    sliderArea = sliderArea.withCentre(Point<int> (sliderArea.getCentreX(), (int)(area.getHeight() * 0.55f)));
     
     Rectangle<int> rotSliderArea = sliderArea;
 
-    rotSliderArea.removeFromTop(rotarySliderVerticalSpacing);
-    lbSlRotOutGain.setBounds(rotSliderArea.removeFromTop(labelHeight));
-    slRotOutGain.setTextBoxStyle(Slider::TextBoxBelow, false, slTbWidth, slTbHeight);
+    rotSliderArea.removeFromTop((int)rotarySliderVerticalSpacing);
+    lbSlRotOutGain.setBounds(rotSliderArea.removeFromTop((int)labelHeight));
+    slRotOutGain.setTextBoxStyle(Slider::TextBoxBelow, false, (int)slTbWidth, slTbHeight);
     slRotOutGain.setBounds(rotSliderArea.removeFromTop(rotarySliderHeight));
 
     rotSliderArea.removeFromTop(rotarySliderVerticalSpacing);

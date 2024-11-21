@@ -50,6 +50,7 @@ private:
     TitleBar<AALogo, ChannelOrderIOWidget> title;
     Footer footer;
     LaF globalLaF;
+    MainLookAndFeel mainLaF;
     TooltipWindow tooltipWindow;
     
     Path aaLogoBgPath;
