@@ -54,8 +54,8 @@ private:
     TooltipWindow tooltipWindow;
     
     Path aaLogoBgPath;
-    Image arrayLegacyImage;
-    Image arrayImage;
+    Image legacyModeImageArray;
+    Image fourChannelModeImageArray;
     Rectangle<float> arrayImageArea;
     
     ReverseSlider slOutGain, slHorizontalRotation, slZGain;
@@ -88,11 +88,13 @@ private:
     
     ComboBox cbOutChannelOrder;
     
-    Slider slRotOutGain, slRotZGain;
+//    Slider slRotOutGain, slRotZGain;
     
     TextButton tbAbLayer[2], tbLegacyMode;
     
-    SimpleLabel lbSlRotOutGain, lbSlRotZGain, lbOutConfig;
+//    SimpleLabel lbSlRotOutGain, lbSlRotZGain;
+
+    SimpleLabel lbOutConfig;
     
     std::unique_ptr<SliderAttachment> slAttRotOutGain, slAttRotZGain;
     std::unique_ptr<ComboBoxAttachment> cbAttOutChannelOrder;
