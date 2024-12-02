@@ -26,16 +26,16 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     addAndMakeVisible (&footer);
     tooltipWindow.setLookAndFeel (&mainLaF);
     tooltipWindow.setMillisecondsBeforeTipAppears(500);
-    
-    arrayLegacyImage = ImageCache::getFromMemory (arrayLegacyPng, arrayLegacyPngSize);
-    arrayImage = ImageCache::getFromMemory (arrayPng4Ch, arrayPng4ChSize);
+
+    legacyModeImageArray = ImageCache::getFromMemory (legacyPNGArray, legacyPNGArraySize);
+    fourChannelModeImageArray = ImageCache::getFromMemory (fourChannelPNGArray, fourChannelPNGArraySize);
 
     aaLogoBgPath.loadPathFromData (aaLogoData, sizeof (aaLogoData));
     
     // add labels
     addAndMakeVisible (&lbSlOutGain);
     lbSlOutGain.setText("Output Gain");
-    
+
     addAndMakeVisible (&lbSlZGain);
     lbSlZGain.setText("Z Gain");
     
@@ -91,16 +91,17 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     cbOutChannelOrder.setSelectedId (1);
     cbOutChannelOrder.addListener(this);
 
+#if 0 // !J!
     addAndMakeVisible(&slRotZGain);
     slAttRotZGain.reset(new SliderAttachment (valueTreeState, "zGainDb", slRotZGain));
-    slRotZGain.setSliderStyle(Slider::Rotary);
+//    slRotZGain.setSliderStyle(Slider::Rotary); // !J!
     slRotZGain.setColour(Slider::rotarySliderOutlineColourId, mainLaF.AARed);
     slRotZGain.setTextValueSuffix(" dB");
     slRotZGain.addListener(this);
 
     addAndMakeVisible(&slRotOutGain);
     slAttRotOutGain.reset(new SliderAttachment (valueTreeState, "outGainDb", slRotOutGain));
-    slRotOutGain.setSliderStyle(Slider::Rotary);
+//    slRotOutGain.setSliderStyle(Slider::Rotary); // !J!
     slRotOutGain.setColour(Slider::rotarySliderOutlineColourId, mainLaF.AARed);
     slRotOutGain.setTextValueSuffix(" dB");
     slRotOutGain.addListener(this);
@@ -110,6 +111,7 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
 
     addAndMakeVisible (&lbSlRotZGain);
     lbSlRotZGain.setText("Z Gain");
+#endif
 
     addAndMakeVisible(&lbOutConfig);
     lbOutConfig.setText("Output Config");
@@ -156,18 +158,20 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
     const int currWidth = getWidth();
     
     g.fillAll (mainLaF.ClBackground);
-    // g.drawImage(arrayImage, arrayImageArea, RectanglePlacement::centred);
-    if (processor.isLegacyModeActive())
+//    g.drawImage(fourChannelModeImageArray, arrayImageArea, RectanglePlacement::centred);
     {
-        g.drawImage(arrayLegacyImage, -40, 0, (int)(arrayImageArea.getWidth() + 100.0f), currHeight + 40, 0, 0, arrayLegacyImage.getWidth(), arrayLegacyImage.getHeight());
-        helpToolTip.setTooltip(helpTextLegacy);
+        if (processor.isLegacyModeActive())
+        {
+            g.drawImage(legacyModeImageArray, -40, 0, (int)(arrayImageArea.getWidth() + 100.0f), currHeight + 40, 0, 0, legacyModeImageArray.getWidth(), legacyModeImageArray.getHeight());
+            helpToolTip.setTooltip(helpTextLegacy);
+        }
+        else
+        {
+            g.drawImageWithin(fourChannelModeImageArray, 12, 1, fourChannelModeImageArray.getWidth() / 2, fourChannelModeImageArray.getHeight() / 2, RectanglePlacement::onlyReduceInSize);
+            helpToolTip.setTooltip(helpText);
+        }
     }
-    else
-    {
-        g.drawImageWithin(arrayImage, 12, 1, arrayImage.getWidth() / 2, arrayImage.getHeight() / 2, RectanglePlacement::onlyReduceInSize);
-        helpToolTip.setTooltip(helpText);
-    }
-    
+
     // background logo
     aaLogoBgPath.applyTransform (aaLogoBgPath.getTransformToScaleToFit ((0.4f * currWidth), (0.25f * currHeight),
                                                                         (0.7f * currWidth), (0.7f * currWidth), true, Justification::centred));
@@ -263,6 +267,7 @@ void AmbiCreatorAudioProcessorEditor::resized()
     
     Rectangle<int> rotSliderArea = sliderArea;
 
+#if 0
     rotSliderArea.removeFromTop((int)rotarySliderVerticalSpacing);
     lbSlRotOutGain.setBounds(rotSliderArea.removeFromTop((int)labelHeight));
     slRotOutGain.setTextBoxStyle(Slider::TextBoxBelow, false, (int)slTbWidth, slTbHeight);
@@ -272,6 +277,7 @@ void AmbiCreatorAudioProcessorEditor::resized()
     lbSlRotZGain.setBounds(rotSliderArea.removeFromTop(labelHeight));
     slRotZGain.setTextBoxStyle(Slider::TextBoxBelow, false, slTbWidth, slTbHeight);
     slRotZGain.setBounds(rotSliderArea.removeFromTop(rotarySliderHeight));
+#endif
 
     sliderArea.removeFromTop(linearSliderVerticalSpacing);
     lbSlOutGain.setBounds(sliderArea.removeFromTop(labelHeight));
@@ -292,7 +298,7 @@ void AmbiCreatorAudioProcessorEditor::resized()
     Rectangle<int> outMeterArea = area.removeFromLeft(4 * meterWidth + 4 * meterSpacing).withHeight(meterHeight);
     outMeterArea = outMeterArea.withCentre(Point<int> (outMeterArea.getCentreX(), int(area.getHeight() * 0.6f)));
     
-    lbOutConfig.setBounds(outMeterArea.getX() - 7 * meterSpacing, lbSlRotOutGain.getY(), 4 * meterWidth + 14 * meterSpacing, labelHeight);
+    lbOutConfig.setBounds(outMeterArea.getX() - 7 * meterSpacing, lbSlOutGain.getY() - 12, 4 * meterWidth + 14 * meterSpacing, labelHeight);
     cbOutChannelOrder.setBounds(outMeterArea.getX() - 7 * meterSpacing, outMeterArea.getY() - 2 * comboBoxHeight, 4 * meterWidth + 14 * meterSpacing, comboBoxHeight);
 
     for (int i = 0; i < 4; ++i)
@@ -408,6 +414,7 @@ int AmbiCreatorAudioProcessorEditor::getControlParameterIndex (Component& contro
 
 void AmbiCreatorAudioProcessorEditor::setModeDisplay(bool legacyModeActive)
 {
+#if 0
     slZGain.setEnabled(legacyModeActive);
     slZGain.setVisible(legacyModeActive);
     slOutGain.setEnabled(legacyModeActive);
@@ -421,6 +428,7 @@ void AmbiCreatorAudioProcessorEditor::setModeDisplay(bool legacyModeActive)
     slRotOutGain.setEnabled(!legacyModeActive);
     lbSlRotZGain.setVisible(!legacyModeActive);
     lbSlRotOutGain.setVisible(!legacyModeActive);
+#endif
 
     if (legacyModeActive)
     {
