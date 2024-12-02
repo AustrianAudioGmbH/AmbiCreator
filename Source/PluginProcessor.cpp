@@ -43,6 +43,8 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     coincEightXFirCoeffBuffer.copyFrom(0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
     coincEightYFirCoeffBuffer.copyFrom(0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
     coincOmniFirCoeffBuffer.copyFrom(0, 0, COINC_OMNI_EQ_COEFFS, FIR_LEN);
+
+
 }
 
 AmbiCreatorAudioProcessor::~AmbiCreatorAudioProcessor()

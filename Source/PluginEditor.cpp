@@ -361,6 +361,8 @@ void AmbiCreatorAudioProcessorEditor::updateOutputMeterLabelTexts()
 
 void AmbiCreatorAudioProcessorEditor::timerCallback()
 {
+//    setModeDisplay(processor.isLegacyModeActive());
+
     for (int i = 0; i < 4; ++i)
     {
         inputMeter[i].setLevel(processor.inRms[i].get());
