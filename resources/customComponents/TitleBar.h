@@ -136,30 +136,69 @@ private:
     Path BinauralPath;
 };
 
-class  AALogo :  public IOWidget
+class InvisibleButtonLookAndFeel : public LookAndFeel_V4
 {
 public:
-    AALogo() : IOWidget() {
-        aaLogoPath.loadPathFromData (aaLogoData, sizeof (aaLogoData));
+    void drawButtonBackground(Graphics&, Button&, const Colour&, bool, bool) override
+    {
+        // Do nothing: no background, no outline
     }
-    
-    ~AALogo() override {}
+
+    void drawButtonText(Graphics&, TextButton&, bool, bool) override
+    {
+        // Do nothing: no text rendering
+    }
+};
+
+
+class AALogo : public IOWidget
+{
+public:
+    AALogo() : IOWidget()
+    {
+        aaLogoPath.loadPathFromData(aaLogoData, sizeof(aaLogoData));
+        aaLogoButton.setLookAndFeel(&invisibleLookAndFeel);
+
+    };
+
+    ~AALogo() {
+        aaLogoButton.setLookAndFeel(nullptr);
+    };
+
     const int getComponentSize() override { return 40; }
-    void setMaxSize (int maxSize) override {}
-    void paint (Graphics& g) override
+    void setMaxSize(int maxSize) override {};
+
+    void paint(Graphics& g) override
     {
         const int size = getLocalBounds().getWidth();
-        aaLogoPath.applyTransform (aaLogoPath.getTransformToScaleToFit (0, 0, size, size, true, Justification::centred));
-        // Colour AARed = Colour(155,35,35);
-        g.setColour (Colours::white);
-        g.strokePath (aaLogoPath, PathStrokeType (0.1f));
-        g.fillPath (aaLogoPath);
-        
-    }
-    
+        aaLogoPath.applyTransform(aaLogoPath.getTransformToScaleToFit(0, 0, size, size, true, Justification::centred));
+
+        // Render the logo
+        g.setColour(Colours::white);
+        g.strokePath(aaLogoPath, PathStrokeType(0.1f));
+        g.fillPath(aaLogoPath);
+
+        // Set the button bounds to match the component's
+        aaLogoButton.setBounds(getLocalBounds());
+
+        // Configure button properties for interaction without visibility
+        aaLogoButton.setButtonText("");
+        aaLogoButton.setTooltip(String(BUILD_TAG) + String("-") + String(BUILD_COMMIT_HASH) + String::formatted(" (%p)", this));
+        aaLogoButton.setInterceptsMouseClicks(true, false); // Ensure it captures clicks but does not visually render
+
+        // Ensure the button is not visible on the screen
+        aaLogoButton.setVisible(false);
+
+        // Add the button for interaction
+        addAndMakeVisible(aaLogoButton); // Still necessary to process mouse events
+    };
+
 private:
+    TextButton aaLogoButton;
     Path aaLogoPath;
+    InvisibleButtonLookAndFeel invisibleLookAndFeel;
 };
+
 
 
 template <int maxChannels, bool selectable = true>

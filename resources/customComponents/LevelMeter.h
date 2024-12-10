@@ -36,6 +36,7 @@ public:
     }
     ~LevelMeter() override
     {
+        setLookAndFeel(nullptr);
     }
 
     void paint (Graphics& g) override

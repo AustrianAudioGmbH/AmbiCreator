@@ -17,7 +17,9 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     
     addAndMakeVisible (&title);
     title.setTitle (String("AustrianAudio"),String("AmbiCreator"));
-    title.setFont (mainLaF.aaMedium, mainLaF.aaRegular);
+//    title.setFont (mainLaF.aaMedium, mainLaF.aaRegular);
+    title.setFont (mainLaF.normalFont, mainLaF.aaRegular);
+
     title.showAlertSymbol(false);
     title.setAlertMessage(wrongBusConfigMessageShort, wrongBusConfigMessageLong);
     cbAttOutChOrder.reset(new ComboBoxAttachment (valueTreeState, "channelOrder", *title.getOutputWidgetPtr()->getCbOutChOrder()));
@@ -157,7 +159,7 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
     const int currHeight = getHeight();
     const int currWidth = getWidth();
     
-    g.fillAll (mainLaF.ClBackground);
+    g.fillAll (mainLaF.mainBackground);
 //    g.drawImage(fourChannelModeImageArray, arrayImageArea, RectanglePlacement::centred);
     {
         if (processor.isLegacyModeActive())
@@ -172,12 +174,15 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
         }
     }
 
+#if 0
     // background logo
     aaLogoBgPath.applyTransform (aaLogoBgPath.getTransformToScaleToFit ((0.4f * currWidth), (0.25f * currHeight),
                                                                         (0.7f * currWidth), (0.7f * currWidth), true, Justification::centred));
     g.setColour (Colours::white.withAlpha(0.1f));
     g.strokePath (aaLogoBgPath, PathStrokeType (0.1f));
     g.fillPath (aaLogoBgPath);
+#endif
+
 }
 
 void AmbiCreatorAudioProcessorEditor::resized()
