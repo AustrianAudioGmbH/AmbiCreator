@@ -59,7 +59,7 @@ public:
 //    void setEditorHeight(int height) {editorHeight = height;}
     
     bool isLegacyModeActive() {
-        bool legacyModeIsActive = (legacyMode->load() < 0.5);
+        bool legacyModeIsActive = (legacyMode->load() > 0.5);
         return legacyModeIsActive;
     }
     void setAbLayer(int desiredLayer);
