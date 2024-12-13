@@ -54,8 +54,8 @@ private:
     TooltipWindow tooltipWindow;
     
     Path aaLogoBgPath;
-    Image legacyModeImageArray;
-    Image fourChannelModeImageArray;
+    Image legacyModeImage;
+    Image fourChannelModeImage;
     Rectangle<float> arrayImageArea;
     
     ReverseSlider slOutGain, slHorizontalRotation, slZGain;
@@ -78,8 +78,7 @@ private:
     void updateOutputMeterLabelTexts();
     
     void timerCallback() override;
-    
-    
+
     // Components for new AmbiCreator Layout
     void setModeDisplay (bool legacyModeActive);
     void setAbButtonAlphaFromLayerState(int layerState);
@@ -87,13 +86,13 @@ private:
     const juce::String inMeterLabelText[4] = { "L", "R", "F", "B" };
     
     ComboBox cbOutChannelOrder;
-    
-//    Slider slRotOutGain, slRotZGain;
-    
-    TextButton tbAbLayer[2], tbLegacyMode;
-    
-//    SimpleLabel lbSlRotOutGain, lbSlRotZGain;
 
+    TextButton tbAbLayer[2], tbLegacyMode;
+
+#ifdef AA_CONFIG_ROTARY_UI 0
+    Slider slRotOutGain, slRotZGain;
+    SimpleLabel lbSlRotOutGain, lbSlRotZGain;
+#endif
     SimpleLabel lbOutConfig;
     
     std::unique_ptr<SliderAttachment> slAttRotOutGain, slAttRotZGain;

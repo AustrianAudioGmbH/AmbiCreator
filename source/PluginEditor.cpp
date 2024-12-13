@@ -11,6 +11,7 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
 //    fixedAspectRatioConstrainer.setSizeLimits (processor.EDITOR_DEFAULT_WIDTH, processor.EDITOR_DEFAULT_HEIGHT, 2 * processor.EDITOR_DEFAULT_WIDTH, 2 * processor.EDITOR_DEFAULT_HEIGHT);
 //    setConstrainer (&fixedAspectRatioConstrainer);
 
+
     setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
     
     setLookAndFeel (&mainLaF);
@@ -29,8 +30,8 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     tooltipWindow.setLookAndFeel (&mainLaF);
     tooltipWindow.setMillisecondsBeforeTipAppears(500);
 
-    legacyModeImageArray = ImageCache::getFromMemory (legacyPNGArray, legacyPNGArraySize);
-    fourChannelModeImageArray = ImageCache::getFromMemory (fourChannelPNGArray, fourChannelPNGArraySize);
+    legacyModeImage = ImageCache::getFromMemory (legacyPNGArray, legacyPNGArraySize);
+    fourChannelModeImage = ImageCache::getFromMemory (fourChannelPNGArray, fourChannelPNGArraySize);
 
     aaLogoBgPath.loadPathFromData (aaLogoData, sizeof (aaLogoData));
     
@@ -77,7 +78,6 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     }
     updateOutputMeterLabelTexts();
     
-    startTimer (100);
 
     // ------------------new AmbiCreator Layout components----------------
     // ugly but simple solution
@@ -93,7 +93,7 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     cbOutChannelOrder.setSelectedId (1);
     cbOutChannelOrder.addListener(this);
 
-#if 0 // !J!
+#ifdef AA_CONFIG_ROTARY_UI // !J!
     addAndMakeVisible(&slRotZGain);
     slAttRotZGain.reset(new SliderAttachment (valueTreeState, "zGainDb", slRotZGain));
 //    slRotZGain.setSliderStyle(Slider::Rotary); // !J!
@@ -122,7 +122,13 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     tbAttLegacyMode.reset(new ButtonAttachment (valueTreeState, "legacyMode", tbLegacyMode));
     tbLegacyMode.addListener(this);
     tbLegacyMode.setButtonText("legacy mode");
-    tbLegacyMode.setToggleState(processor.isLegacyModeActive(), NotificationType::sendNotification);
+
+    auto legacyModeInit = valueTreeState.getParameter("legacyMode")->getValue();
+    valueTreeState.getParameter("legacyMode")->setValueNotifyingHost(legacyModeInit);
+
+    tbLegacyMode.setToggleState(processor.isNormalLRFBMode(), NotificationType::dontSendNotification);
+
+
 
     addAndMakeVisible(&tbAbLayer[0]);
     tbAbLayer[0].setButtonText("A");
@@ -145,7 +151,10 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     helpToolTip.setText("help", NotificationType::dontSendNotification);
     helpToolTip.setTextColour(Colours::white.withAlpha(0.5f));
 
-    setModeDisplay(processor.isLegacyModeActive());
+    setModeDisplay(processor.isNormalLRFBMode());
+
+    startTimer (100);
+
 }
 
 AmbiCreatorAudioProcessorEditor::~AmbiCreatorAudioProcessorEditor()
@@ -158,23 +167,24 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
 {
     const int currHeight = getHeight();
     const int currWidth = getWidth();
-    
-    g.fillAll (mainLaF.mainBackground);
-//    g.drawImage(fourChannelModeImageArray, arrayImageArea, RectanglePlacement::centred);
     {
-        if (processor.isLegacyModeActive())
+        g.fillAll (mainLaF.mainBackground);
+//        g.drawImage(fourChannelModeImage, arrayImageArea, RectanglePlacement::centred);
+
+        if (processor.isNormalLRFBMode())
         {
-            g.drawImage(legacyModeImageArray, -40, 0, (int)(arrayImageArea.getWidth() + 100.0f), currHeight + 40, 0, 0, legacyModeImageArray.getWidth(), legacyModeImageArray.getHeight());
+            g.drawImage(legacyModeImage, -40, 0, (int)(arrayImageArea.getWidth() + 100.0f), currHeight + 40, 0, 0, legacyModeImage.getWidth(), legacyModeImage.getHeight());
             helpToolTip.setTooltip(helpTextLegacy);
         }
         else
         {
-            g.drawImageWithin(fourChannelModeImageArray, 12, 1, fourChannelModeImageArray.getWidth() / 2, fourChannelModeImageArray.getHeight() / 2, RectanglePlacement::onlyReduceInSize);
+            g.drawImageWithin(fourChannelModeImage, 12, 1, fourChannelModeImage.getWidth() / 2, fourChannelModeImage.getHeight() / 2, RectanglePlacement::onlyReduceInSize);
             helpToolTip.setTooltip(helpText);
         }
+
     }
 
-#if 0
+#ifdef AA_CONFIG_BG_LOGO
     // background logo
     aaLogoBgPath.applyTransform (aaLogoBgPath.getTransformToScaleToFit ((0.4f * currWidth), (0.25f * currHeight),
                                                                         (0.7f * currWidth), (0.7f * currWidth), true, Justification::centred));
@@ -229,7 +239,7 @@ void AmbiCreatorAudioProcessorEditor::resized()
     title.setBounds (headerArea);
 //    title.toFront(false);
     
-    if (processor.isLegacyModeActive())
+    if (processor.isNormalLRFBMode())
     {
         title.setLineBounds(false, 0.0f, (int)(0.116f * currentWidth), (int)(0.186f * currentWidth));
     }
@@ -272,7 +282,7 @@ void AmbiCreatorAudioProcessorEditor::resized()
     
     Rectangle<int> rotSliderArea = sliderArea;
 
-#if 0
+#ifdef AA_CONFIG_ROTARY_UI
     rotSliderArea.removeFromTop((int)rotarySliderVerticalSpacing);
     lbSlRotOutGain.setBounds(rotSliderArea.removeFromTop((int)labelHeight));
     slRotOutGain.setTextBoxStyle(Slider::TextBoxBelow, false, (int)slTbWidth, slTbHeight);
@@ -333,8 +343,8 @@ void AmbiCreatorAudioProcessorEditor::buttonClicked (Button* button) {
             processor.setAbLayer(eCurrentActiveLayer::layerB);
             setAbButtonAlphaFromLayerState(eCurrentActiveLayer::layerB);
         }
-        tbLegacyMode.setToggleState(processor.isLegacyModeActive(), NotificationType::dontSendNotification);
-        setModeDisplay(processor.isLegacyModeActive());
+        tbLegacyMode.setToggleState(processor.isNormalLRFBMode(), NotificationType::dontSendNotification);
+        setModeDisplay(processor.isNormalLRFBMode());
     }
     else if (button == &tbAbLayer[1])
     {
@@ -344,8 +354,8 @@ void AmbiCreatorAudioProcessorEditor::buttonClicked (Button* button) {
             processor.setAbLayer(eCurrentActiveLayer::layerA);
             setAbButtonAlphaFromLayerState(eCurrentActiveLayer::layerA);
         }
-        tbLegacyMode.setToggleState(processor.isLegacyModeActive(), NotificationType::dontSendNotification);
-        setModeDisplay(processor.isLegacyModeActive());
+        tbLegacyMode.setToggleState(processor.isNormalLRFBMode(), NotificationType::dontSendNotification);
+        setModeDisplay(processor.isNormalLRFBMode());
     }
     repaint();
 }
@@ -372,7 +382,9 @@ void AmbiCreatorAudioProcessorEditor::updateOutputMeterLabelTexts()
 
 void AmbiCreatorAudioProcessorEditor::timerCallback()
 {
-//    setModeDisplay(processor.isLegacyModeActive());
+//    setModeDisplay(processor.isNormalLRFBMode());
+
+//DBG("EDITOR TIMER: LegacyMode:" << String(processor.isNormalLRFBMode() ? "TRUE" : "FALSE"));
 
     for (int i = 0; i < 4; ++i)
     {
@@ -421,7 +433,7 @@ int AmbiCreatorAudioProcessorEditor::getControlParameterIndex (Component& contro
 
 void AmbiCreatorAudioProcessorEditor::setModeDisplay(bool legacyModeActive)
 {
-#if 0
+#ifdef AA_CONFIG_ROTARY_UI
     slZGain.setEnabled(legacyModeActive);
     slZGain.setVisible(legacyModeActive);
     slOutGain.setEnabled(legacyModeActive);

@@ -58,10 +58,11 @@ public:
     int getEditorHeight() {return editorHeight;}
 //    void setEditorHeight(int height) {editorHeight = height;}
     
-    bool isLegacyModeActive() {
-        bool legacyModeIsActive = (legacyMode->load() > 0.5);
-        return legacyModeIsActive;
+    bool isNormalLRFBMode() {
+//        DBG("PROCESSOR LEGACYMODE:"<< juce::String((legacyModePtr->load() < 0.5 ? "TRUE" : "FALSE")));
+        return (legacyModePtr->load() < 0.5 ? true : false);
     }
+
     void setAbLayer(int desiredLayer);
     void changeAbLayerState();
     
@@ -134,7 +135,7 @@ private:
     void ambiRotateAroundZ(AudioBuffer<float>* ambiBuffer);
     void updateLatency();
     
-    std::atomic<float>* legacyMode;
+    std::atomic<float>* legacyModePtr;
     // AB Layer handling
     Identifier nodeA = "layerA";
     Identifier nodeB = "layerB";

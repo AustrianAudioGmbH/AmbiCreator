@@ -17,7 +17,7 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
         std::make_unique<AudioParameterFloat>(ParameterID{"outGainDb", PD_PARAMETER_V1},"output gain", NormalisableRange<float>(-40.0f, 10.0f, 0.1f),0.0f, "dB", AudioProcessorParameter::genericParameter,[](float value, int) { return String(value, 1); }, nullptr),
         std::make_unique<AudioParameterFloat>(ParameterID{"zGainDb", PD_PARAMETER_V1}, "z gain", NormalisableRange<float>(MIN_Z_GAIN_DB, 10.0f, 0.1f),0.0f, "dB", AudioProcessorParameter::genericParameter,[](float value, int) { return (value > MIN_Z_GAIN_DB + GAIN_TO_ZERO_THRESH_DB) ? String(value, 1) : "-inf"; }, nullptr),
         std::make_unique<AudioParameterFloat>(ParameterID{"horRotation",PD_PARAMETER_V1}, "horizontal rotation", NormalisableRange<float>(-180.0f, 180.0f, 1.0f),0.0f, String (CharPointer_UTF8 ("°")), AudioProcessorParameter::genericParameter,[](float value, int) { return String(value, 1); }, nullptr),
-        std::make_unique<AudioParameterBool>(ParameterID{"legacyMode",PD_PARAMETER_V1}, "Legacy Mode", false, "", [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr)
+        std::make_unique<AudioParameterBool>(ParameterID{"legacyMode",PD_PARAMETER_V1}, "Legacy Mode", true, "", [](bool value, int maximumStringLength) {return (value) ? "on" : "off";}, nullptr)
 
     }),
     firLatencySec((static_cast<float>(FIR_LEN) / 2 - 1) / FIR_SAMPLE_RATE),
@@ -36,9 +36,11 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     params.addParameterListener("zGainDb", this);
     params.addParameterListener("horRotation", this);
     params.addParameterListener("legacyMode", this);
-    
-    legacyMode = params.getRawParameterValue("legacyMode");
-    
+
+    legacyModePtr = params.getRawParameterValue("legacyMode");
+
+//    DBG("PROCESSOR INIT LEGACY MODE: " << String((legacyModePtr->load() > 0) ? "TRUE" : "FALSE"));
+
     zFirCoeffBuffer.copyFrom(0, 0, DIFF_Z_EIGHT_EQ_COEFFS, FIR_LEN);
     coincEightXFirCoeffBuffer.copyFrom(0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
     coincEightYFirCoeffBuffer.copyFrom(0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
@@ -187,7 +189,7 @@ void AmbiCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
     int numSamples = buffer.getNumSamples();
     
     // if legacy mode is disabled (input: LRFB) - audio is always processed with FBLR
-    if (legacyMode->load() < 0.5)
+    if (legacyModePtr->load() < 0.5)
     {
         legacyModeReorderBuffer.copyFrom(0, 0, buffer, 0, 0, buffer.getNumSamples()); // L
         legacyModeReorderBuffer.copyFrom(1, 0, buffer, 1, 0, buffer.getNumSamples()); // R
@@ -374,21 +376,19 @@ void AmbiCreatorAudioProcessor::getStateInformation (MemoryBlock& destData)
 //    params.state.setProperty("editorHeight", var(editorHeight), nullptr);
 //    std::unique_ptr<XmlElement> xml (params.state.createXml());
 //    copyXmlToBinary (*xml, destData);
-    
-//    layerA.getPropertyAsValue("legacyMode", nullptr).setValue(var(isLegacyModeActive()));
-//    layerB.getPropertyAsValue("legacyMode", nullptr).setValue(var(isLegacyModeActive()));
+
+
+//DBG("PROCESSOR GETSTATEINFORMATION: isLegacyMode: " << juce::String(isNormalLRFBMode() ? "TRUE" : "FALSE"));
     
     if (abLayerState == eCurrentActiveLayer::layerA)
     {
+        layerA.getPropertyAsValue("legacyMode", nullptr).setValue(var(isNormalLRFBMode()));
         layerA = params.copyState();
     }
     else if (abLayerState == eCurrentActiveLayer::layerB)
     {
+        layerB.getPropertyAsValue("legacyMode", nullptr).setValue(var(isNormalLRFBMode()));
         layerB = params.copyState();
-    }
-    else
-    {
-        layerA = params.copyState();
     }
 
 //    layerA.setProperty("editorWidth", var(editorWidth), nullptr);
@@ -492,6 +492,9 @@ void AmbiCreatorAudioProcessor::parameterChanged (const String &parameterID, flo
     {
         horRotationDeg = newValue;
     }
+    else if (parameterID == "legacyMode") {
+        legacyModePtr->store(newValue);
+    }
 }
 
 //========================= CUSTOM METHODS =====================================
@@ -545,7 +548,7 @@ void AmbiCreatorAudioProcessor::setAbLayer(int desiredLayer)
 
 void AmbiCreatorAudioProcessor::changeAbLayerState()
 {
-    bool currentLegacyMode = isLegacyModeActive();
+    bool currentLegacyMode = isNormalLRFBMode();
     
     if (abLayerState == eCurrentActiveLayer::layerB)
     {
