@@ -189,7 +189,7 @@ void AmbiCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
     int numSamples = buffer.getNumSamples();
     
     // if legacy mode is disabled (input: LRFB) - audio is always processed with FBLR
-    if (legacyModePtr->load() < 0.5)
+    if (legacyModePtr->load() > 0.5)
     {
         legacyModeReorderBuffer.copyFrom(0, 0, buffer, 0, 0, buffer.getNumSamples()); // L
         legacyModeReorderBuffer.copyFrom(1, 0, buffer, 1, 0, buffer.getNumSamples()); // R
