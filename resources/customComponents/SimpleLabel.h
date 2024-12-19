@@ -60,9 +60,12 @@ public:
     {
         // In your constructor, you should add any child components, and
         // initialise any special settings that your component needs.
+        setLookAndFeel(&mainLaF);
+    }
+    ~SimpleLabel() override   {
+        setLookAndFeel(nullptr);
 
     }
-    ~SimpleLabel() override   {}
 
     void setText(String newText)
     {
@@ -127,6 +130,8 @@ private:
     bool isBold = false;
     Colour colour = Colours::white;
     Justification justification = Justification::centred;
+    MainLookAndFeel mainLaF;
+
 };
 
 
@@ -140,10 +145,12 @@ public:
     {
         // In your constructor, you should add any child components, and
         // initialise any special settings that your component needs.
-
+        setLookAndFeel(&mainLaF);
     }
 
-    ~TripleLabel() override {}
+    ~TripleLabel() override {
+        setLookAndFeel(nullptr);
+    }
 
     void setText(String newLeftText, String newMiddleText, String newRightText, bool newLeftBold, bool newMiddleBold, bool newRightBold) {
         leftText = newLeftText;
@@ -197,5 +204,6 @@ private:
     String middleText = "";
     String rightText = "";
     bool leftBold, middleBold, rightBold;
+    MainLookAndFeel mainLaF;
 
 };

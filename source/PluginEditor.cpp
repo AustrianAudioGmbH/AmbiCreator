@@ -209,7 +209,7 @@ void AmbiCreatorAudioProcessorEditor::resized()
     const float linearSliderWidth = 0.246f * currentWidth;
     const float linearSliderVerticalSpacing = 0.08f * currentHeight;
     const float linearSliderHeight = 0.08f * currentHeight;
-    const float labelHeight = 0.03f * currentHeight;
+    const float labelHeight = 0.08f * currentHeight;
     const float meterWidth = 0.023f * currentWidth;
     const float meterHeight = 0.32f * currentHeight;
     const float meterSpacing = 0.003f * currentWidth;

@@ -62,7 +62,9 @@ public:
     reversed(false),
     isDual(false),
     scrollWheelEnabled(true)
-    {}
+    {
+        setLookAndFeel(&mainLaF);
+    }
     
     ReverseSlider (const String& componentName) :
     Slider(componentName),
@@ -70,9 +72,13 @@ public:
     reversed(false),
     isDual(false),
     scrollWheelEnabled(true)
-    {}
+    {
+        setLookAndFeel(&mainLaF);
+    }
     
-    ~ReverseSlider () override {}
+    ~ReverseSlider () override {
+        setLookAndFeel(nullptr);
+    }
     
 public:
     
@@ -280,4 +286,5 @@ private:
     bool isDual;
     bool scrollWheelEnabled;
     const AudioProcessorParameter* parameter {nullptr};
+    MainLookAndFeel mainLaF;
 };

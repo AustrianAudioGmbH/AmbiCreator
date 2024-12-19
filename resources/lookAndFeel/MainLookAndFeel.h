@@ -867,7 +867,7 @@ public:
         if (slider.getSliderStyle() == Slider::SliderStyle::LinearHorizontal)
         {
             layout.sliderBounds.setBounds(static_cast<int> (localBounds.getWidth() * 0.07f), localBounds.getY(), static_cast<int> (localBounds.getWidth() * 0.42f), localBounds.getHeight());
-            layout.textBoxBounds.setBounds(static_cast<int> (localBounds.getWidth() * 0.71f), localBounds.getY(), static_cast<int> (localBounds.getWidth() * 0.29f), localBounds.getHeight());
+            layout.textBoxBounds.setBounds(static_cast<int> (localBounds.getWidth() * 0.71f), localBounds.getY(), static_cast<int> (localBounds.getWidth() * 0.29f), localBounds.getHeight() * 1.25f);
             layout.textBoxBounds.reduce(10, 10);
         }
         else if (slider.getSliderStyle() == Slider::SliderStyle::LinearVertical)
@@ -879,7 +879,7 @@ public:
 //            Slider::TextEntryBoxPosition textBoxPos = slider.getTextBoxPosition();
 
             int textBoxWidth = static_cast<int> (slider.getTopLevelComponent()->getWidth() * 0.05f);
-            int textBoxHeight = static_cast<int> (slider.getTopLevelComponent()->getHeight() * 0.029f);
+            int textBoxHeight = static_cast<int> (slider.getTopLevelComponent()->getHeight() * 0.06f);  // !J! 0.029f
             int textBoxX = static_cast<int> (layout.sliderBounds.getTopLeft().getX() - textBoxWidth + 3.f);
             layout.textBoxBounds.setBounds(textBoxX, layout.sliderBounds.getCentreY() - textBoxHeight / 2, textBoxWidth, textBoxHeight);
         }
@@ -965,7 +965,7 @@ public:
 
     void drawLabel(Graphics& g, Label& label) override
     {
-        Rectangle<float> labelArea(0.0f, 0.0f, label.getWidth() * 1.0f, label.getHeight() * 1.0f);
+        Rectangle<float> labelArea(0.0f, 0.0f, label.getWidth() * 1.0f, label.getHeight() * 1.25f);  // !J! 1.0f
 
         g.setColour(labelBackgroundColor);
         auto labelInnerArea = labelArea.reduced(labelArea.getWidth() * 0.07f, labelArea.getHeight() * 0.08f);
@@ -980,7 +980,7 @@ public:
         int y = static_cast<int> ((labelArea.getHeight() - h) / 2);
 
         Font font(normalFont);
-        font.setHeight(h * 1.0f);
+        font.setHeight(h * 1.25f);
         g.setFont(font);
 
         if (!label.isBeingEdited()) {
