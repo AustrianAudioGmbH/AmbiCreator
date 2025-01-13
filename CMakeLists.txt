@@ -18,6 +18,14 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+# Check the hostname and set AAX_SDK_PATH if it matches "abc-jv.local"
+execute_process(
+		COMMAND uname -n
+		OUTPUT_VARIABLE HOSTNAME
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+
 # This tells cmake we have goodies in the /cmake folder
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include (PamplejuceVersion)
@@ -42,10 +50,6 @@ set(COMPANY_NAME "Austrian Audio")
 # Change me! Used for the MacOS bundle identifier (and signing)
 set(BUNDLE_ID "audio.austrian.software.plugins.ambicreator")
 
-# Change me! Set the plugin formats you want built
-# Valid choices: AAX Unity VST VST3 AU AUv3 Standalone
-set(FORMATS Standalone AU VST3 AUv3 AAX)
-
 # For simplicity, the name of the CMake project is also the name of the target
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
@@ -58,9 +62,34 @@ include(JUCEDefaults)
 # On Github Actions, this is done as a part of actions/checkout
 add_subdirectory(JUCE)
 
+# Find the AAX SDK path if it hasn't already been set by a builder script
+if (DEFINED ENV{AAX_SDK_PATH})
+	message(STATUS "AAX_SDK_PATH set to: $ENV{AAX_SDK_PATH}")
+	#juce_set_aax_sdk_path($ENV{AAX_SDK_PATH})
+	# Valid choices: AAX Unity VST VST3 AU AUv3 Standalone
+	set(FORMATS Standalone AU VST3 AUv3 AAX)
+	set_directory_properties( PROPERTIES JUCE_AAX_COPY_DIR  "$ENV{PD_SHARED_BUILD_DIR}/Library/Application Support/Avid/Audio/Plug-Ins" )
+else()
+	message(STATUS "AAX_SDK_PATH not set. Current hostname: ${HOSTNAME}")
+	# Valid choices: AAX Unity VST VST3 AU AUv3 Standalone
+	set(FORMATS Standalone AU VST3 AUv3)
+endif()
+
 # This adds the melatonin inspector module
 # Only linked when #define AA_INCLUDE_MELATONIN
 #add_subdirectory (modules/melatonin_inspector)
+# Sudara's Perfetto implementation for JUCE
+#add_subdirectory(modules/melatonin_perfetto)
+
+# Do not copy the plugin into standard directories if it is a Release build type
+if (${CMAKE_BUILD_TYPE} MATCHES "Release")
+	message(STATUS "Release build detected: will not copy plugins")
+	set(JUCE_COPY_PLUGIN_AFTER_BUILD FALSE)
+else ()
+	message(STATUS "Debug build detected: will copy plugins for testing")
+	set(JUCE_COPY_PLUGIN_AFTER_BUILD TRUE)
+endif()
+
 
 # See `docs/CMake API.md` in the JUCE repo for all config options
 juce_add_plugin("${PROJECT_NAME}"
@@ -72,7 +101,7 @@ juce_add_plugin("${PROJECT_NAME}"
     BUNDLE_ID "${BUNDLE_ID}"
 
     # On MacOS, plugin is copied to ~/Users/yourname/Library/Audio/Plug-Ins/
-    COPY_PLUGIN_AFTER_BUILD TRUE
+    #COPY_PLUGIN_AFTER_BUILD TRUE
 
     # Change me!
     # A four-character plugin id
@@ -82,15 +111,15 @@ juce_add_plugin("${PROJECT_NAME}"
     # Change me!
     # A unique four-character plugin id
     # Note: this must have at least one upper-case character
-    PLUGIN_CODE AAAC
+	PLUGIN_CODE AAAC
     FORMATS "${FORMATS}"
-
 
     # The name of your final executable
     # This is how it's listed in the DAW
     # This can be different from PROJECT_NAME and can have spaces!
     # You might want to use v${MAJOR_VERSION} here once you go to v2...
     PRODUCT_NAME "${PRODUCT_NAME}${MAJOR_VERSION}"
+
 )
 
 
@@ -105,7 +134,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	# Configures universal binaries in CI
 	include(PamplejuceMacOS)
     set(CMAKE_OSX_ARCHITECTURES arm64 x86_64 )
-	set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum version of the target platform" FORCE) 
+	set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum version of the target platform" FORCE)
 	target_link_options(SharedCode INTERFACE -Wl )
 	if(CMAKE_OSX_DEPLOYMENT_TARGET)
 		message("The minimum macOS version is set to " $CACHE{CMAKE_OSX_DEPLOYMENT_TARGET}.)
@@ -114,6 +143,7 @@ else ()
 	message("Building on Windows")
 	set(FORMATS VST3)
 endif ()
+
 
 
 # C++20, please
@@ -167,6 +197,9 @@ target_compile_definitions(SharedCode
     BUILD_COMMIT_HASH="${GIT_COMMIT_HASH}"
     BUILD_TAG="${GIT_TAG}"
 
+	# Enable this to profile
+	# PERFETTO=1
+
     # JucePlugin_Name is for some reason doesn't use the nicer PRODUCT_NAME
     PRODUCT_NAME_WITHOUT_VERSION="AmbiCreator"
 )
@@ -179,7 +212,8 @@ target_compile_definitions(SharedCode
 target_link_libraries(SharedCode
     INTERFACE
     Assets
-#    melatonin_inspector
+#    melatonin_inspector	
+#    melatonin_perfetto
     juce_audio_basics
 	juce_audio_devices
 	juce_audio_formats
@@ -203,6 +237,17 @@ add_custom_target(host_header DEPENDS
 
 # Link the JUCE plugin targets our SharedCode target
 target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)
+
+if("AAX" IN_LIST FORMATS)
+	message(STATUS "AAX Build: Adding custom command to copy PageTable file to .aaxplugin Resources/ folder")
+	add_custom_command(
+			TARGET ${PROJECT_NAME}_AAX POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy
+			${CMAKE_CURRENT_SOURCE_DIR}/extra/ProTools/AmbiCreator3.xml
+			$<TARGET_FILE_DIR:${PROJECT_NAME}_AAX>/../Resources/
+			COMMENT "Copying AmbiCreator3.xml to the Resources folder for macOS AAX build"
+	)
+endif()
 
 # IPP support, comment out to disable
 #include(PamplejuceIPP)
