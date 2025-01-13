@@ -238,16 +238,16 @@ add_custom_target(host_header DEPENDS
 # Link the JUCE plugin targets our SharedCode target
 target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)
 
-if("AAX" IN_LIST FORMATS)
-	message(STATUS "AAX Build: Adding custom command to copy PageTable file to .aaxplugin Resources/ folder")
-	add_custom_command(
-			TARGET ${PROJECT_NAME}_AAX POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -E copy
-			${CMAKE_CURRENT_SOURCE_DIR}/extra/ProTools/AmbiCreator3.xml
-			$<TARGET_FILE_DIR:${PROJECT_NAME}_AAX>/../Resources/
-			COMMENT "Copying AmbiCreator3.xml to the Resources folder for macOS AAX build"
-	)
-endif()
+#if("AAX" IN_LIST FORMATS)
+#	message(STATUS "AAX Build: Adding custom command to copy PageTable file to .aaxplugin Resources/ folder")
+#	add_custom_command(
+#			TARGET ${PROJECT_NAME}_AAX POST_BUILD
+#			COMMAND ${CMAKE_COMMAND} -E copy
+#			${CMAKE_CURRENT_SOURCE_DIR}/extra/ProTools/AmbiCreator3.xml
+#			$<TARGET_FILE_DIR:${PROJECT_NAME}_AAX>/../Resources/
+#			COMMENT "Copying AmbiCreator.xml to the Resources folder for macOS AAX build"
+#	)
+#endif()
 
 # IPP support, comment out to disable
 #include(PamplejuceIPP)
