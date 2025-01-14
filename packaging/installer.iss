@@ -2,7 +2,7 @@
 #define ProductName 'AmbiCreator2'
 #define Publisher 'AustrianAudio'
 #define Year GetDateTimeString("yyyy","","")
-#define AC_BUILD_DIR GetEnv('AC_BUILD_DIR')
+#define AC_BUILD_DIR GetEnv('AC_SHARED_BUILD_DIR')
 #define AC_BUILD_ARCHIVE GetEnv('AC_BUILD_ARCHIVE')
 #define AC_BUILD_TYPE GetEnv('AC_BUILD_TYPE')
 
@@ -10,7 +10,7 @@
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 AppName={#ProductName}
-OutputBaseFilename="{#GetEnv('AC_BUILD_MARK')}_{#ProductName}_Installer"
+OutputBaseFilename="{#ProductName}_{#GetEnv('AC_BUILD_MARK')}_Installer"
 AppCopyright=Copyright (C) {#Year} {#Publisher}
 AppPublisher={#Publisher}
 AppVersion={#Version}
