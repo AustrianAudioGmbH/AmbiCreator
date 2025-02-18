@@ -1,8 +1,7 @@
-# 3.24.1 is bundled in Visual Studio 2022 v17.4
-# 3.24.1 is also bundled in CLion as of 2023
 cmake_minimum_required(VERSION 3.24.1)
 
-# Get the current Git commit hash
+set(CMAKE_VERBOSE_MAKEFILE ON CACHE BOOL "ON" FORCE)
+
 execute_process(
     COMMAND git rev-parse --short HEAD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -10,7 +9,6 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-# Get the latest Git tag
 execute_process(
     COMMAND git describe --tags --abbrev=0
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -18,121 +16,71 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-# Check the hostname and set AAX_SDK_PATH if it matches "abc-jv.local"
 execute_process(
 		COMMAND uname -n
 		OUTPUT_VARIABLE HOSTNAME
 		OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-
-# This tells cmake we have goodies in the /cmake folder
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include (PamplejuceVersion)
 
-# Change me!
-# This is the internal name of the project and the name of JUCE's shared code "target"
-# Note: This cannot have spaces (it may be 2023, but you can't have it all!)
-# Worry not, JUCE's PRODUCT_NAME can have spaces (and is DAWs display)
 set(PROJECT_NAME "AmbiCreator")
 
-# Worry not, JUCE's PRODUCT_NAME can have spaces (and is what DAWs will display)
-# You can also just have it be the same thing as PROJECT_NAME
-# You may want to append the major version on the end of this (and PROJECT_NAME) ala:
-#   set(PROJECT_NAME "MyPlugin_v${MAJOR_VERSION}")
-# Doing so enables major versions to show up in IDEs and DAWs as separate plugins
-# allowing you to change parameters and behavior without breaking existing user projects
 set(PRODUCT_NAME "AmbiCreator")
 
-# Change me! Used for the MacOS bundle name and Installers
 set(COMPANY_NAME "Austrian Audio")
 
-# Change me! Used for the MacOS bundle identifier (and signing)
 set(BUNDLE_ID "audio.austrian.software.plugins.ambicreator")
 
-# For simplicity, the name of the CMake project is also the name of the target
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
-# Couple tweaks that IMO should be JUCE defaults
 include(JUCEDefaults)
 
-# JUCE is setup as a submodule in the /JUCE folder
-# Locally, you must run `git submodule update --init --recursive` once
-# and later `git submodule update --remote --merge` to keep it up to date
-# On Github Actions, this is done as a part of actions/checkout
 add_subdirectory(JUCE)
 
-# Find the AAX SDK path if it hasn't already been set by a builder script
 if (DEFINED ENV{AAX_SDK_PATH})
 	message(STATUS "AAX_SDK_PATH set to: $ENV{AAX_SDK_PATH}")
-	#juce_set_aax_sdk_path($ENV{AAX_SDK_PATH})
-	# Valid choices: AAX Unity VST VST3 AU AUv3 Standalone
+	juce_set_aax_sdk_path($ENV{AAX_SDK_PATH})
 	set(FORMATS Standalone AU VST3 AUv3 AAX)
 	set_directory_properties( PROPERTIES JUCE_AAX_COPY_DIR  "$ENV{PD_SHARED_BUILD_DIR}/Library/Application Support/Avid/Audio/Plug-Ins" )
 else()
 	message(STATUS "AAX_SDK_PATH not set. Current hostname: ${HOSTNAME}")
-	# Valid choices: AAX Unity VST VST3 AU AUv3 Standalone
 	set(FORMATS Standalone AU VST3 AUv3)
 endif()
 
-# This adds the melatonin inspector module
-# Only linked when #define AA_INCLUDE_MELATONIN
-#add_subdirectory (modules/melatonin_inspector)
-# Sudara's Perfetto implementation for JUCE
-#add_subdirectory(modules/melatonin_perfetto)
+set(JUCE_BUILD_LV2 OFF CACHE BOOL "Disable LV2")
+set(JUCE_BUILD_ARA OFF CACHE BOOL "Disable ARA")
 
-# Do not copy the plugin into standard directories if it is a Release build type
-if (${CMAKE_BUILD_TYPE} MATCHES "Release")
-	message(STATUS "Release build detected: will not copy plugins")
-	set(JUCE_COPY_PLUGIN_AFTER_BUILD FALSE)
-else ()
-	message(STATUS "Debug build detected: will copy plugins for testing")
-	set(JUCE_COPY_PLUGIN_AFTER_BUILD TRUE)
-endif()
-
-
-# See `docs/CMake API.md` in the JUCE repo for all config options
 juce_add_plugin("${PROJECT_NAME}"
-    # Icons for the standalone app
     ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/packaging/icon.png"
 
-    # Change me!
     COMPANY_NAME "${COMPANY_NAME}"
     BUNDLE_ID "${BUNDLE_ID}"
 
-    # On MacOS, plugin is copied to ~/Users/yourname/Library/Audio/Plug-Ins/
-    #COPY_PLUGIN_AFTER_BUILD TRUE
+    COPY_PLUGIN_AFTER_BUILD ON
 
-    # Change me!
-    # A four-character plugin id
-    # First character MUST be uppercase for AU formats
 	PLUGIN_MANUFACTURER_CODE OIDA
 
-    # Change me!
-    # A unique four-character plugin id
-    # Note: this must have at least one upper-case character
 	PLUGIN_CODE AAAC
     FORMATS "${FORMATS}"
 
-    # The name of your final executable
-    # This is how it's listed in the DAW
-    # This can be different from PROJECT_NAME and can have spaces!
-    # You might want to use v${MAJOR_VERSION} here once you go to v2...
     PRODUCT_NAME "${PRODUCT_NAME}${MAJOR_VERSION}"
-
 )
 
+if (${CMAKE_BUILD_TYPE} MATCHES "Release")
+	message(STATUS "Release build detected: will not copy plugins")
+	set_target_properties("${PROJECT_NAME}" PROPERTIES JUCE_COPY_PLUGIN_AFTER_BUILD OFF)
+else ()
+	message(STATUS "Debug build detected: will copy plugins for testing")
+	set_target_properties("${PROJECT_NAME}" PROPERTIES JUCE_COPY_PLUGIN_AFTER_BUILD ON)
+endif()
 
-# This lets us use our code in both the JUCE targets and our Test target
-# Without running into ODR violations
 add_library(SharedCode INTERFACE)
 
-# Sets the minimum macOS version
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	message("Building on MacOS (Darwin)")
-    set(CMAKE_XCODE_GENERATE_SCHEME “TRUE”)
-	# Configures universal binaries in CI
-	include(PamplejuceMacOS)
+    set(CMAKE_XCODE_GENERATE_SCHEME "TRUE")
     set(CMAKE_OSX_ARCHITECTURES arm64 x86_64 )
 	set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum version of the target platform" FORCE)
 	target_link_options(SharedCode INTERFACE -Wl )
@@ -144,76 +92,43 @@ else ()
 	set(FORMATS VST3)
 endif ()
 
-
-
-# C++20, please
-# Use cxx_std_23 for C++23 (as of CMake v 3.20)
 target_compile_features(SharedCode INTERFACE cxx_std_20)
 
-# Manually list all .h and .cpp files for the plugin
-# If you are like me, you'll use globs for your sanity.
-# Just ensure you employ CONFIGURE_DEPENDS so the build system picks up changes
-# If you want to appease the CMake gods and avoid globs, manually add files like so:
 set(SourceFiles source/PluginEditor.h source/PluginProcessor.h source/PluginEditor.cpp source/PluginProcessor.cpp)
-#file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/source/*.h")
 file(GLOB_RECURSE SourceLookAndFeelFiles CONFIGURE_DEPENDS" ${CMAKE_CURRENT_SOURCE_DIR}/resources/lookAndFeel/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/resources/lookAndFeel/*.cpp")
 
 juce_generate_juce_header(${PROJECT_NAME})
 
 target_sources(SharedCode INTERFACE ${SourceFiles} ${SourceLookAndFeelFiles})
 
-#get_target_property(juce_generated_headers_directory ${PROJECT_NAME} JUCE_GENERATED_SOURCES_DIRECTORY)
-#message(WARNING "DEBUG INFO [${juce_generated_headers_directory}] <jucelibrayrcode")
-
 target_include_directories(${PROJECT_NAME} INTERFACE ${juce_generated_headers_directory})
 
-# We intend to only use BinaryData.h from JuceLibraryCode
-#juce_add_binary_data("${PROJECT_NAME}")
-
-# Adds a BinaryData target for embedding assets into the binary
 include(Assets)
 
-# MacOS only: Cleans up folder and target organization on Xcode.
 include(XcodePrettify)
 
-# This is where you can set preprocessor definitions for JUCE and your plugin
 target_compile_definitions(SharedCode
     INTERFACE
 
-    # JUCE_WEB_BROWSER and JUCE_USE_CURL off by default
-    JUCE_WEB_BROWSER=0  # If you set this to 1, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
-    JUCE_USE_CURL=0     # If you set this to 1, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0
     JUCE_MODAL_LOOPS_PERMITTED=1
 
-    # Uncomment if you are paying for a an Indie/Pro license or releasing under GPLv3
     # JUCE_DISPLAY_SPLASH_SCREEN=0
 
-    # lets the app known if we're Debug or Release
     CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
     VERSION="${CURRENT_VERSION}"
 
-    # Add compile definitions to pass the Git hash and tag as preprocessor macros
     BUILD_COMMIT_HASH="${GIT_COMMIT_HASH}"
     BUILD_TAG="${GIT_TAG}"
 
-	# Enable this to profile
-	# PERFETTO=1
-
-    # JucePlugin_Name is for some reason doesn't use the nicer PRODUCT_NAME
     PRODUCT_NAME_WITHOUT_VERSION="AmbiCreator"
 )
 
-# Link to any other modules you added (with juce_add_module) here!
-# Usually JUCE modules must have PRIVATE visibility
-# See https://github.com/juce-framework/JUCE/blob/master/docs/CMake%20API.md#juce_add_module
-# However, with AmbiCreator, you'll link modules to SharedCode with INTERFACE visibility
-# This allows the JUCE plugin targets and the Tests target to link against it
 target_link_libraries(SharedCode
     INTERFACE
     Assets
-#    melatonin_inspector	
-#    melatonin_perfetto
     juce_audio_basics
 	juce_audio_devices
 	juce_audio_formats
@@ -234,8 +149,6 @@ add_custom_target(host_header DEPENDS
     $<TARGET_PROPERTY:${PROJECT_NAME},JUCE_GENERATED_SOURCES_DIRECTORY>/JuceHeader.h
 )
 
-
-# Link the JUCE plugin targets our SharedCode target
 target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)
 
 #if("AAX" IN_LIST FORMATS)
@@ -249,14 +162,3 @@ target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)
 #	)
 #endif()
 
-# IPP support, comment out to disable
-#include(PamplejuceIPP)
-#
-## Everything related to the tests target
-#include(Tests)
-#
-## A separate target keeps the Tests target fast!
-#include(Benchmarks)
-#
-## Pass some config to GA (like our PRODUCT_NAME)
-#include(GitHubENV)
