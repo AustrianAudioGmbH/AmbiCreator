@@ -2,6 +2,8 @@
 #include "PluginEditor.h"
 #include "../resources/customComponents/ImgPaths.h"
 
+#define AA_SUPPORT_URL "https://austrian.audio/support-downloads/"
+
 //==============================================================================
 AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAudioProcessor& p, AudioProcessorValueTreeState& vts)
     : AudioProcessorEditor (&p), processor (p), valueTreeState(vts)
@@ -150,6 +152,8 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     addAndMakeVisible(&helpToolTip);
     helpToolTip.setText("help", NotificationType::dontSendNotification);
     helpToolTip.setTextColour(Colours::white.withAlpha(0.5f));
+    helpToolTip.setInterceptsMouseClicks(true, false); // Enable mouse clicks
+    helpToolTip.addMouseListener(this, false); // Listen for clicks
 
     setModeDisplay(processor.isNormalLRFBMode());
 
@@ -160,6 +164,17 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
 AmbiCreatorAudioProcessorEditor::~AmbiCreatorAudioProcessorEditor()
 {
     setLookAndFeel (nullptr);
+}
+
+void AmbiCreatorAudioProcessorEditor::mouseUp(const juce::MouseEvent& event)
+{
+    if (event.eventComponent == &helpToolTip)
+    {
+        if (!juce::URL(AA_SUPPORT_URL).launchInDefaultBrowser())
+        {
+            DBG("Failed to open URL!");
+        }
+    }
 }
 
 //==============================================================================

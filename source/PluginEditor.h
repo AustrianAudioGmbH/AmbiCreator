@@ -33,6 +33,8 @@ public:
     void resized() override;
     
     void buttonClicked (Button* button) override;
+    void mouseUp(const juce::MouseEvent& event) override;
+
     void comboBoxChanged (ComboBox* cb) override;
     void sliderValueChanged (Slider* slider) override;
     
