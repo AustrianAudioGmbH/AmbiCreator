@@ -15,7 +15,7 @@
 #include "../resources/customComponents/MultiTextButton.h"
 
 
-#define AA_MELATONIN
+#undef AA_MELATONIN
 #ifdef AA_MELATONIN
 #include "melatonin_inspector/melatonin_inspector.h"
 #endif
@@ -133,7 +133,7 @@ private:
 
 
 #ifdef AA_MELATONIN
-    melatonin::Inspector inspector { *this, false };
+    melatonin::Inspector inspector { *this, true };
 #endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmbiCreatorAudioProcessorEditor)

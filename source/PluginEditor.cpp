@@ -18,8 +18,6 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     inspector.toggle(true);
 #endif
 
-    setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
-    
     setLookAndFeel (&ambiCreatorLookAndFeel);
     
     addAndMakeVisible (&title);
@@ -184,6 +182,9 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     helpToolTip.addMouseListener(this, false); // Listen for clicks
 
     setModeDisplay(processor.isNormalLRFBMode());
+
+    setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
+    setResizable(true, true );
 
     startTimer (100);
 
