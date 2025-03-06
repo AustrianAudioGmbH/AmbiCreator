@@ -69,6 +69,9 @@ public:
     const Colour ClText = Colour(0xFFFFFFFF);
     const Colour ClTextTextboxBackground = Colour(0xFF000000);
     const Colour ClSeparator = Colour(0xFF979797);
+    const Colour mainBackground = Colour(17, 18, 19);
+    const Colour groupComponentBackgroundColor = Colour(24, 25, 28);
+
 //    const Colour ClWidgetColours[4] = {
 //        Colour(0xFF00CAFF), Colour(0xFF4FFF00), Colour(0xFFFF9F00), Colour(0xFFD0011B)
 //    };

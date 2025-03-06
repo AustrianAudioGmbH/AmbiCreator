@@ -51,12 +51,18 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
 
 AmbiCreatorAudioProcessor::~AmbiCreatorAudioProcessor()
 {
+
 }
 
 //==============================================================================
 const String AmbiCreatorAudioProcessor::getName() const
 {
     return JucePlugin_Name;
+}
+
+int AmbiCreatorAudioProcessor::getChannelOrder()
+{
+    return channelOrder;
 }
 
 bool AmbiCreatorAudioProcessor::acceptsMidi() const

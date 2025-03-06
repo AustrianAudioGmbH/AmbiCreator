@@ -49,7 +49,9 @@ public:
     //==============================================================================
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
-    
+
+    int getChannelOrder();
+
     //==============================================================================
     void parameterChanged (const String &parameterID, float newValue) override;
     
@@ -116,13 +118,7 @@ private:
     
     int editorWidth;
     int editorHeight;
-    
-    enum eChannelOrder
-    {
-        ACN = 0, // ACN implies AmbiX, SN3D normalization
-        FUMA = 1 // N3D normalization
-    };
-    
+
     enum eChannelOrderACN
     {
         W = 0,

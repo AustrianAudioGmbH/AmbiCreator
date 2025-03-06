@@ -18,7 +18,6 @@ class MainLookAndFeel : public LookAndFeel_V4
 {
 public:
     const Colour AARed = Colour(155,35,35);
-    const Colour ClBackground = Colour(0xFF2D2D2D);
 
     const Colour mainBackground = Colour(17, 18, 19);
     const Colour mainTextColor = Colour(255, 255, 255);
@@ -48,10 +47,11 @@ public:
     const Colour textButtonPressedBackgroundColor = textButtonActiveFrameColor.withAlpha(0.1f);
     const Colour textButtonPressedRedBackgroundColor = textButtonActiveRedFrameColor.withAlpha(0.1f);
     const Colour toggleButtonActiveRedBackgroundColor = Colour(182, 22, 22).withAlpha(0.7f);
+    const Colour ClText = Colour(0xFFFFFFFF);
+    const Colour ClTextTextboxBackground = Colour(0xFF000000);
 
     Typeface::Ptr normalFont;
     Typeface::Ptr terminatorRegularFont, terminatorBoldFont;
-    Typeface::Ptr aaLight, aaRegular, aaMedium, terminator;
 
     MainLookAndFeel()
     {
@@ -59,12 +59,8 @@ public:
         terminatorRegularFont = Typeface::createSystemTypefaceFor(BinaryFonts::InterRegular_ttf, BinaryFonts::InterRegular_ttfSize);
         terminatorBoldFont = Typeface::createSystemTypefaceFor(BinaryFonts::InterBold_ttf, BinaryFonts::InterBold_ttfSize);
 
-        aaLight = Typeface::createSystemTypefaceFor(BinaryFonts::NunitoSansLight_ttf, BinaryFonts::NunitoSansLight_ttfSize);
-        aaMedium = Typeface::createSystemTypefaceFor(BinaryFonts::NunitoSansRegular_ttf, BinaryFonts::NunitoSansRegular_ttfSize);
-        aaRegular = Typeface::createSystemTypefaceFor(BinaryFonts::NunitoSansSemiBold_ttf, BinaryFonts::NunitoSansSemiBold_ttfSize);
-        terminator = Typeface::createSystemTypefaceFor(BinaryFonts::terminator_ttf, BinaryFonts::terminator_ttfSize);
-
         setColour(ListBox::backgroundColourId, groupComponentBackgroundColor);
+
     }
 
     ~MainLookAndFeel() override {}
@@ -72,13 +68,13 @@ public:
     Typeface::Ptr getTypefaceForFont(const Font& f) override
     {
         switch (f.getStyleFlags()) {
-        case 1: return normalFont;
-        default: return normalFont;
+            case 1: return normalFont;
+            default: return normalFont;
         }
     }
 
     void drawButtonBackground(Graphics& g, Button& button, const Colour& backgroundColour,
-        bool isMouseOverButton, bool isButtonDown) override
+                              bool isMouseOverButton, bool isButtonDown) override
     {
         (void)backgroundColour;
         Rectangle<float> buttonArea(0.0f, 0.0f, button.getWidth() * 1.0f, button.getHeight() * 1.0f);
@@ -106,15 +102,18 @@ public:
         {
             g.setColour(button.isEnabled() ? textButtonActiveFrameColor : textButtonHoverBackgroundColor);
             g.drawRect(buttonArea, 1);
-            
+
+            auto toggleState = button.getToggleState();
+
             if (isMouseOverButton)
             {
-                g.setColour(textButtonHoverBackgroundColor);
+                g.setColour(textButtonHoverBackgroundColor );
                 g.fillRect(buttonArea.reduced(1.0f, 1.0f));
             }
-            if (isButtonDown)
+
+            if (toggleState)
             {
-                g.setColour(textButtonPressedBackgroundColor);
+                g.setColour(polarVisualizerRed);
                 g.fillRect(buttonArea.reduced(1.0f, 1.0f));
             }
         }
@@ -124,7 +123,7 @@ public:
             g.drawRect(buttonArea, 1);
 
             auto arrowArea = buttonArea.reduced(button.proportionOfWidth(0.45f) * 1.0f,
-                                           button.proportionOfHeight(0.33f) * 1.0f).translated(button.proportionOfWidth(0.36f) * 1.0f, 0.0f);
+                                                button.proportionOfHeight(0.33f) * 1.0f).translated(button.proportionOfWidth(0.36f) * 1.0f, 0.0f);
 
             if (!button.isEnabled())
             {
@@ -232,7 +231,7 @@ public:
             if (button.getToggleState() == true)
             {
                 auto eqFieldCheckSignArea = juce::Rectangle<float>(button.getWidth() * 0.77f,
-                    button.getHeight() * 0.05f, button.getWidth() * 0.18f, button.getWidth() * 0.18f);
+                                                                   button.getHeight() * 0.05f, button.getWidth() * 0.18f, button.getWidth() * 0.18f);
                 eqFieldCheckSign->drawWithin(g, eqFieldCheckSignArea, juce::RectanglePlacement::centred, 1.f);
             }
         }
@@ -240,7 +239,7 @@ public:
         {
             g.setColour(textButtonFrameColor);
             g.drawRect(buttonArea, 1);
-            
+
             if (isMouseOverButton)
             {
                 g.setColour(textButtonHoverBackgroundColor);
@@ -251,7 +250,7 @@ public:
                 g.setColour(textButtonPressedBackgroundColor);
                 g.fillRect(buttonArea.reduced(1.0f, 1.0f));
             }
-            
+
             if (!button.isEnabled())
             {
                 bool resultMainImg = diffuseFieldImg->replaceColour(Colours::white, mainTextDisabledColor);
@@ -269,11 +268,11 @@ public:
             diffuseFieldImageArea.removeFromTop(button.proportionOfHeight(0.11f) * 1.0f);
             diffuseFieldImageArea.removeFromBottom(button.proportionOfHeight(0.33f) * 1.0f);
             diffuseFieldImg->drawWithin(g, diffuseFieldImageArea, juce::RectanglePlacement::centred, 1.f);
-            
+
             if (button.getToggleState() == true)
             {
                 auto eqFieldCheckSignArea = juce::Rectangle<float>(button.getWidth()*0.77f,
-                    button.getHeight() * 0.05f, button.getWidth()*0.18f, button.getWidth() * 0.18f);
+                                                                   button.getHeight() * 0.05f, button.getWidth()*0.18f, button.getWidth() * 0.18f);
                 eqFieldCheckSign->drawWithin(g, eqFieldCheckSignArea, juce::RectanglePlacement::centred, 1.f);
             }
         }
@@ -319,7 +318,7 @@ public:
                     return;
             }
             maximizeTargetIconImg->drawWithin(g, iconArea, juce::RectanglePlacement::centred, 1.f);
-             
+
             if (isMouseOverButton)
             {
                 g.setColour(textButtonHoverBackgroundColor);
@@ -398,19 +397,19 @@ public:
                 ellipseArea.setHeight(jmin(reducedButtonArea.getWidth(), reducedButtonArea.getHeight()));
                 ellipseArea.setCentre(buttonArea.getCentre());
                 path.addEllipse(ellipseArea);
-                
+
                 auto color = textButtonPressedBackgroundColor;
                 if (button.getToggleState())
                 {
                     //Draw check sign when terminator stage completed
-                    Line<float> line1(Point(ellipseArea.getX() + ellipseArea.proportionOfWidth(0.24f), 
-                        ellipseArea.getY() + ellipseArea.proportionOfHeight(0.47f)), 
-                        Point(ellipseArea.getX() + ellipseArea.proportionOfWidth(0.41f), 
-                            ellipseArea.getY() + ellipseArea.proportionOfHeight(0.67f)));
+                    Line<float> line1(Point(ellipseArea.getX() + ellipseArea.proportionOfWidth(0.24f),
+                                            ellipseArea.getY() + ellipseArea.proportionOfHeight(0.47f)),
+                                      Point(ellipseArea.getX() + ellipseArea.proportionOfWidth(0.41f),
+                                            ellipseArea.getY() + ellipseArea.proportionOfHeight(0.67f)));
 
                     Line<float> line2(line1.getEnd(),
-                        Point(ellipseArea.getX() + ellipseArea.proportionOfWidth(0.72f),
-                            ellipseArea.getY() + ellipseArea.proportionOfHeight(0.26f)));
+                                      Point(ellipseArea.getX() + ellipseArea.proportionOfWidth(0.72f),
+                                            ellipseArea.getY() + ellipseArea.proportionOfHeight(0.26f)));
 
                     Path signPath;
                     signPath.addLineSegment(line1, ellipseArea.proportionOfWidth(0.06f));
@@ -433,18 +432,18 @@ public:
             }
         }
         else if (button.getButtonText() == "Click on the button below to apply polar\npatterns with minimum spill energy"
-              || button.getButtonText() == "Click on the button below to apply polar\npatterns with maximum signal energy"
-              || button.getButtonText() == "Find best compromise between reduction\nof spill and maximizing target signal")
+                 || button.getButtonText() == "Click on the button below to apply polar\npatterns with maximum signal energy"
+                 || button.getButtonText() == "Find best compromise between reduction\nof spill and maximizing target signal")
         {
         }
         else if (button.getButtonText() == "Begin Terminate"
-            || button.getButtonText() == "Begin Maximize"
-            || button.getButtonText() == "Apply Max Target-to-Spill"
-            )
+                 || button.getButtonText() == "Begin Maximize"
+                 || button.getButtonText() == "Apply Max Target-to-Spill"
+                )
         {
             g.setColour(mainTextColor);
             g.drawRect(buttonArea, 1);
-            
+
             if (isMouseOverButton)
             {
                 g.setColour(textButtonHoverBackgroundColor);
@@ -456,7 +455,7 @@ public:
                 g.fillRect(buttonArea.reduced(1.0f, 1.0f));
             }
         }
-        //Sync channel buttons
+            //Sync channel buttons
         else if (button.getComponentID() == "5521")
         {
             auto mainColor = button.isEnabled() ? textButtonActiveBlue1FrameColor : textButtonActiveBlue1FrameColor.withAlpha(0.5f);
@@ -541,7 +540,7 @@ public:
                 g.drawRect(buttonArea.reduced(3.0f, 3.0f), 2);
             }
         }
-        //Close preset and close terminator buttons
+            //Close preset and close terminator buttons
         else if (button.getComponentID() == "5621" || button.getComponentID() == "5721")
         {
             if (isMouseOverButton)
@@ -558,90 +557,90 @@ public:
         else if (button.getButtonText() == "Eight Pattern")
         {
             drawPatternImage(g,
-                juce::Drawable::createFromImageData(BinaryData::eightPatternIcon_svg, BinaryData::eightPatternIcon_svgSize),
-                buttonArea,
-                0,
-                reduceYDirButtons,
-                cornerDirButtons,
-                isMouseOverButton,
-                isButtonDown);
+                             juce::Drawable::createFromImageData(BinaryData::eightPatternIcon_svg, BinaryData::eightPatternIcon_svgSize),
+                             buttonArea,
+                             0,
+                             reduceYDirButtons,
+                             cornerDirButtons,
+                             isMouseOverButton,
+                             isButtonDown);
         }
         else if (button.getButtonText() == "HyperCardioid Pattern")
         {
             drawPatternImage(g,
-                juce::Drawable::createFromImageData(BinaryData::hyperCardioidPatternIcon_svg, BinaryData::hyperCardioidPatternIcon_svgSize),
-                buttonArea,
-                0,
-                reduceYDirButtons,
-                cornerDirButtons,
-                isMouseOverButton,
-                isButtonDown);
+                             juce::Drawable::createFromImageData(BinaryData::hyperCardioidPatternIcon_svg, BinaryData::hyperCardioidPatternIcon_svgSize),
+                             buttonArea,
+                             0,
+                             reduceYDirButtons,
+                             cornerDirButtons,
+                             isMouseOverButton,
+                             isButtonDown);
         }
         else if (button.getButtonText() == "SuperCardioid Pattern")
         {
             drawPatternImage(g,
-                juce::Drawable::createFromImageData(BinaryData::superCardioidPatternIcon_svg, BinaryData::superCardioidPatternIcon_svgSize),
-                buttonArea,
-                0,
-                reduceYDirButtons,
-                cornerDirButtons,
-                isMouseOverButton,
-                isButtonDown);
+                             juce::Drawable::createFromImageData(BinaryData::superCardioidPatternIcon_svg, BinaryData::superCardioidPatternIcon_svgSize),
+                             buttonArea,
+                             0,
+                             reduceYDirButtons,
+                             cornerDirButtons,
+                             isMouseOverButton,
+                             isButtonDown);
         }
         else if (button.getButtonText() == "Cardioid Pattern")
         {
             drawPatternImage(g,
-                juce::Drawable::createFromImageData(BinaryData::cardioidPatternIcon_svg, BinaryData::cardioidPatternIcon_svgSize),
-                buttonArea,
-                reduceYDirButtons,
-                reduceYDirButtons,
-                cornerDirButtons,
-                isMouseOverButton,
-                isButtonDown);
+                             juce::Drawable::createFromImageData(BinaryData::cardioidPatternIcon_svg, BinaryData::cardioidPatternIcon_svgSize),
+                             buttonArea,
+                             reduceYDirButtons,
+                             reduceYDirButtons,
+                             cornerDirButtons,
+                             isMouseOverButton,
+                             isButtonDown);
         }
         else if (button.getButtonText() == "BCardioid Pattern")
         {
             drawPatternImage(g,
-                juce::Drawable::createFromImageData(BinaryData::bCardioidPatternIcon_svg, BinaryData::bCardioidPatternIcon_svgSize),
-                buttonArea,
-                reduceYDirButtons,
-                reduceYDirButtons,
-                cornerDirButtons,
-                isMouseOverButton,
-                isButtonDown);
+                             juce::Drawable::createFromImageData(BinaryData::bCardioidPatternIcon_svg, BinaryData::bCardioidPatternIcon_svgSize),
+                             buttonArea,
+                             reduceYDirButtons,
+                             reduceYDirButtons,
+                             cornerDirButtons,
+                             isMouseOverButton,
+                             isButtonDown);
         }
         else if (button.getButtonText() == "Omni Pattern")
         {
             drawPatternImage(g,
-                juce::Drawable::createFromImageData(BinaryData::omniPatternIcon_svg, BinaryData::omniPatternIcon_svgSize),
-                buttonArea,
-                reduceYDirButtons,
-                reduceYDirButtons,
-                cornerDirButtons,
-                isMouseOverButton,
-                isButtonDown);
+                             juce::Drawable::createFromImageData(BinaryData::omniPatternIcon_svg, BinaryData::omniPatternIcon_svgSize),
+                             buttonArea,
+                             reduceYDirButtons,
+                             reduceYDirButtons,
+                             cornerDirButtons,
+                             isMouseOverButton,
+                             isButtonDown);
         }
         else if (button.getButtonText() == "RevBCardioid Pattern")
         {
             drawPatternImage(g,
-                juce::Drawable::createFromImageData(BinaryData::revBCardioidPatternIcon_svg, BinaryData::revBCardioidPatternIcon_svgSize),
-                buttonArea,
-                reduceYDirButtons,
-                reduceYDirButtons,
-                cornerDirButtons,
-                isMouseOverButton,
-                isButtonDown);
+                             juce::Drawable::createFromImageData(BinaryData::revBCardioidPatternIcon_svg, BinaryData::revBCardioidPatternIcon_svgSize),
+                             buttonArea,
+                             reduceYDirButtons,
+                             reduceYDirButtons,
+                             cornerDirButtons,
+                             isMouseOverButton,
+                             isButtonDown);
         }
         else if (button.getButtonText() == "RevCardioid Pattern")
         {
             drawPatternImage(g,
-                juce::Drawable::createFromImageData(BinaryData::revCardioidPatternIcon_svg, BinaryData::revCardioidPatternIcon_svgSize),
-                buttonArea,
-                reduceYDirButtons,
-                reduceYDirButtons,
-                cornerDirButtons,
-                isMouseOverButton,
-                isButtonDown);
+                             juce::Drawable::createFromImageData(BinaryData::revCardioidPatternIcon_svg, BinaryData::revCardioidPatternIcon_svgSize),
+                             buttonArea,
+                             reduceYDirButtons,
+                             reduceYDirButtons,
+                             cornerDirButtons,
+                             isMouseOverButton,
+                             isButtonDown);
         }
         else if (button.getButtonText() == "Trim Slider Pointer")
         {
@@ -664,7 +663,7 @@ public:
             path.lineTo(point4);
             path.lineTo(point5);
             path.closeSubPath();
-            
+
             g.setColour(textButtonFrameColor);
             g.fillPath(path);
         }
@@ -673,7 +672,7 @@ public:
             auto imageArea = buttonArea.translated(0, 1);
             undoPresetIconImg->drawWithin(g, imageArea, juce::RectanglePlacement::centred, 1.f);
         }
-        //Nr of bands buttons
+            //Nr of bands buttons
         else
         {
 //            auto mainColor = button.isEnabled() ? textButtonActiveBlue4FrameColor : textButtonActiveBlue4FrameColor.withAlpha(0.5f);
@@ -730,26 +729,26 @@ public:
             h = static_cast<int> (button.getTopLevelComponent()->getHeight() * 0.018f);
         }
         else if (button.getButtonText() == "Terminate Spill"
-            || button.getButtonText() == "Maximize Target"
-            || button.getButtonText() == "Max Target-to-spill"
-            )
+                 || button.getButtonText() == "Maximize Target"
+                 || button.getButtonText() == "Max Target-to-spill"
+                )
         {
             justification = Justification::centredLeft;
             x = buttonArea.proportionOfWidth(0.11f);
             w = buttonArea.proportionOfWidth(0.78f);
         }
         else if (button.getButtonText() == "Begin Terminate"
-            || button.getButtonText() == "Begin Maximize"
-            || button.getButtonText() == "Apply Max Target-to-Spill"
-            )
+                 || button.getButtonText() == "Begin Maximize"
+                 || button.getButtonText() == "Apply Max Target-to-Spill"
+                )
         {
             justification = Justification::centredLeft;
             x = buttonArea.proportionOfWidth(0.11f);
             w = buttonArea.proportionOfWidth(0.78f);
         }
         else if (button.getButtonText() == "Terminate spill" ||
-            button.getButtonText() == "Maximize target" ||
-            button.getButtonText() == "Max Target-to-Spill")
+                 button.getButtonText() == "Maximize target" ||
+                 button.getButtonText() == "Max Target-to-Spill")
         {
             g.setColour(button.isEnabled() ? mainTextColor : mainTextInactiveColor);
             font = button.isEnabled() ? terminatorBoldFont : terminatorRegularFont;
@@ -758,9 +757,9 @@ public:
             y = (buttonArea.getHeight() - h) / 2;
         }
         else if (button.getButtonText() == "01" ||
-            button.getButtonText() == "02" ||
-            button.getButtonText() == "03"
-            )
+                 button.getButtonText() == "02" ||
+                 button.getButtonText() == "03"
+                )
         {
             if (button.getToggleState())
                 return;
@@ -779,9 +778,9 @@ public:
             return;
         }
         else if (button.getButtonText() == "Click on the button below to apply polar\npatterns with minimum spill energy"
-            || button.getButtonText() == "Click on the button below to apply polar\npatterns with maximum signal energy"
-            || button.getButtonText() == "Find best compromise between reduction\nof spill and maximizing target signal"
-            )
+                 || button.getButtonText() == "Click on the button below to apply polar\npatterns with maximum signal energy"
+                 || button.getButtonText() == "Find best compromise between reduction\nof spill and maximizing target signal"
+                )
         {
             g.setColour(button.isEnabled() ? mainTextColor : mainTextInactiveColor);
             font = terminatorRegularFont;
@@ -790,13 +789,13 @@ public:
             w = buttonArea.proportionOfWidth(1.f);
         }
         else if (button.getButtonText() == "Eight Pattern" ||
-            button.getButtonText() == "HyperCardioid Pattern" ||
-            button.getButtonText() == "SuperCardioid Pattern" ||
-            button.getButtonText() == "Cardioid Pattern" ||
-            button.getButtonText() == "BCardioid Pattern" ||
-            button.getButtonText() == "Omni Pattern" ||
-            button.getButtonText() == "RevBCardioid Pattern" ||
-            button.getButtonText() == "RevCardioid Pattern")
+                 button.getButtonText() == "HyperCardioid Pattern" ||
+                 button.getButtonText() == "SuperCardioid Pattern" ||
+                 button.getButtonText() == "Cardioid Pattern" ||
+                 button.getButtonText() == "BCardioid Pattern" ||
+                 button.getButtonText() == "Omni Pattern" ||
+                 button.getButtonText() == "RevBCardioid Pattern" ||
+                 button.getButtonText() == "RevCardioid Pattern")
         {
             return;
         }
@@ -819,8 +818,8 @@ public:
     }
 
     void drawGroupComponentOutline(Graphics& g, int width, int height,
-        const String& text, const Justification& position,
-        GroupComponent& group) override
+                                   const String& text, const Justification& position,
+                                   GroupComponent& group) override
     {
         (void)width;
         (void)height;
@@ -859,6 +858,7 @@ public:
         g.drawFittedText(text, x, y, w, h, Justification::left, 1);
     }
 
+#if AA_SLIDER_LAYOUT
     Slider::SliderLayout getSliderLayout(Slider& slider) override
     {
         Rectangle<int> localBounds(0, 0, slider.getWidth(), slider.getHeight());
@@ -867,8 +867,8 @@ public:
         if (slider.getSliderStyle() == Slider::SliderStyle::LinearHorizontal)
         {
             layout.sliderBounds.setBounds(static_cast<int> (localBounds.getWidth() * 0.07f), localBounds.getY(), static_cast<int> (localBounds.getWidth() * 0.42f), localBounds.getHeight());
-            layout.textBoxBounds.setBounds(static_cast<int> (localBounds.getWidth() * 0.71f), localBounds.getY(), static_cast<int> (localBounds.getWidth() * 0.29f), localBounds.getHeight() * 1.25f);
-            layout.textBoxBounds.reduce(10, 10);
+            layout.textBoxBounds.setBounds(static_cast<int> (localBounds.getWidth() * 0.71f), localBounds.getY(), static_cast<int> (localBounds.getWidth() * 0.29f), localBounds.getHeight());
+//            layout.textBoxBounds.reduce(10, 10);
         }
         else if (slider.getSliderStyle() == Slider::SliderStyle::LinearVertical)
         {
@@ -879,27 +879,28 @@ public:
 //            Slider::TextEntryBoxPosition textBoxPos = slider.getTextBoxPosition();
 
             int textBoxWidth = static_cast<int> (slider.getTopLevelComponent()->getWidth() * 0.05f);
-            int textBoxHeight = static_cast<int> (slider.getTopLevelComponent()->getHeight() * 0.06f);  // !J! 0.029f
+            int textBoxHeight = static_cast<int> (slider.getTopLevelComponent()->getHeight() * 0.05f);  // !J! 0.029f
             int textBoxX = static_cast<int> (layout.sliderBounds.getTopLeft().getX() - textBoxWidth + 3.f);
             layout.textBoxBounds.setBounds(textBoxX, layout.sliderBounds.getCentreY() - textBoxHeight / 2, textBoxWidth, textBoxHeight);
         }
 
         return layout;
     }
+#endif
 
     void drawLinearSlider(Graphics& g, int x, int y, int width, int height,
-        float sliderPos, float minSliderPos, float maxSliderPos,
-        const Slider::SliderStyle style, Slider& slider) override
+                          float sliderPos, float minSliderPos, float maxSliderPos,
+                          const Slider::SliderStyle style, Slider& slider) override
     {
         drawLinearSliderBackground(g, x, y, width, height, sliderPos, minSliderPos, maxSliderPos, style, slider);
         drawLinearSliderThumb(g, x, y, width, height, sliderPos, minSliderPos, maxSliderPos, style, slider);
     }
 
     void drawLinearSliderBackground(Graphics& g, int x, int y, int width, int height,
-        float sliderPos,
-        float minSliderPos,
-        float maxSliderPos,
-        const Slider::SliderStyle style, Slider& slider) override
+                                    float sliderPos,
+                                    float minSliderPos,
+                                    float maxSliderPos,
+                                    const Slider::SliderStyle style, Slider& slider) override
     {
         (void)minSliderPos;
         (void)maxSliderPos;
@@ -933,8 +934,8 @@ public:
     }
 
     void drawLinearSliderThumb(Graphics& g, int x, int y, int width, int height,
-        float sliderPos, float minSliderPos, float maxSliderPos,
-        const Slider::SliderStyle style, Slider& slider) override
+                               float sliderPos, float minSliderPos, float maxSliderPos,
+                               const Slider::SliderStyle style, Slider& slider) override
     {
         (void)minSliderPos;
         (void)maxSliderPos;
@@ -963,9 +964,52 @@ public:
         }
     }
 
+
+    void drawLabel (Graphics& g, Label& label) override
+    {
+        auto alpha = label.isEnabled() ? 0.6f : 0.4f;
+        g.fillAll (label.findColour (Label::backgroundColourId));
+        Rectangle<int> bounds = label.getLocalBounds();
+        auto x = (float) bounds.getX();
+        auto y = (float) bounds.getY();
+        auto w = (float) bounds.getWidth();
+        auto h = (float) bounds.getHeight();
+        Path p;
+        p.addRoundedRectangle(x, y, w, h, h/2.0f);
+
+//        g.setColour (ClTextTextboxBackground.withMultipliedAlpha(0.2f));
+        g.setColour (labelBackgroundColor.withMultipliedAlpha(alpha));
+        g.fillPath (p);
+
+        if (! label.isBeingEdited())
+        {
+            const float editingAlpha = label.isEnabled() ? 1.0f : 0.5f;
+            const Font font (normalFont);
+
+            //g.setColour (ClText.withMultipliedAlpha (alpha));
+            g.setColour (ClText.withMultipliedAlpha(editingAlpha));
+            g.setFont (getLabelFont(label));
+
+            Rectangle<int> textArea (label.getBorderSize().subtractedFrom (label.getLocalBounds()));
+
+            g.drawFittedText (label.getText(), textArea, label.getJustificationType(), 1,
+                              label.getMinimumHorizontalScale());
+
+            g.setColour (label.findColour (Label::outlineColourId).withMultipliedAlpha (editingAlpha));
+        }
+        else if (label.isEnabled())
+        {
+            g.setColour (label.findColour (Label::outlineColourId));
+        }
+        //g.drawRect (label.getLocalBounds());
+        //g.drawRoundedRectangle (0,0,80,10,7.f,2);
+
+    }
+
+#if AA_DO_EMBIQ_LABEL
     void drawLabel(Graphics& g, Label& label) override
     {
-        Rectangle<float> labelArea(0.0f, 0.0f, label.getWidth() * 1.0f, label.getHeight() * 1.25f);  // !J! 1.0f
+        Rectangle<float> labelArea(0.0f, 0.0f, label.getWidth() * 1.0f, label.getHeight() * 1.25f);
 
         g.setColour(labelBackgroundColor);
         auto labelInnerArea = labelArea.reduced(labelArea.getWidth() * 0.07f, labelArea.getHeight() * 0.08f);
@@ -980,18 +1024,19 @@ public:
         int y = static_cast<int> ((labelArea.getHeight() - h) / 2);
 
         Font font(normalFont);
-        font.setHeight(h * 1.25f);
+        font.setHeight(h * 1.0f);
         g.setFont(font);
 
         if (!label.isBeingEdited()) {
-          g.drawFittedText(label.getText(), x, y, w, h, Justification::centred, 1);
-       }
+            g.drawFittedText(label.getText(), x, y, w, h, Justification::centred, 1);
+        }
     }
+#endif
 
     void fillTextEditorBackground(Graphics& g, int width, int height, TextEditor& textEditor) override
     {
-       (void)width;
-       (void)height;
+        (void)width;
+        (void)height;
         Rectangle<float> textEditorArea(0.0f, 0.0f, textEditor.getWidth() * 1.0f, textEditor.getHeight() * 1.0f);
         g.setColour(textButtonHoverBackgroundColor);
         g.fillRect(textEditorArea);
@@ -1010,7 +1055,7 @@ public:
     }
 
     void drawToggleButton(Graphics& g, ToggleButton& button,
-        bool isMouseOverButton, bool isButtonDown) override
+                          bool isMouseOverButton, bool isButtonDown) override
     {
         Rectangle<float> toggleButtonBounds(0.0f, 0.0f, button.getWidth() * 1.0f, button.getHeight() * 1.0f);
 
@@ -1025,7 +1070,7 @@ public:
         g.setFont(font);
 
         if (button.getButtonText() == "S" || button.getButtonText() == "M")
-        { 
+        {
             toggleButtonBounds.reduce(4, 4);
             if (button.getToggleState())
             {
@@ -1110,17 +1155,17 @@ public:
             g.fillPath(outline);
 
             drawTickBox(g, button, toggleButtonBounds.getX(), toggleButtonBounds.getY(),
-                toggleButtonBounds.getWidth(), toggleButtonBounds.getHeight(),
-                button.getToggleState(), false, false, false);
+                        toggleButtonBounds.getWidth(), toggleButtonBounds.getHeight(),
+                        button.getToggleState(), false, false, false);
         }
     }
 
     void drawTickBox(Graphics& g, Component& component,
-        float x, float y, float w, float h,
-        bool ticked,
-        bool isEnabled,
-        bool isMouseOverButton,
-        bool isButtonDown) override
+                     float x, float y, float w, float h,
+                     bool ticked,
+                     bool isEnabled,
+                     bool isMouseOverButton,
+                     bool isButtonDown) override
     {
         (void)x;
         (void)y;
@@ -1140,22 +1185,22 @@ public:
         {
             p.addEllipse(w*0.23f, h / 2 - newDiameter / 2, newDiameter, newDiameter);
         }
-        
+
         g.setColour(component.isEnabled() ? mainTextColor : mainTextDisabledColor);
         g.fillPath(p);
     }
 
     void drawScrollbar(Graphics& g,
-        ScrollBar& scrollbar,
-        int  	x,
-        int  	y,
-        int  	width,
-        int  	height,
-        bool  	isScrollbarVertical,
-        int  	thumbStartPosition,
-        int  	thumbSize,
-        bool  	isMouseOver,
-        bool  	isMouseDown
+                       ScrollBar& scrollbar,
+                       int  	x,
+                       int  	y,
+                       int  	width,
+                       int  	height,
+                       bool  	isScrollbarVertical,
+                       int  	thumbStartPosition,
+                       int  	thumbSize,
+                       bool  	isMouseOver,
+                       bool  	isMouseDown
     ) override
     {
         (void)scrollbar;
@@ -1173,31 +1218,31 @@ public:
         g.fillPath(pathFgr);
     }
 
-    private:
-        void drawPatternImage(Graphics &g, std::unique_ptr<Drawable> image, Rectangle<float>& buttonArea, int reduceX, int reduceY, int corner, bool mouseOver, bool mouseDown)
+private:
+    void drawPatternImage(Graphics &g, std::unique_ptr<Drawable> image, Rectangle<float>& buttonArea, int reduceX, int reduceY, int corner, bool mouseOver, bool mouseDown)
+    {
+        g.setColour(labelBackgroundColor);
+
+        int deltaX = 0;
+
+        if (SystemStats::getOperatingSystemName() == "iOS")
+            deltaX = static_cast<int> (buttonArea.proportionOfWidth (0.24f));
+
+        int deltaY = 1;
+        g.fillRoundedRectangle(buttonArea.reduced(deltaX * 1.0f, deltaY * 1.0f), corner * 1.0f);
+        auto imageRect = buttonArea.reduced(reduceX * 1.0f, reduceY * 1.0f);
+        if (mouseOver)
         {
-            g.setColour(labelBackgroundColor);
-
-            int deltaX = 0;
-            
-            if (SystemStats::getOperatingSystemName() == "iOS")
-                deltaX = static_cast<int> (buttonArea.proportionOfWidth (0.24f));
-
-            int deltaY = 1;
-            g.fillRoundedRectangle(buttonArea.reduced(deltaX * 1.0f, deltaY * 1.0f), corner * 1.0f);
-            auto imageRect = buttonArea.reduced(reduceX * 1.0f, reduceY * 1.0f);
-            if (mouseOver)
-            {
-                bool resultMainImg = image->replaceColour(Colours::white, sliderHoverFrameColor);
-                if (!resultMainImg)
-                    return;
-            }
-            if (mouseDown)
-            {
-                bool resultMainImg = image->replaceColour(sliderHoverFrameColor, Colours::white.withAlpha(0.7f));
-                if (!resultMainImg)
-                    return;
-            }
-            image->drawWithin(g, imageRect, juce::RectanglePlacement::centred, 1.f);
+            bool resultMainImg = image->replaceColour(Colours::white, sliderHoverFrameColor);
+            if (!resultMainImg)
+                return;
         }
+        if (mouseDown)
+        {
+            bool resultMainImg = image->replaceColour(sliderHoverFrameColor, Colours::white.withAlpha(0.7f));
+            if (!resultMainImg)
+                return;
+        }
+        image->drawWithin(g, imageRect, juce::RectanglePlacement::centred, 1.f);
+    }
 };

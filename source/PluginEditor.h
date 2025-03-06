@@ -12,12 +12,23 @@
 #include "../resources/customComponents/MuteSoloButton.h"
 #include "../resources/customComponents/ReverseSlider.h"
 #include "../resources/customComponents/LevelMeter.h"
+#include "../resources/customComponents/MultiTextButton.h"
 
 
+#define AA_MELATONIN
+#ifdef AA_MELATONIN
+#include "melatonin_inspector/melatonin_inspector.h"
+#endif
 
 typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
 typedef AudioProcessorValueTreeState::ButtonAttachment ButtonAttachment;
 typedef AudioProcessorValueTreeState::ComboBoxAttachment ComboBoxAttachment;
+
+enum eChannelOrder
+{
+    ACN = 0, // ACN implies AmbiX, SN3D normalization
+    FUMA = 1 // N3D normalization
+};
 
 //==============================================================================
 /**
@@ -52,19 +63,25 @@ private:
     TitleBar<AALogo, ChannelOrderIOWidget> title;
     Footer footer;
 
-    MainLookAndFeel mainLaF;
+    MainLookAndFeel ambiCreatorLookAndFeel;
+    LaF alternativeLookAndFeel;
+
     TooltipWindow tooltipWindow;
 
     Path aaLogoBgPath;
+
     Image legacyModeImage;
     Image fourChannelModeImage;
     Rectangle<float> arrayImageArea;
-    
-    ReverseSlider slOutGain, slHorizontalRotation, slZGain;
-    std::unique_ptr<ReverseSlider::SliderAttachment> slAttOutGain, slAttHorizontalRotation, slAttZGain;
-    std::unique_ptr<ComboBoxAttachment> cbAttOutChOrder;
-    
-    SimpleLabel lbSlOutGain, lbSlHorizontalRotation, lbSlZGain;
+
+    GroupComponent outGainGroup, horizontalRotationGroup, zGainGroup;
+    Slider outGainSlider, horizontalRotationSlider, zGainSlider;
+    std::unique_ptr<ReverseSlider::SliderAttachment> outGainAttachment, horizontalRotationAttachment, zGainAttachment;
+
+    std::unique_ptr<ButtonAttachment> cbAttOutChOrder;
+
+    // !J! Not needed with Groups:
+//    SimpleLabel outGainLabel, horizontalRotationLabel, zGainLabel;
     
     LevelMeter inputMeter[4];
     LevelMeter outputMeter[4];
@@ -86,8 +103,12 @@ private:
     void setAbButtonAlphaFromLayerState(int layerState);
     
     const juce::String inMeterLabelText[4] = { "L", "R", "F", "B" };
-    
+
+#ifdef AA_CONFIG_COMBOBOX
     ComboBox cbOutChannelOrder;
+#endif
+    // !J! comboboxx is replaced with texmultibutton functioning as a radiobutton
+    TextMultiButton tmbOutChannelOrder;
 
     TextButton tbAbLayer[2], tbLegacyMode;
 
@@ -95,7 +116,7 @@ private:
     Slider slRotOutGain, slRotZGain;
     SimpleLabel lbSlRotOutGain, lbSlRotZGain;
 #endif
-    SimpleLabel lbOutConfig;
+    SimpleLabel outputConfigLabel;
     
     std::unique_ptr<SliderAttachment> slAttRotOutGain, slAttRotZGain;
     std::unique_ptr<ComboBoxAttachment> cbAttOutChannelOrder;
@@ -109,6 +130,11 @@ private:
 
     const juce::String helpText = {"left/right are seen from the recording side. front of upper mic should point towards the source."};
     const juce::String helpTextLegacy = {"left/right are seen from the recording side. front of lower mic should point towards the source."};
+
+
+#ifdef AA_MELATONIN
+    melatonin::Inspector inspector { *this, false };
+#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmbiCreatorAudioProcessorEditor)
 };

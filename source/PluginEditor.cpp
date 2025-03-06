@@ -13,79 +13,108 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
 //    fixedAspectRatioConstrainer.setSizeLimits (processor.EDITOR_DEFAULT_WIDTH, processor.EDITOR_DEFAULT_HEIGHT, 2 * processor.EDITOR_DEFAULT_WIDTH, 2 * processor.EDITOR_DEFAULT_HEIGHT);
 //    setConstrainer (&fixedAspectRatioConstrainer);
 
+#ifdef AA_MELATONIN
+    inspector.setVisible(true);
+    inspector.toggle(true);
+#endif
 
     setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
     
-    setLookAndFeel (&mainLaF);
+    setLookAndFeel (&ambiCreatorLookAndFeel);
     
     addAndMakeVisible (&title);
     title.setTitle (String("AustrianAudio"),String("AmbiCreator"));
-//    title.setFont (mainLaF.aaMedium, mainLaF.aaRegular);
-    title.setFont (mainLaF.normalFont, mainLaF.aaRegular);
+//    title.setFont (alternativeLookAndFeel.aaMedium, alternativeLookAndFeel.aaRegular);
+    title.setFont (ambiCreatorLookAndFeel.terminatorBoldFont, ambiCreatorLookAndFeel.normalFont);
 
     title.showAlertSymbol(false);
     title.setAlertMessage(wrongBusConfigMessageShort, wrongBusConfigMessageLong);
-    cbAttOutChOrder.reset(new ComboBoxAttachment (valueTreeState, "channelOrder", *title.getOutputWidgetPtr()->getCbOutChOrder()));
+    //    cbAttOutChOrder.reset(new ButtonAttachment (valueTreeState, "channelOrder", *title.getOutputWidgetPtr()->getCbOutChOrder()));
+
     title.getOutputWidgetPtr()->getCbOutChOrder()->addListener(this);
     
     addAndMakeVisible (&footer);
-    tooltipWindow.setLookAndFeel (&mainLaF);
+    tooltipWindow.setLookAndFeel (&ambiCreatorLookAndFeel);
     tooltipWindow.setMillisecondsBeforeTipAppears(500);
 
     legacyModeImage = ImageCache::getFromMemory (legacyPNGArray, legacyPNGArraySize);
     fourChannelModeImage = ImageCache::getFromMemory (fourChannelPNGArray, fourChannelPNGArraySize);
 
     aaLogoBgPath.loadPathFromData (aaLogoData, sizeof (aaLogoData));
-    
-    // add labels
-    addAndMakeVisible (&lbSlOutGain);
-    lbSlOutGain.setText("Output Gain");
 
-    addAndMakeVisible (&lbSlZGain);
-    lbSlZGain.setText("Z Gain");
-    
-    addAndMakeVisible (&lbSlHorizontalRotation);
-    lbSlHorizontalRotation.setText("Horizontal Rotation");
-    
-    // add sliders
-    addAndMakeVisible (&slOutGain);
-    slAttOutGain.reset(new ReverseSlider::SliderAttachment (valueTreeState, "outGainDb", slOutGain));
-    slOutGain.setSliderStyle (Slider::LinearHorizontal);
-    slOutGain.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
-    slOutGain.setColour (Slider::thumbColourId, mainLaF.AARed);
-    slOutGain.addListener (this);
-    
-    addAndMakeVisible (&slHorizontalRotation);
-    slAttHorizontalRotation.reset(new ReverseSlider::SliderAttachment (valueTreeState, "horRotation", slHorizontalRotation));
-    slHorizontalRotation.setSliderStyle (Slider::LinearHorizontal);
-    slHorizontalRotation.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
-    slHorizontalRotation.setColour (Slider::thumbColourId, mainLaF.AARed);
-    slHorizontalRotation.addListener (this);
-    
-    addAndMakeVisible (&slZGain);
-    slAttZGain.reset(new ReverseSlider::SliderAttachment (valueTreeState, "zGainDb", slZGain));
-    slZGain.setSliderStyle (Slider::LinearHorizontal);
-    slZGain.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
-    slZGain.setColour (Slider::thumbColourId, mainLaF.AARed);
-    slZGain.addListener (this);
-    
+//    outGainSlider.setLookAndFeel(&alternativeLookAndFeel);
+//    horizontalRotationSlider.setLookAndFeel(&alternativeLookAndFeel);
+//    zGainSlider.setLookAndFeel(&alternativeLookAndFeel);
+
+    addAndMakeVisible(&outGainGroup);
+    outGainGroup.setName("grpOutputGain");
+    outGainGroup.setText("Output Gain");
+    outGainGroup.setEnabled(true);
+    addAndMakeVisible (&outGainSlider);
+    outGainAttachment.reset(new ReverseSlider::SliderAttachment (valueTreeState, "outGainDb", outGainSlider));
+    outGainSlider.setSliderStyle(Slider::LinearHorizontal);
+    outGainSlider.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
+    outGainSlider.setColour (Slider::thumbColourId, ambiCreatorLookAndFeel.AARed);
+    outGainSlider.addListener (this);
+
+    addAndMakeVisible(&horizontalRotationGroup);
+    horizontalRotationGroup.setName("horizontalRotationGroup");
+    horizontalRotationGroup.setText("Horizontal Rotation");
+    horizontalRotationGroup.setEnabled(true);
+    addAndMakeVisible (&horizontalRotationSlider);
+    horizontalRotationAttachment.reset(new ReverseSlider::SliderAttachment (valueTreeState, "horRotation", horizontalRotationSlider));
+    horizontalRotationSlider.setSliderStyle (Slider::LinearHorizontal);
+    horizontalRotationSlider.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
+    horizontalRotationSlider.setColour (Slider::thumbColourId, ambiCreatorLookAndFeel.AARed);
+    horizontalRotationSlider.addListener (this);
+
+    addAndMakeVisible(&zGainGroup);
+    zGainGroup.setName("zGainGroup");
+    zGainGroup.setText("Z Gain");
+    zGainGroup.setEnabled(true);
+    addAndMakeVisible (&zGainSlider);
+    zGainAttachment.reset(new ReverseSlider::SliderAttachment (valueTreeState, "zGainDb", zGainSlider));
+    zGainSlider.setSliderStyle (Slider::LinearHorizontal);
+    zGainSlider.setColour (Slider::rotarySliderOutlineColourId, Colours::black);
+    zGainSlider.setColour (Slider::thumbColourId, ambiCreatorLookAndFeel.AARed);
+    zGainSlider.addListener (this);
+
+
     for (int i = 0; i < 4; ++i)
     {
         addAndMakeVisible(&inputMeter[i]);
-        inputMeter[i].setColour(mainLaF.AARed);
+        inputMeter[i].setColour(ambiCreatorLookAndFeel.AARed);
         inputMeter[i].setLabelText(inMeterLabelText[i]);
         
         addAndMakeVisible(&outputMeter[i]);
-        outputMeter[i].setColour(mainLaF.AARed);
+        outputMeter[i].setColour(ambiCreatorLookAndFeel.AARed);
     }
-    updateOutputMeterLabelTexts();
-    
+
 
     // ------------------new AmbiCreator Layout components----------------
     // ugly but simple solution
     title.getOutputWidgetPtr()->setEnabled(false);
     title.getOutputWidgetPtr()->setVisible(false);
 
+
+    addAndMakeVisible(&tmbOutChannelOrder);
+    tmbOutChannelOrder.setButtonsNumber(2);
+    tmbOutChannelOrder.setInterceptsMouseClicks(true, true);
+
+    tmbOutChannelOrder[0].setClickingTogglesState(true);
+    tmbOutChannelOrder[0].setRadioGroupId(8880);
+    tmbOutChannelOrder[0].setButtonText("AmbiX");
+    tmbOutChannelOrder[0].addListener(this);
+//    tmbOutChannelOrder[0].setToggleState(polarDesignerProcessor.abLayerState, NotificationType::dontSendNotification);
+
+    tmbOutChannelOrder[1].setClickingTogglesState(true);
+    tmbOutChannelOrder[1].setRadioGroupId(8880);
+    tmbOutChannelOrder[1].setButtonText("FUMA");
+    tmbOutChannelOrder[1].addListener(this);
+
+    updateOutputMeterLabelTexts();
+
+#ifdef AA_CONFIG_COMBOBOX
     addAndMakeVisible(&cbOutChannelOrder);
     cbAttOutChannelOrder.reset(new ComboBoxAttachment (valueTreeState, "channelOrder", cbOutChannelOrder));
     cbOutChannelOrder.addItem("AmbiX", 1);
@@ -94,19 +123,20 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     cbOutChannelOrder.setJustificationType (Justification::centred);
     cbOutChannelOrder.setSelectedId (1);
     cbOutChannelOrder.addListener(this);
+#endif
 
 #ifdef AA_CONFIG_ROTARY_UI // !J!
     addAndMakeVisible(&slRotZGain);
     slAttRotZGain.reset(new SliderAttachment (valueTreeState, "zGainDb", slRotZGain));
 //    slRotZGain.setSliderStyle(Slider::Rotary); // !J!
-    slRotZGain.setColour(Slider::rotarySliderOutlineColourId, mainLaF.AARed);
+    slRotZGain.setColour(Slider::rotarySliderOutlineColourId, ambiCreatorLookAndFeel.AARed);
     slRotZGain.setTextValueSuffix(" dB");
     slRotZGain.addListener(this);
 
     addAndMakeVisible(&slRotOutGain);
     slAttRotOutGain.reset(new SliderAttachment (valueTreeState, "outGainDb", slRotOutGain));
 //    slRotOutGain.setSliderStyle(Slider::Rotary); // !J!
-    slRotOutGain.setColour(Slider::rotarySliderOutlineColourId, mainLaF.AARed);
+    slRotOutGain.setColour(Slider::rotarySliderOutlineColourId, ambiCreatorLookAndFeel.AARed);
     slRotOutGain.setTextValueSuffix(" dB");
     slRotOutGain.addListener(this);
 
@@ -117,8 +147,8 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     lbSlRotZGain.setText("Z Gain");
 #endif
 
-    addAndMakeVisible(&lbOutConfig);
-    lbOutConfig.setText("Output Config");
+    addAndMakeVisible(&outputConfigLabel);
+    outputConfigLabel.setText("Output Config");
 
     addAndMakeVisible (&tbLegacyMode);
     tbAttLegacyMode.reset(new ButtonAttachment (valueTreeState, "legacyMode", tbLegacyMode));
@@ -129,8 +159,6 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     valueTreeState.getParameter("legacyMode")->setValueNotifyingHost(legacyModeInit);
 
     tbLegacyMode.setToggleState(processor.isNormalLRFBMode(), NotificationType::dontSendNotification);
-
-
 
     addAndMakeVisible(&tbAbLayer[0]);
     tbAbLayer[0].setButtonText("A");
@@ -183,7 +211,7 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
     const int currHeight = getHeight();
     const int currWidth = getWidth();
     {
-        g.fillAll (mainLaF.mainBackground);
+        g.fillAll (ambiCreatorLookAndFeel.mainBackground);
 //        g.drawImage(fourChannelModeImage, arrayImageArea, RectanglePlacement::centred);
 
         if (processor.isNormalLRFBMode())
@@ -223,16 +251,16 @@ void AmbiCreatorAudioProcessorEditor::resized()
     const float footerHeight = 0.05f * currentHeight;
     const float linearSliderWidth = 0.246f * currentWidth;
     const float linearSliderVerticalSpacing = 0.08f * currentHeight;
-    const float linearSliderHeight = 0.08f * currentHeight;
-    const float labelHeight = 0.08f * currentHeight;
+    const float linearSliderHeight = 0.06f * currentHeight;
+    const float labelHeight = 0.07f * currentHeight;
     const float meterWidth = 0.023f * currentWidth;
     const float meterHeight = 0.32f * currentHeight;
     const float meterSpacing = 0.003f * currentWidth;
     const float meterToSliderSpacing = 0.046f * currentWidth;
     const float arrayWidth = 0.308f * currentWidth;
-    const float slTbWidth = 0.092f * currentWidth;
-    const float slTbHeight = 0.03f * currentHeight;
-    
+    const float slTbWidth = 0.08f * currentWidth;
+    const float slTbHeight = 0.06f * currentHeight;
+
 //    const float rotarySliderWidth = 0.123f * currentWidth;
     const float rotarySliderHeight = 0.12f * currentHeight;
     const float rotarySliderVerticalSpacing = 0.05f * currentHeight;
@@ -308,28 +336,53 @@ void AmbiCreatorAudioProcessorEditor::resized()
     slRotZGain.setTextBoxStyle(Slider::TextBoxBelow, false, slTbWidth, slTbHeight);
     slRotZGain.setBounds(rotSliderArea.removeFromTop(rotarySliderHeight));
 #endif
+    {
+        int numGroups = 3;  // Total groups
+        int groupSpacing = 10;  // Space between groups
 
-    sliderArea.removeFromTop(linearSliderVerticalSpacing);
-    lbSlOutGain.setBounds(sliderArea.removeFromTop(labelHeight));
-    slOutGain.setTextBoxStyle (Slider::TextBoxBelow, false, slTbWidth, slTbHeight);
-    slOutGain.setBounds(sliderArea.removeFromTop(linearSliderHeight));
-    
-    sliderArea.removeFromTop(linearSliderVerticalSpacing);
-    lbSlZGain.setBounds(sliderArea.removeFromTop(labelHeight));
-    slZGain.setTextBoxStyle (Slider::TextBoxBelow, false, slTbWidth, slTbHeight);
-    slZGain.setBounds(sliderArea.removeFromTop(linearSliderHeight));
-    
-    sliderArea.removeFromTop(linearSliderVerticalSpacing);
-    lbSlHorizontalRotation.setBounds(sliderArea.removeFromTop(labelHeight));
-    slHorizontalRotation.setTextBoxStyle (Slider::TextBoxBelow, false, slTbWidth, slTbHeight);
-    slHorizontalRotation.setBounds(sliderArea.removeFromTop(linearSliderHeight));
-    
+        sliderArea.removeFromTop(linearSliderVerticalSpacing);
+
+        // Height for each group including spacing
+        int totalSpacing = (numGroups - 1) * groupSpacing;
+        int groupHeight = (sliderArea.getHeight() - totalSpacing) / numGroups;
+
+
+        // OUT GAIN GROUP
+        outGainGroup.setBounds(sliderArea.removeFromTop(groupHeight).reduced(2)); // Assign a portion of sliderArea
+        auto outGainArea = outGainGroup.getBounds().reduced(4); // Inner padding for components
+        outGainSlider.setBounds(outGainArea.reduced(2)); // removeFromTop(linearSliderHeight));
+        outGainSlider.setTextBoxStyle(Slider::TextBoxRight, false, (int)slTbWidth, slTbHeight);
+
+        sliderArea.removeFromTop(groupSpacing); // Space before next group
+
+        // Z GAIN GROUP
+        zGainGroup.setBounds(sliderArea.removeFromTop(groupHeight).reduced(2));
+        auto zGainArea = zGainGroup.getBounds().reduced(4);
+        zGainSlider.setBounds(zGainArea.reduced(2));
+        zGainSlider.setTextBoxStyle(Slider::TextBoxRight, false, (int)slTbWidth, slTbHeight);
+
+        sliderArea.removeFromTop(groupSpacing); // Space before next group
+
+        // HORIZONTAL ROTATION GROUP
+        horizontalRotationGroup.setBounds(sliderArea.removeFromTop(groupHeight).reduced(2));
+        auto horizontalRotationArea = horizontalRotationGroup.getBounds().reduced(4);
+        horizontalRotationSlider.setBounds(horizontalRotationArea.reduced(2));
+        horizontalRotationSlider.setTextBoxStyle(Slider::TextBoxRight, false, (int)slTbWidth, slTbHeight);
+
+    }
+
     area.removeFromLeft(meterToSliderSpacing);
+
     Rectangle<int> outMeterArea = area.removeFromLeft(4 * meterWidth + 4 * meterSpacing).withHeight(meterHeight);
+
     outMeterArea = outMeterArea.withCentre(Point<int> (outMeterArea.getCentreX(), int(area.getHeight() * 0.6f)));
-    
-    lbOutConfig.setBounds(outMeterArea.getX() - 7 * meterSpacing, lbSlOutGain.getY() - 12, 4 * meterWidth + 14 * meterSpacing, labelHeight);
+
+    outputConfigLabel.setBounds(outMeterArea.getX() - 7 * meterSpacing, outMeterArea.getY() - 4 * comboBoxHeight, 4 * meterWidth + 14 * meterSpacing, comboBoxHeight);
+    tmbOutChannelOrder.setBounds(outMeterArea.getX() - 7 * meterSpacing, outGainSlider.getY(), 4 * meterWidth + 14 * meterSpacing, labelHeight);
+
+#ifdef AA_CONFIG_COMBOBOX
     cbOutChannelOrder.setBounds(outMeterArea.getX() - 7 * meterSpacing, outMeterArea.getY() - 2 * comboBoxHeight, 4 * meterWidth + 14 * meterSpacing, comboBoxHeight);
+#endif
 
     for (int i = 0; i < 4; ++i)
     {
@@ -372,6 +425,28 @@ void AmbiCreatorAudioProcessorEditor::buttonClicked (Button* button) {
         tbLegacyMode.setToggleState(processor.isNormalLRFBMode(), NotificationType::dontSendNotification);
         setModeDisplay(processor.isNormalLRFBMode());
     }
+    else if (button == &tmbOutChannelOrder[0])
+    {
+        bool isToggled = button->getToggleState();
+        if (!isToggled)
+        {
+            for (int i = 0; i < 4; ++i)
+                outputMeter[i].setLabelText(outMeterLabelTextACN[i]);
+        }
+        valueTreeState.getParameter("channelOrder")->setValueNotifyingHost(valueTreeState.getParameter("channelOrder")->convertTo0to1((eChannelOrder::ACN)));
+    }
+    else if (button == &tmbOutChannelOrder[1]) {
+        bool isToggled = button->getToggleState();
+        if (!isToggled) {
+            for (int i = 0; i < 4; ++i)
+                outputMeter[i].setLabelText(outMeterLabelTextFUMA[i]);
+        }
+        valueTreeState.getParameter("channelOrder")->setValueNotifyingHost(
+                valueTreeState.getParameter("channelOrder")->convertTo0to1((eChannelOrder::FUMA)));
+    }
+
+    updateOutputMeterLabelTexts();
+
     repaint();
 }
 
@@ -382,13 +457,12 @@ void AmbiCreatorAudioProcessorEditor::comboBoxChanged (ComboBox* cb) {
 
 void AmbiCreatorAudioProcessorEditor::updateOutputMeterLabelTexts()
 {
-    auto cb = title.getOutputWidgetPtr()->getCbOutChOrder();
-    if (cb->getText() == "AmbiX")
+    if (processor.getChannelOrder() == eChannelOrder::ACN)
     {
         for (int i = 0; i < 4; ++i)
             outputMeter[i].setLabelText(outMeterLabelTextACN[i]);
     }
-    else if (cb->getText() == "FUMA")
+    else if (processor.getChannelOrder() == eChannelOrder::FUMA)
     {
         for (int i = 0; i < 4; ++i)
             outputMeter[i].setLabelText(outMeterLabelTextFUMA[i]);
@@ -429,18 +503,28 @@ void AmbiCreatorAudioProcessorEditor::timerCallback()
             }
         }
     }
-    
+
+    if (processor.getChannelOrder() == eChannelOrder::ACN) {
+        tmbOutChannelOrder[0].setToggleState(true, NotificationType::dontSendNotification);
+        tmbOutChannelOrder[1].setToggleState(false, NotificationType::dontSendNotification);
+    }
+    else {
+        tmbOutChannelOrder[0].setToggleState(false, NotificationType::dontSendNotification);
+        tmbOutChannelOrder[1].setToggleState(true, NotificationType::dontSendNotification);
+    }
+
+
     title.showAlertSymbol(false);
 }
 
 // implement this for AAX automation shortchut
 int AmbiCreatorAudioProcessorEditor::getControlParameterIndex (Component& control)
 {
-    if (&control == &slOutGain)
+    if (&control == &outGainSlider)
         return 1;
-    else if (&control == &slHorizontalRotation)
+    else if (&control == &horizontalRotationSlider)
         return 2;
-    else if (&control == &slZGain)
+    else if (&control == &zGainSlider)
         return 3;
     
     return -1;
@@ -449,12 +533,12 @@ int AmbiCreatorAudioProcessorEditor::getControlParameterIndex (Component& contro
 void AmbiCreatorAudioProcessorEditor::setModeDisplay(bool legacyModeActive)
 {
 #ifdef AA_CONFIG_ROTARY_UI
-    slZGain.setEnabled(legacyModeActive);
-    slZGain.setVisible(legacyModeActive);
-    slOutGain.setEnabled(legacyModeActive);
-    slOutGain.setVisible(legacyModeActive);
-    lbSlOutGain.setVisible(legacyModeActive);
-    lbSlZGain.setVisible(legacyModeActive);
+    zGainSlider.setEnabled(legacyModeActive);
+    zGainSlider.setVisible(legacyModeActive);
+    outGainSlider.setEnabled(legacyModeActive);
+    outGainSlider.setVisible(legacyModeActive);
+    outGainLabel.setVisible(legacyModeActive);
+    zGainLabel.setVisible(legacyModeActive);
 
     slRotZGain.setVisible(!legacyModeActive);
     slRotZGain.setEnabled(!legacyModeActive);
