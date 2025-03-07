@@ -53,11 +53,11 @@ set(JUCE_BUILD_LV2 OFF CACHE BOOL "Disable LV2")
 set(JUCE_BUILD_ARA OFF CACHE BOOL "Disable ARA")
 
 Include (FetchContent)
-FetchContent_Declare (melatonin_inspector
-		GIT_REPOSITORY https://github.com/sudara/melatonin_inspector.git
-		GIT_TAG origin/main
-		SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/melatonin_inspector)
-FetchContent_MakeAvailable (melatonin_inspector)
+#FetchContent_Declare (melatonin_inspector
+#		GIT_REPOSITORY https://github.com/sudara/melatonin_inspector.git
+#		GIT_TAG origin/main
+#		SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/melatonin_inspector)
+#FetchContent_MakeAvailable (melatonin_inspector)
 
 juce_add_plugin("${PROJECT_NAME}"
     ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/packaging/icon.png"
@@ -148,7 +148,7 @@ target_link_libraries(SharedCode
 	juce_gui_basics
 	juce_gui_extra
 	juce_opengl
-	melatonin_inspector
+##	melatonin_inspector
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
