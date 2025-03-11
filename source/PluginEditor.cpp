@@ -26,6 +26,7 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     title.setFont (ambiCreatorLookAndFeel.terminatorBoldFont, ambiCreatorLookAndFeel.normalFont);
 
     title.showAlertSymbol(false);
+
     title.setAlertMessage(wrongBusConfigMessageShort, wrongBusConfigMessageLong);
     //    cbAttOutChOrder.reset(new ButtonAttachment (valueTreeState, "channelOrder", *title.getOutputWidgetPtr()->getCbOutChOrder()));
 
@@ -185,6 +186,8 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
 
     setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
     setResizable(true, true );
+    setResizeLimits(600, 490, 800, 600);
+
 
     startTimer (100);
 

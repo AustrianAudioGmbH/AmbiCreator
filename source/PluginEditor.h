@@ -15,7 +15,7 @@
 #include "../resources/customComponents/MultiTextButton.h"
 
 
-#undef AA_MELATONIN
+#define AA_MELATONIN
 #ifdef AA_MELATONIN
 #include "melatonin_inspector/melatonin_inspector.h"
 #endif
@@ -75,7 +75,7 @@ private:
     Rectangle<float> arrayImageArea;
 
     GroupComponent outGainGroup, horizontalRotationGroup, zGainGroup;
-    Slider outGainSlider, horizontalRotationSlider, zGainSlider;
+    ReverseSlider outGainSlider, horizontalRotationSlider, zGainSlider;
     std::unique_ptr<ReverseSlider::SliderAttachment> outGainAttachment, horizontalRotationAttachment, zGainAttachment;
 
     std::unique_ptr<ButtonAttachment> cbAttOutChOrder;
