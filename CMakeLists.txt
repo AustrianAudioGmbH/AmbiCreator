@@ -41,7 +41,7 @@ add_subdirectory(JUCE)
 
 if (DEFINED ENV{AAX_SDK_PATH})
 	message(STATUS "AAX_SDK_PATH set to: $ENV{AAX_SDK_PATH}")
-	juce_set_aax_sdk_path($ENV{AAX_SDK_PATH})
+	#juce_set_aax_sdk_path($ENV{AAX_SDK_PATH})
 	set(FORMATS Standalone AU VST3 AUv3 AAX)
 	set_directory_properties( PROPERTIES JUCE_AAX_COPY_DIR  "$ENV{PD_SHARED_BUILD_DIR}/Library/Application Support/Avid/Audio/Plug-Ins" )
 else()
@@ -148,7 +148,7 @@ target_link_libraries(SharedCode
 	juce_gui_basics
 	juce_gui_extra
 	juce_opengl
-	melatonin_inspector
+	#melatonin_inspector
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
