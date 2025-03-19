@@ -14,8 +14,8 @@
 #include "../resources/customComponents/LevelMeter.h"
 #include "../resources/customComponents/MultiTextButton.h"
 
-
-#define AA_MELATONIN
+// enable for debugging purposes only:
+//#define AA_MELATONIN
 #ifdef AA_MELATONIN
 #include "melatonin_inspector/melatonin_inspector.h"
 #endif
@@ -64,7 +64,6 @@ private:
     Footer footer;
 
     MainLookAndFeel ambiCreatorLookAndFeel;
-    LaF alternativeLookAndFeel;
 
     TooltipWindow tooltipWindow;
 

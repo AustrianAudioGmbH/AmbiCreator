@@ -494,6 +494,7 @@ public:
     
     void setAlertMessage(String shortMessage, String longMessage)
     {
+
         shortAlertMessage = shortMessage;
         longAlertMessage = longMessage;
         alertSymbol.setTooltip(longMessage);

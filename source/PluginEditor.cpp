@@ -186,7 +186,7 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
 
     setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
     setResizable(true, true );
-    setResizeLimits(600, 490, 800, 600);
+    setResizeLimits(600, 490, 1920, 1080);
 
 
     startTimer (100);
