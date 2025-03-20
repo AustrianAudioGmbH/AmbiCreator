@@ -39,31 +39,51 @@ include(JUCEDefaults)
 
 add_subdirectory(JUCE)
 
-#We always build AAX, unless being run on a development machine.
+# Development-specific environment settings:
+
+# Get the hostname of the current machine
+execute_process(
+		COMMAND hostname
+		OUTPUT_VARIABLE HOSTNAME
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Developer workstation - jv's macbook pro
+if(HOSTNAME STREQUAL "austrianaudio-jv-mbpro.local")
+	set(AAX_SDK_PATH "/Users/jayvaughan/Documents/Development/Plugins/SDKs/aax-sdk-2-8-1/")
+	set(ENV{AAX_SDK_PATH} "${AAX_SDK_PATH}")
+	set(FORMATS Standalone AU VST3 AUv3)
+	message(STATUS "Building on MacOS (Debug) with AAX_SDK_PATH=${AAX_SDK_PATH}")
+endif()
+
+# MacOS VM environment on zosma.intra.austrian.audio
+if(HOSTNAME STREQUAL "builder-macos-plugins.local")
+	set(AAX_SDK_PATH "/Users/builder/Desktop/Internal/SDKs/aax-sdk-2-8-1/")
+	set(MACOSX_DEPLOYMENT_TARGET "10.15")
+	set(ENV{AAX_SDK_PATH} "${AAX_SDK_PATH}")
+	set(ENV{MACOSX_DEPLOYMENT_TARGET} "${MACOSX_DEPLOYMENT_TARGET}")
+	message(STATUS "Building on MacOS (Release) with AAX_SDK_PATH=${AAX_SDK_PATH}")
+	message(STATUS "Building on MacOS with MACOSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET}")
+endif()
+
+if(HOSTNAME STREQUAL "builder-win-plugins")
+	set(AAX_SDK_PATH "c:/Users/builder/Desktop/plugins-builder-desktop/Internal/SDKs/aax-sdk-2-8-1/")
+	set(ENV{AAX_SDK_PATH} "${AAX_SDK_PATH}")
+	message(STATUS "Building on Windows with AAX_SDK_PATH=${AAX_SDK_PATH}")
+endif()
+
+# If FORMATS has not already been defined (e.g. for Development machine), set it up:
 if(NOT DEFINED FORMATS)
-
-	# Get the hostname
-	execute_process(
-			COMMAND hostname
-			OUTPUT_VARIABLE HOSTNAME
-			OUTPUT_STRIP_TRAILING_WHITESPACE
-	)
-	message(STATUS "Current hostname: ${HOSTNAME}")
-
-	if (HOSTNAME STREQUAL "austrianaudio-jv-mbpro.local")
-		message(STATUS "Excluding AAX for host ${HOSTNAME}")
-		set(FORMATS Standalone AU VST3 AUv3)
+	if (DEFINED ENV{AAX_SDK_PATH})
+		message(STATUS "AAX_SDK_PATH set to: $ENV{AAX_SDK_PATH}")
+		juce_set_aax_sdk_path($ENV{AAX_SDK_PATH})
+		set_directory_properties(
+				PROPERTIES JUCE_AAX_COPY_DIR "$ENV{PD_SHARED_BUILD_DIR}/Library/Application Support/Avid/Audio/Plug-Ins"
+		)
+		set(FORMATS Standalone AU VST3 AUv3 AAX)
 	else()
-		if (DEFINED ENV{AAX_SDK_PATH})
-			message(STATUS "AAX_SDK_PATH set to: $ENV{AAX_SDK_PATH}")
-			set(FORMATS Standalone AU VST3 AUv3 AAX)
-			set_directory_properties(
-					PROPERTIES JUCE_AAX_COPY_DIR "$ENV{PD_SHARED_BUILD_DIR}/Library/Application Support/Avid/Audio/Plug-Ins"
-			)
-		else()
-			message(WARNING "AAX_SDK_PATH not set. Cannot build AAX!")
-			set(FORMATS Standalone AU VST3 AUv3)
-		endif()
+		message(WARNING "AAX_SDK_PATH not set. Will not build AAX!")
+		set(FORMATS Standalone AU VST3 AUv3)
 	endif()
 endif()
 
