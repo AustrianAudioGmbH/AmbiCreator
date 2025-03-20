@@ -39,6 +39,7 @@ include(JUCEDefaults)
 
 add_subdirectory(JUCE)
 
+#We always build AAX, unless being run on a development machine.
 if(NOT DEFINED FORMATS)
 
 	# Get the hostname
@@ -60,13 +61,11 @@ if(NOT DEFINED FORMATS)
 					PROPERTIES JUCE_AAX_COPY_DIR "$ENV{PD_SHARED_BUILD_DIR}/Library/Application Support/Avid/Audio/Plug-Ins"
 			)
 		else()
-			message(WARNING "AAX_SDK_PATH not set. Will not build AAX!")
+			message(WARNING "AAX_SDK_PATH not set. Cannot build AAX!")
 			set(FORMATS Standalone AU VST3 AUv3)
 		endif()
 	endif()
-
 endif()
-
 
 set(JUCE_BUILD_LV2 OFF CACHE BOOL "Disable LV2")
 set(JUCE_BUILD_ARA OFF CACHE BOOL "Disable ARA")
