@@ -39,14 +39,32 @@ include(JUCEDefaults)
 
 add_subdirectory(JUCE)
 
-if (DEFINED ENV{AAX_SDK_PATH})
-	message(STATUS "AAX_SDK_PATH set to: $ENV{AAX_SDK_PATH}")
-	#juce_set_aax_sdk_path($ENV{AAX_SDK_PATH})
-	set(FORMATS Standalone AU VST3 AUv3 AAX)
-	set_directory_properties( PROPERTIES JUCE_AAX_COPY_DIR  "$ENV{PD_SHARED_BUILD_DIR}/Library/Application Support/Avid/Audio/Plug-Ins" )
-else()
-	message(STATUS "AAX_SDK_PATH not set. Current hostname: ${HOSTNAME}")
-	set(FORMATS Standalone AU VST3 AUv3)
+#We always build AAX, unless being run on a development machine.
+if(NOT DEFINED FORMATS)
+
+	# Get the hostname
+	execute_process(
+			COMMAND hostname
+			OUTPUT_VARIABLE HOSTNAME
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+	message(STATUS "Current hostname: ${HOSTNAME}")
+
+	if (HOSTNAME STREQUAL "austrianaudio-jv-mbpro.local")
+		message(STATUS "Excluding AAX for host ${HOSTNAME}")
+		set(FORMATS Standalone AU VST3 AUv3)
+	else()
+		if (DEFINED ENV{AAX_SDK_PATH})
+			message(STATUS "AAX_SDK_PATH set to: $ENV{AAX_SDK_PATH}")
+			set(FORMATS Standalone AU VST3 AUv3 AAX)
+			set_directory_properties(
+					PROPERTIES JUCE_AAX_COPY_DIR "$ENV{PD_SHARED_BUILD_DIR}/Library/Application Support/Avid/Audio/Plug-Ins"
+			)
+		else()
+			message(WARNING "AAX_SDK_PATH not set. Cannot build AAX!")
+			set(FORMATS Standalone AU VST3 AUv3)
+		endif()
+	endif()
 endif()
 
 set(JUCE_BUILD_LV2 OFF CACHE BOOL "Disable LV2")
