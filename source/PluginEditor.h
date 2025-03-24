@@ -53,7 +53,7 @@ public:
 
 private:
     static const int EDITOR_WIDTH = 650;
-    static const int EDITOR_HEIGHT = 500;
+    static const int EDITOR_HEIGHT = 490;
     
     AmbiCreatorAudioProcessor& processor;
     AudioProcessorValueTreeState& valueTreeState;
