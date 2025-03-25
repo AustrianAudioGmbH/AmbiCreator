@@ -163,9 +163,11 @@ void AmbiCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     coincXEightFilterConv.prepare (spec); // must be called before loading an ir
     coincXEightFilterConv.loadImpulseResponse(std::move(coincEightXFirCoeffBuffer), FIR_SAMPLE_RATE, dsp::Convolution::Stereo::no, dsp::Convolution::Trim::no, dsp::Convolution::Normalise::no);
     coincXEightFilterConv.reset();
+
     coincYEightFilterConv.prepare (spec); // must be called before loading an ir
-    coincXEightFilterConv.loadImpulseResponse(std::move(coincEightYFirCoeffBuffer), FIR_SAMPLE_RATE, dsp::Convolution::Stereo::no, dsp::Convolution::Trim::no, dsp::Convolution::Normalise::no);
+    coincYEightFilterConv.loadImpulseResponse(std::move(coincEightYFirCoeffBuffer), FIR_SAMPLE_RATE, dsp::Convolution::Stereo::no, dsp::Convolution::Trim::no, dsp::Convolution::Normalise::no);
     coincYEightFilterConv.reset();
+
     coincOmniFilterConv.prepare (spec); // must be called before loading an ir
     coincOmniFilterConv.loadImpulseResponse(std::move(coincOmniFirCoeffBuffer), FIR_SAMPLE_RATE, dsp::Convolution::Stereo::no, dsp::Convolution::Trim::no, dsp::Convolution::Normalise::no);
     coincOmniFilterConv.reset();
