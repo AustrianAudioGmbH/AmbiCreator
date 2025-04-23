@@ -14,10 +14,8 @@
 #include "../resources/customComponents/LevelMeter.h"
 #include "../resources/customComponents/MultiTextButton.h"
 
-// enable for debugging purposes only:
-//#define AA_MELATONIN
-#ifdef AA_MELATONIN
-#include "melatonin_inspector/melatonin_inspector.h"
+#ifdef USE_MELATONIN_INSPECTOR
+#include <melatonin_inspector/melatonin_inspector.h>
 #endif
 
 typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
@@ -130,8 +128,8 @@ private:
     const juce::String helpText = {"left/right are seen from the recording side. front of upper mic should point towards the source."};
     const juce::String helpTextLegacy = {"left/right are seen from the recording side. front of lower mic should point towards the source."};
 
-
-#ifdef AA_MELATONIN
+#ifdef USE_MELATONIN_INSPECTOR
+#warning "MELATONIN INSPECTOR IS CONFIGURED TO BE INCLUDED IN BUILD"
     melatonin::Inspector inspector { *this, true };
 #endif
 

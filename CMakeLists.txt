@@ -90,12 +90,16 @@ endif()
 set(JUCE_BUILD_LV2 OFF CACHE BOOL "Disable LV2")
 set(JUCE_BUILD_ARA OFF CACHE BOOL "Disable ARA")
 
-#Include (FetchContent)
-#FetchContent_Declare (melatonin_inspector
-#		GIT_REPOSITORY https://github.com/sudara/melatonin_inspector.git
-#		GIT_TAG origin/main
-#		SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/melatonin_inspector)
-#FetchContent_MakeAvailable (melatonin_inspector)
+
+# Include Melatonin Inspector only for Debug builds
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+	include(FetchContent)
+	FetchContent_Declare(melatonin_inspector
+			GIT_REPOSITORY https://github.com/sudara/melatonin_inspector.git
+			GIT_TAG origin/main
+			SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/melatonin_inspector)
+	FetchContent_MakeAvailable(melatonin_inspector)
+endif()
 
 juce_add_plugin("${PROJECT_NAME}"
     ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/packaging/icon.png"
@@ -169,6 +173,10 @@ target_compile_definitions(SharedCode
     BUILD_TAG="${GIT_TAG}"
 
     PRODUCT_NAME_WITHOUT_VERSION="AmbiCreator"
+
+	# Define USE_MELATONIN_INSPECTOR for Debug builds
+	$<$<CONFIG:Debug>:USE_MELATONIN_INSPECTOR>
+
 )
 
 target_link_libraries(SharedCode
@@ -186,10 +194,17 @@ target_link_libraries(SharedCode
 	juce_gui_basics
 	juce_gui_extra
 	juce_opengl
-#	melatonin_inspector
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
-    juce::juce_recommended_warning_flags)
+    juce::juce_recommended_warning_flags
+)
+
+# Link melatonin_inspector only for Debug builds
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+	target_link_libraries(SharedCode INTERFACE melatonin_inspector)
+endif()
+
+
 
 add_custom_target(host_header DEPENDS
     $<TARGET_PROPERTY:${PROJECT_NAME},JUCE_GENERATED_SOURCES_DIRECTORY>/JuceHeader.h
