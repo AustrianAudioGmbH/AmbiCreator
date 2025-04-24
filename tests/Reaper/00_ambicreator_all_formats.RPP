@@ -1,4 +1,4 @@
-<REAPER_PROJECT 0.1 "7.36/macOS-arm64" 1745494640
+<REAPER_PROJECT 0.1 "7.36/macOS-arm64" 1745496456
   <NOTES 0 2
   >
   RIPPLE 0 0
@@ -18,7 +18,7 @@
   VIDEO_CONFIG 0 0 65792
   PANMODE 3
   PANLAWFLAGS 3
-  CURSOR 0
+  CURSOR 1.5
   ZOOM 100 0 0
   VZOOMEX 6 0
   USE_REC_CFG 0
@@ -32,7 +32,7 @@
   >
   <APPLYFX_CFG
   >
-  RENDER_FILE "/Users/jayvaughan/Documents/Development/Plugins/AUTOBUILDS_/builder-desktop/plugins-builder-desktop/Internal/AmbiCreator/tests/Results/00_ambicreator_all_formats_reaper.wav"
+  RENDER_FILE "../Results/00_ambicreator_all_formats_reaper.wav"
   RENDER_FMT 0 2 44100
   RENDER_1X 0
   RENDER_RANGE 1 0 0 0 1000
@@ -200,7 +200,7 @@
     AUTOMODE 0
     PANLAWFLAGS 3
     VOLPAN 1 0 -1 -1 1
-    MUTESOLO 0 0 0
+    MUTESOLO 1 0 0
     IPHASE 0
     PLAYOFFS 0 1
     ISBUS 0 0
@@ -267,7 +267,7 @@
       FADEIN 1 0 0 1 0 0 0
       FADEOUT 1 0 0 1 0 0 0
       MUTE 0 0
-      SEL 1
+      SEL 0
       IGUID {A738C72C-F4C9-D044-9E0A-052F80212B01}
       IID 6
       NAME FourChannel1k.wav
