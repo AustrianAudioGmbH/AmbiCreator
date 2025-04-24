@@ -11,3 +11,5 @@
 cmake-build-debug/
 cmake-build-release/
 tests/Reaper/Backups/**
+tests/Reaper/Results/**
+tests/Reaper/Reference/*.txt
