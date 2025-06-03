@@ -47,6 +47,7 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     coincOmniFirCoeffBuffer.copyFrom(0, 0, COINC_OMNI_EQ_COEFFS, FIR_LEN);
 
 
+
 }
 
 AmbiCreatorAudioProcessor::~AmbiCreatorAudioProcessor()
@@ -442,10 +443,12 @@ void AmbiCreatorAudioProcessor::changeAbLayerState(int desiredLayer) {
         layerB = params.copyState();
         params.replaceState(layerA.createCopy());
         abLayerState = eCurrentActiveLayer::layerA;
+        DBG("Layer A loaded: legacyMode=" << (isNormalLRFBMode() ? "ON" : "OFF"));
     } else {
         layerA = params.copyState();
         params.replaceState(layerB.createCopy());
         abLayerState = eCurrentActiveLayer::layerB;
+        DBG("Layer B loaded: legacyMode=" << (isNormalLRFBMode() ? "ON" : "OFF"));
     }
 
     MessageManager::callAsync([this] {

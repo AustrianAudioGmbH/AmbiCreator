@@ -61,7 +61,9 @@ public:
 //    void setEditorHeight(int height) {editorHeight = height;}
     
     bool isNormalLRFBMode() {
-        return *legacyModePtr > 0.5f;
+        bool legacyMode = *legacyModePtr > 0.5f;
+        DBG("isNormalLRFBMode: Layer=" << (abLayerState == eCurrentActiveLayer::layerA ? "A" : "B") << ", legacyMode=" << (legacyMode ? "ON" : "OFF"));
+        return legacyMode;
     }
 
     void setAbLayer(int desiredLayer);

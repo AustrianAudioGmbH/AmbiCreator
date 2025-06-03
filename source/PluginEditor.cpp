@@ -202,14 +202,34 @@ AmbiCreatorAudioProcessorEditor::~AmbiCreatorAudioProcessorEditor()
 
 void AmbiCreatorAudioProcessorEditor::parameterChanged(const String& parameterID, float newValue)
 {
-    if (parameterID == "outGainDb" || parameterID == "horRotation" || parameterID == "zGainDb")
+    if (parameterID == "outGainDb")
     {
-        repaint(); // Trigger repaint to update sliders
+        DBG("OutGainDb changed to: " << newValue);
+    }
+    else if (parameterID == "horRotation")
+    {
+        DBG("HorRotation changed to: " << newValue);
+    }
+    else if (parameterID == "zGainDb")
+    {
+        DBG("ZGainDb changed to: " << newValue);
+    }
+    else if (parameterID == "channelOrder")
+    {
+        eChannelOrder order = static_cast<eChannelOrder>(static_cast<int>(newValue));
+        DBG("ChannelOrder changed to: " << (order == eChannelOrder::ACN ? "AmbiX" : "FUMA"));
+        tmbOutChannelOrder[order].setToggleState(true, NotificationType::dontSendNotification);
+        updateOutputMeterLabelTexts();
     }
     else if (parameterID == "legacyMode")
     {
-        setModeDisplay(processor.isNormalLRFBMode());
+        bool legacyMode = newValue > 0.5f;
+        DBG("LegacyMode changed to: " << (legacyMode ? "ON" : "OFF") << ", Layer=" << (processor.abLayerState == eCurrentActiveLayer::layerA ? "A" : "B"));
+        tbLegacyMode.setToggleState(legacyMode, NotificationType::dontSendNotification);
+        setModeDisplay(legacyMode);
     }
+
+    repaint();
 }
 
 void AmbiCreatorAudioProcessorEditor::mouseUp(const juce::MouseEvent& event)
