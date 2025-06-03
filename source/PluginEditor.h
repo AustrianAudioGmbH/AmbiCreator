@@ -31,7 +31,12 @@ enum eChannelOrder
 //==============================================================================
 /**
 */
-class AmbiCreatorAudioProcessorEditor  : public AudioProcessorEditor, private Button::Listener, private ComboBox::Listener, private Slider::Listener, private Timer
+class AmbiCreatorAudioProcessorEditor  :    public AudioProcessorEditor,
+                                            private Button::Listener,
+                                            private ComboBox::Listener,
+                                            private Slider::Listener,
+                                            private Timer,
+                                            private AudioProcessorValueTreeState::Listener
 {
 public:
     AmbiCreatorAudioProcessorEditor (AmbiCreatorAudioProcessor&, AudioProcessorValueTreeState&);
@@ -48,6 +53,8 @@ public:
     void sliderValueChanged (Slider* slider) override;
     
     int getControlParameterIndex (Component& control) override;
+
+    void parameterChanged(const String& parameterID, float newValue) override;
 
 private:
     static const int EDITOR_WIDTH = 650;

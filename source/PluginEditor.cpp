@@ -18,8 +18,13 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     inspector.toggle(true);
 #endif
 
+    valueTreeState.addParameterListener("outGainDb", this);
+    valueTreeState.addParameterListener("horRotation", this);
+    valueTreeState.addParameterListener("zGainDb", this);
+    valueTreeState.addParameterListener("legacyMode", this);
+
     setLookAndFeel (&ambiCreatorLookAndFeel);
-    
+
     addAndMakeVisible (&title);
     title.setTitle (String("AustrianAudio"),String("AmbiCreator"));
 //    title.setFont (alternativeLookAndFeel.aaMedium, alternativeLookAndFeel.aaRegular);
@@ -129,13 +134,10 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     outputConfigLabel.setText("Output Config");
 
     addAndMakeVisible (&tbLegacyMode);
-    tbAttLegacyMode.reset(new ButtonAttachment (valueTreeState, "legacyMode", tbLegacyMode));
-    tbLegacyMode.addListener(this);
     tbLegacyMode.setButtonText("legacy mode");
-
-    auto legacyModeInit = valueTreeState.getParameter("legacyMode")->getValue();
-    valueTreeState.getParameter("legacyMode")->setValueNotifyingHost(legacyModeInit);
-
+    tbLegacyMode.setClickingTogglesState(true);
+    tbLegacyMode.addListener(this);
+    tbAttLegacyMode.reset(new ButtonAttachment (valueTreeState, "legacyMode", tbLegacyMode));
     tbLegacyMode.setToggleState(processor.isNormalLRFBMode(), NotificationType::dontSendNotification);
 
     addAndMakeVisible(&tbAbLayer[0]);
@@ -153,6 +155,20 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
     tbAbLayer[1].setToggleState(false, NotificationType::dontSendNotification);
 
     setAbButtonAlphaFromLayerState(eCurrentActiveLayer::layerA);
+
+    if (processor.abLayerState == eCurrentActiveLayer::layerB)
+    {
+        tbAbLayer[0].setToggleState(false, NotificationType::dontSendNotification);
+        tbAbLayer[1].setToggleState(true, NotificationType::dontSendNotification);
+        setAbButtonAlphaFromLayerState(eCurrentActiveLayer::layerB);
+    }
+    else
+    {
+        tbAbLayer[0].setToggleState(true, NotificationType::dontSendNotification);
+        tbAbLayer[1].setToggleState(false, NotificationType::dontSendNotification);
+        setAbButtonAlphaFromLayerState(eCurrentActiveLayer::layerA);
+    }
+
 
     // help tooltip
     addAndMakeVisible(&helpToolTip);
@@ -175,7 +191,25 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (AmbiCreatorAud
 
 AmbiCreatorAudioProcessorEditor::~AmbiCreatorAudioProcessorEditor()
 {
+    valueTreeState.removeParameterListener("outGainDb", this);
+    valueTreeState.removeParameterListener("horRotation", this);
+    valueTreeState.removeParameterListener("zGainDb", this);
+    valueTreeState.removeParameterListener("legacyMode", this);
+
     setLookAndFeel (nullptr);
+}
+
+
+void AmbiCreatorAudioProcessorEditor::parameterChanged(const String& parameterID, float newValue)
+{
+    if (parameterID == "outGainDb" || parameterID == "horRotation" || parameterID == "zGainDb")
+    {
+        repaint(); // Trigger repaint to update sliders
+    }
+    else if (parameterID == "legacyMode")
+    {
+        setModeDisplay(processor.isNormalLRFBMode());
+    }
 }
 
 void AmbiCreatorAudioProcessorEditor::mouseUp(const juce::MouseEvent& event)
@@ -227,9 +261,7 @@ void AmbiCreatorAudioProcessorEditor::resized()
 {
     const float currentWidth = getWidth();
     const float currentHeight = getHeight();
-//    processor.setEditorWidth(currentWidth);
-//    processor.setEditorHeight(currentHeight);
-    
+
     const float leftRightMargin = 0.046f * currentWidth;
     const float topMargin = 0.01f * currentHeight;
     const int headerHeight = 60;
@@ -246,13 +278,11 @@ void AmbiCreatorAudioProcessorEditor::resized()
     const float slTbWidth = 0.08f * currentWidth;
     const float slTbHeight = 0.06f * currentHeight;
 
-//    const float rotarySliderWidth = 0.123f * currentWidth;
     const float rotarySliderHeight = 0.12f * currentHeight;
     const float rotarySliderVerticalSpacing = 0.05f * currentHeight;
     const float buttonHeight = 0.051f * currentHeight;
     const float legacyButtonWidth = 0.13f * currentWidth;
     const float horizontalButtonSpacing = 0.006f * currentWidth;
-//    const float comboBoxWidth = 0.2f * currentWidth;
     const float comboBoxHeight = 0.038f * currentHeight;
 
     Rectangle<int> area (getLocalBounds());
@@ -265,8 +295,7 @@ void AmbiCreatorAudioProcessorEditor::resized()
     area.removeFromRight((int)leftRightMargin);
     Rectangle<int> headerArea = area.removeFromTop(headerHeight);
     title.setBounds (headerArea);
-//    title.toFront(false);
-    
+
     if (processor.isNormalLRFBMode())
     {
         title.setLineBounds(false, 0.0f, (int)(0.116f * currentWidth), (int)(0.186f * currentWidth));
@@ -310,17 +339,6 @@ void AmbiCreatorAudioProcessorEditor::resized()
     
     Rectangle<int> rotSliderArea = sliderArea;
 
-#ifdef AA_CONFIG_ROTARY_UI
-    rotSliderArea.removeFromTop((int)rotarySliderVerticalSpacing);
-    lbSlRotOutGain.setBounds(rotSliderArea.removeFromTop((int)labelHeight));
-    slRotOutGain.setTextBoxStyle(Slider::TextBoxBelow, false, (int)slTbWidth, slTbHeight);
-    slRotOutGain.setBounds(rotSliderArea.removeFromTop(rotarySliderHeight));
-
-    rotSliderArea.removeFromTop(rotarySliderVerticalSpacing);
-    lbSlRotZGain.setBounds(rotSliderArea.removeFromTop(labelHeight));
-    slRotZGain.setTextBoxStyle(Slider::TextBoxBelow, false, slTbWidth, slTbHeight);
-    slRotZGain.setBounds(rotSliderArea.removeFromTop(rotarySliderHeight));
-#endif
     {
         int numGroups = 3;  // Total groups
         int groupSpacing = 10;  // Space between groups
@@ -365,9 +383,6 @@ void AmbiCreatorAudioProcessorEditor::resized()
     outputConfigLabel.setBounds(outMeterArea.getX() - 7 * meterSpacing, outMeterArea.getY() - 4 * comboBoxHeight, 4 * meterWidth + 14 * meterSpacing, comboBoxHeight);
     tmbOutChannelOrder.setBounds(outMeterArea.getX() - 7 * meterSpacing, outGainSlider.getY(), 4 * meterWidth + 14 * meterSpacing, labelHeight);
 
-#ifdef AA_CONFIG_COMBOBOX
-    cbOutChannelOrder.setBounds(outMeterArea.getX() - 7 * meterSpacing, outMeterArea.getY() - 2 * comboBoxHeight, 4 * meterWidth + 14 * meterSpacing, comboBoxHeight);
-#endif
 
     for (int i = 0; i < 4; ++i)
     {
@@ -380,57 +395,43 @@ void AmbiCreatorAudioProcessorEditor::sliderValueChanged (Slider* slider) {
     
 }
 
-void AmbiCreatorAudioProcessorEditor::buttonClicked (Button* button) {
+void AmbiCreatorAudioProcessorEditor::buttonClicked(Button* button)
+{
     if (button == &tbLegacyMode)
     {
         bool isToggled = button->getToggleState();
-        button->setToggleState(!isToggled, NotificationType::dontSendNotification);
-
-        setModeDisplay(button->getToggleState());
+        DBG("tbLegacyMode clicked: Setting legacyMode to " << (isToggled ? "ON" : "OFF"));
+         valueTreeState.getParameter("legacyMode")->setValueNotifyingHost(isToggled ? 1.0f : 0.0f);
+         setModeDisplay(processor.isNormalLRFBMode());
     }
-    else if (button == &tbAbLayer[0])
+    else if (button == &tbAbLayer[0] && button->getToggleState())
     {
-        bool isToggled = button->getToggleState();
-        if (isToggled < 0.5f)
-        {
-            processor.setAbLayer(eCurrentActiveLayer::layerB);
-            setAbButtonAlphaFromLayerState(eCurrentActiveLayer::layerB);
-        }
-        tbLegacyMode.setToggleState(processor.isNormalLRFBMode(), NotificationType::dontSendNotification);
+        processor.setAbLayer(eCurrentActiveLayer::layerA);
+        setAbButtonAlphaFromLayerState(eCurrentActiveLayer::layerA);
+        tbAbLayer[0].setToggleState(true, NotificationType::dontSendNotification);
+        tbAbLayer[1].setToggleState(false, NotificationType::dontSendNotification);
         setModeDisplay(processor.isNormalLRFBMode());
     }
-    else if (button == &tbAbLayer[1])
+    else if (button == &tbAbLayer[1] && button->getToggleState())
     {
-        bool isToggled = button->getToggleState();
-        if (isToggled < 0.5f)
-        {
-            processor.setAbLayer(eCurrentActiveLayer::layerA);
-            setAbButtonAlphaFromLayerState(eCurrentActiveLayer::layerA);
-        }
-        tbLegacyMode.setToggleState(processor.isNormalLRFBMode(), NotificationType::dontSendNotification);
+        processor.setAbLayer(eCurrentActiveLayer::layerB);
+        setAbButtonAlphaFromLayerState(eCurrentActiveLayer::layerB);
+        tbAbLayer[0].setToggleState(false, NotificationType::dontSendNotification);
+        tbAbLayer[1].setToggleState(true, NotificationType::dontSendNotification);
         setModeDisplay(processor.isNormalLRFBMode());
     }
-    else if (button == &tmbOutChannelOrder[0])
+    else if (button == &tmbOutChannelOrder[0] && button->getToggleState())
     {
-        bool isToggled = button->getToggleState();
-        if (!isToggled)
-        {
-            for (int i = 0; i < 4; ++i)
-                outputMeter[i].setLabelText(outMeterLabelTextACN[i]);
-        }
-        valueTreeState.getParameter("channelOrder")->setValueNotifyingHost(valueTreeState.getParameter("channelOrder")->convertTo0to1((eChannelOrder::ACN)));
-    }
-    else if (button == &tmbOutChannelOrder[1]) {
-        bool isToggled = button->getToggleState();
-        if (!isToggled) {
-            for (int i = 0; i < 4; ++i)
-                outputMeter[i].setLabelText(outMeterLabelTextFUMA[i]);
-        }
         valueTreeState.getParameter("channelOrder")->setValueNotifyingHost(
-                valueTreeState.getParameter("channelOrder")->convertTo0to1((eChannelOrder::FUMA)));
+                valueTreeState.getParameter("channelOrder")->convertTo0to1(eChannelOrder::ACN));
+        updateOutputMeterLabelTexts();
     }
-
-    updateOutputMeterLabelTexts();
+    else if (button == &tmbOutChannelOrder[1] && button->getToggleState())
+    {
+        valueTreeState.getParameter("channelOrder")->setValueNotifyingHost(
+                valueTreeState.getParameter("channelOrder")->convertTo0to1(eChannelOrder::FUMA));
+        updateOutputMeterLabelTexts();
+    }
 
     repaint();
 }
@@ -456,9 +457,7 @@ void AmbiCreatorAudioProcessorEditor::updateOutputMeterLabelTexts()
 
 void AmbiCreatorAudioProcessorEditor::timerCallback()
 {
-//    setModeDisplay(processor.isNormalLRFBMode());
-
-//DBG("EDITOR TIMER: LegacyMode:" << String(processor.isNormalLRFBMode() ? "TRUE" : "FALSE"));
+    DBG("Timer: LegacyMode=" << (processor.isNormalLRFBMode() ? "ON" : "OFF") << ", tbLegacyMode=" << (tbLegacyMode.getToggleState() ? "ON" : "OFF"));
 
     for (int i = 0; i < 4; ++i)
     {
@@ -498,6 +497,12 @@ void AmbiCreatorAudioProcessorEditor::timerCallback()
         tmbOutChannelOrder[1].setToggleState(true, NotificationType::dontSendNotification);
     }
 
+    setAbButtonAlphaFromLayerState(processor.abLayerState);
+    tbAbLayer[0].setToggleState(processor.abLayerState == eCurrentActiveLayer::layerA, NotificationType::dontSendNotification);
+    tbAbLayer[1].setToggleState(processor.abLayerState == eCurrentActiveLayer::layerB, NotificationType::dontSendNotification);
+
+    tbLegacyMode.setToggleState(processor.isNormalLRFBMode(), NotificationType::dontSendNotification);
+    setModeDisplay(processor.isNormalLRFBMode());
 
     title.showAlertSymbol(false);
 }

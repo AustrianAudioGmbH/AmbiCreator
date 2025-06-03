@@ -125,11 +125,13 @@ void AmbiCreatorAudioProcessor::changeProgramName (int, const String&)
 void AmbiCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     currentSampleRate = sampleRate;
-    
-    if (getTotalNumInputChannels() != 4 || getTotalNumOutputChannels() != 4)
-        wrongBusConfiguration = true;
-    else
-        wrongBusConfiguration = false;
+    firLatencySec = (static_cast<float>(FIR_LEN) / 2 - 1) / sampleRate; // Update latency based on actual sample rate
+
+    if (getTotalNumInputChannels() != 4 || getTotalNumOutputChannels() != 4) {
+        wrongBusConfiguration.set(true);
+    } else {
+        wrongBusConfiguration.set(false);
+    }
     
     foaChannelBuffer.setSize(4, samplesPerBlock);
     foaChannelBuffer.clear();
@@ -195,55 +197,59 @@ bool AmbiCreatorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 void AmbiCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer&)
 {
     int numSamples = buffer.getNumSamples();
-    
-    // if legacy mode is disabled (input: LRFB) - audio is always processed with FBLR
-    if (legacyModePtr->load() > 0.5)
-    {
-        legacyModeReorderBuffer.copyFrom(0, 0, buffer, 0, 0, buffer.getNumSamples()); // L
-        legacyModeReorderBuffer.copyFrom(1, 0, buffer, 1, 0, buffer.getNumSamples()); // R
-        legacyModeReorderBuffer.copyFrom(2, 0, buffer, 2, 0, buffer.getNumSamples()); // F
-        legacyModeReorderBuffer.copyFrom(3, 0, buffer, 3, 0, buffer.getNumSamples()); // B
-        
+
+    DBG("processBlock: LegacyMode=" << (isNormalLRFBMode() ? "ON" : "OFF"));
+
+    if (numSamples == 0 || wrongBusConfiguration.get() ||
+        buffer.getNumChannels() != 4 ||
+        getTotalNumInputChannels() != 4 ||
+        getTotalNumOutputChannels() != 4) {
         buffer.clear();
-        buffer.copyFrom(0, 0, legacyModeReorderBuffer, 2, 0, buffer.getNumSamples()); // F
-        buffer.copyFrom(1, 0, legacyModeReorderBuffer, 3, 0, buffer.getNumSamples()); // B
-        buffer.copyFrom(2, 0, legacyModeReorderBuffer, 0, 0, buffer.getNumSamples()); // L
-        buffer.copyFrom(3, 0, legacyModeReorderBuffer, 1, 0, buffer.getNumSamples()); // R
-        
-        for (int i = 0; i < buffer.getNumChannels(); ++i)
-        {
-            inRms[i] = legacyModeReorderBuffer.getRMSLevel (i, 0, numSamples);
-            
-            // cubase inputs a small noise when bypassing due to wrong channel layout
-            if (inRms[i].get() < 0.000000001f)
-                channelActive[i] = false;
-            else
-                channelActive[i] = true;
+        for (int i = 0; i < buffer.getNumChannels(); ++i) {
+            outRms[i].set(0.0f);
+        }
+        return;
+    }
+
+    // In legacy mode, input channels are expected in order: Left (0), Right (1), Front (2), Back (3)
+    // Reordered to: Front (0), Back (1), Left (2), Right (3)
+    if (isNormalLRFBMode()) {
+        legacyModeReorderBuffer.copyFrom(0, 0, buffer, 0, 0, numSamples); // L
+        legacyModeReorderBuffer.copyFrom(1, 0, buffer, 1, 0, numSamples); // R
+        legacyModeReorderBuffer.copyFrom(2, 0, buffer, 2, 0, numSamples); // F
+        legacyModeReorderBuffer.copyFrom(3, 0, buffer, 3, 0, numSamples); // B
+
+        buffer.clear();
+        buffer.copyFrom(0, 0, legacyModeReorderBuffer, 2, 0, numSamples); // F
+        buffer.copyFrom(1, 0, legacyModeReorderBuffer, 3, 0, numSamples); // B
+        buffer.copyFrom(2, 0, legacyModeReorderBuffer, 0, 0, numSamples); // L
+        buffer.copyFrom(3, 0, legacyModeReorderBuffer, 1, 0, numSamples); // R
+
+        for (int i = 0; i < buffer.getNumChannels(); ++i) {
+            inRms[i].set(legacyModeReorderBuffer.getRMSLevel(i, 0, numSamples));
+            channelActive[i].set(inRms[i].get() >= 0.000000001f);
+        }
+    } else {
+        for (int i = 0; i < buffer.getNumChannels(); ++i) {
+            inRms[i].set(buffer.getRMSLevel(i, 0, numSamples));
+            channelActive[i].set(inRms[i].get() >= 0.000000001f);
         }
     }
-    else
-    {
-        for (int i = 0; i < buffer.getNumChannels(); ++i)
-        {
-            inRms[i] = buffer.getRMSLevel (i, 0, numSamples);
-            
-            // cubase inputs a small noise when bypassing due to wrong channel layout
-            if (inRms[i].get() < 0.000000001f)
-                channelActive[i] = false;
-            else
-                channelActive[i] = true;
-        }
-    }
-    
+
     ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
+    auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-    
+
     auto playhead = getPlayHead();
     juce::AudioPlayHead::CurrentPositionInfo posInfo;
-    playhead->getCurrentPosition(posInfo);
-    isPlaying = posInfo.isPlaying;
-    
+    if (playhead) playhead->getCurrentPosition(posInfo);
+    isPlaying.set(posInfo.isPlaying);
+
+    if (isBypassed) {
+        isBypassed = false;
+        updateLatency();
+    }
+
     if (wrongBusConfiguration.get())
         return;
     
@@ -377,117 +383,93 @@ AudioProcessorEditor* AmbiCreatorAudioProcessor::createEditor()
     return new AmbiCreatorAudioProcessorEditor (*this, params);
 }
 
-//==============================================================================
-void AmbiCreatorAudioProcessor::getStateInformation (MemoryBlock& destData)
-{
-//    params.state.setProperty("editorWidth", var(editorWidth), nullptr);
-//    params.state.setProperty("editorHeight", var(editorHeight), nullptr);
-//    std::unique_ptr<XmlElement> xml (params.state.createXml());
-//    copyXmlToBinary (*xml, destData);
-
-
-//DBG("PROCESSOR GETSTATEINFORMATION: isLegacyMode: " << juce::String(isNormalLRFBMode() ? "TRUE" : "FALSE"));
-    
-    if (abLayerState == eCurrentActiveLayer::layerA)
-    {
-        layerA.getPropertyAsValue("legacyMode", nullptr).setValue(var(isNormalLRFBMode()));
+void AmbiCreatorAudioProcessor::getStateInformation(MemoryBlock &destData) {
+    ScopedLock lock(stateLock);
+    if (abLayerState == eCurrentActiveLayer::layerA) {
         layerA = params.copyState();
-    }
-    else if (abLayerState == eCurrentActiveLayer::layerB)
-    {
-        layerB.getPropertyAsValue("legacyMode", nullptr).setValue(var(isNormalLRFBMode()));
+    } else {
         layerB = params.copyState();
     }
 
-//    layerA.setProperty("editorWidth", var(editorWidth), nullptr);
-//    layerA.setProperty("editorHeight", var(editorWidth), nullptr);
-//    layerB.setProperty("editorWidth", var(editorWidth), nullptr);
-//    layerB.setProperty("editorHeight", var(editorWidth), nullptr);
-    
     ValueTree vtsState = params.copyState();
     ValueTree AState = layerA.createCopy();
     ValueTree BState = layerB.createCopy();
-    
+
     allValueTreeStates.removeAllChildren(nullptr);
     allValueTreeStates.addChild(vtsState, 0, nullptr);
     allValueTreeStates.addChild(AState, 1, nullptr);
     allValueTreeStates.addChild(BState, 2, nullptr);
-    
-    std::unique_ptr<XmlElement> xml (allValueTreeStates.createXml());
-    copyXmlToBinary (*xml, destData);
+    allValueTreeStates.setProperty("activeLayer", abLayerState, nullptr); // Save active layer
+
+    std::unique_ptr<XmlElement> xml(allValueTreeStates.createXml());
+    copyXmlToBinary(*xml, destData);
 }
 
-void AmbiCreatorAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
-{
-//    std::unique_ptr<XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
-//    if (xmlState != nullptr)
-//    {
-//        if (xmlState->hasTagName (params.state.getType()))
-//        {
-//            params.state = ValueTree::fromXml (*xmlState);
-//        }
-//        if (params.state.hasProperty("editorWidth"))
-//        {
-//            Value val = params.state.getPropertyAsValue("editorWidth", nullptr);
-//            if (val.getValue().toString() != "")
-//            {
-//                editorWidth = static_cast<int>(val.getValue());
-//            }
-//        }
-//        if (params.state.hasProperty("editorHeight"))
-//        {
-//            Value val = params.state.getPropertyAsValue("editorHeight", nullptr);
-//            if (val.getValue().toString() != "")
-//            {
-//                editorHeight = static_cast<int>(val.getValue());
-//            }
-//        }
-//    }
-    
-    std::unique_ptr<XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
-    if (xmlState != nullptr)
-    {
-        if (xmlState->hasTagName (allValueTreeStates.getType()))
-        {
-            allValueTreeStates = ValueTree::fromXml (*xmlState);
+void AmbiCreatorAudioProcessor::setStateInformation(const void *data, int sizeInBytes) {
+    std::unique_ptr<XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+    if (xmlState != nullptr) {
+        ScopedLock lock(stateLock);
+        if (xmlState->hasTagName(allValueTreeStates.getType())) {
+            allValueTreeStates = ValueTree::fromXml(*xmlState);
             params.replaceState(allValueTreeStates.getChild(0));
+            layerA = allValueTreeStates.getChild(1).createCopy();
             layerB = allValueTreeStates.getChild(2).createCopy();
-        }
-        else if (xmlState->hasTagName (params.state.getType()))
-        {
-            params.state = ValueTree::fromXml (*xmlState);
+            abLayerState = allValueTreeStates.getProperty("activeLayer", eCurrentActiveLayer::layerA);
+        } else if (xmlState->hasTagName(params.state.getType())) {
+            params.replaceState(ValueTree::fromXml(*xmlState));
+            layerA = params.copyState();
+            layerB = params.copyState();
+            abLayerState = eCurrentActiveLayer::layerA;
         }
 
-        
-//        if (params.state.hasProperty("editorWidth"))
-//        {
-//            Value val = params.state.getPropertyAsValue("editorWidth", nullptr);
-//            if (val.getValue().toString() != "")
-//            {
-//                editorWidth = static_cast<int>(val.getValue());
-//            }
-//        }
-//        if (params.state.hasProperty("editorHeight"))
-//        {
-//            Value val = params.state.getPropertyAsValue("editorHeight", nullptr);
-//            if (val.getValue().toString() != "")
-//            {
-//                editorHeight = static_cast<int>(val.getValue());
-//            }
-//        }
+        MessageManager::callAsync([this] {
+            static const StringArray paramIDs = {"outGainDb", "horRotation", "zGainDb", "channelOrder", "legacyMode"};
+            for (const auto &id: paramIDs) {
+                if (auto *param = params.getParameter(id)) {
+                    param->setValueNotifyingHost(param->getValue());
+                }
+            }
+        });
     }
 }
 
+
+void AmbiCreatorAudioProcessor::changeAbLayerState(int desiredLayer) {
+    ScopedLock lock(stateLock); // Protect ValueTree operations
+    DBG("Switching to layer: " << (desiredLayer == eCurrentActiveLayer::layerA ? "A" : "B"));
+
+    if (desiredLayer == eCurrentActiveLayer::layerA) {
+        layerB = params.copyState();
+        params.replaceState(layerA.createCopy());
+        abLayerState = eCurrentActiveLayer::layerA;
+    } else {
+        layerA = params.copyState();
+        params.replaceState(layerB.createCopy());
+        abLayerState = eCurrentActiveLayer::layerB;
+    }
+
+    MessageManager::callAsync([this] {
+        static const StringArray paramIDs = {"outGainDb", "horRotation", "zGainDb", "channelOrder", "legacyMode"};
+        for (const auto &id: paramIDs) {
+            if (auto *param = params.getParameter(id)) {
+                param->setValueNotifyingHost(param->getValue());
+            }
+        }
+    });
+}
+
 //==============================================================================
-void AmbiCreatorAudioProcessor::parameterChanged (const String &parameterID, float newValue)
+void AmbiCreatorAudioProcessor::parameterChanged(const String& parameterID, float newValue)
 {
     if (parameterID == "channelOrder")
     {
         channelOrder = (static_cast<int>(newValue) == eChannelOrder::FUMA) ? eChannelOrder::FUMA : eChannelOrder::ACN;
+        DBG("ChannelOrder changed to: " << (channelOrder == eChannelOrder::ACN ? "AmbiX" : "FUMA"));
     }
     else if (parameterID == "outGainDb")
     {
         outGainLin = Decibels::decibelsToGain(newValue);
+        DBG("OutGainDb changed to: " << newValue);
     }
     else if (parameterID == "zGainDb")
     {
@@ -495,13 +477,17 @@ void AmbiCreatorAudioProcessor::parameterChanged (const String &parameterID, flo
             zGainLin = 0.0f;
         else
             zGainLin = Decibels::decibelsToGain(newValue);
+        DBG("ZGainDb changed to: " << newValue);
     }
     else if (parameterID == "horRotation")
     {
         horRotationDeg = newValue;
+        DBG("HorRotation changed to: " << newValue);
     }
-    else if (parameterID == "legacyMode") {
+    else if (parameterID == "legacyMode")
+    {
         legacyModePtr->store(newValue);
+        DBG("LegacyMode changed to: " << (newValue > 0.5f ? "ON" : "OFF") << ", Layer=" << (abLayerState == eCurrentActiveLayer::layerA ? "A" : "B"));
     }
 }
 
@@ -550,25 +536,10 @@ void AmbiCreatorAudioProcessor::updateLatency() {
 
 void AmbiCreatorAudioProcessor::setAbLayer(int desiredLayer)
 {
-    abLayerState = desiredLayer;
-    changeAbLayerState();
-}
-
-void AmbiCreatorAudioProcessor::changeAbLayerState()
-{
-    bool currentLegacyMode = isNormalLRFBMode();
-    
-    if (abLayerState == eCurrentActiveLayer::layerB)
+    if (desiredLayer != abLayerState)
     {
-        layerA = params.copyState();
-        params.state = layerB.createCopy();
+        changeAbLayerState(desiredLayer);
     }
-    else
-    {
-        layerB = params.copyState();
-        params.state = layerA.createCopy();
-    }
-    params.getParameter("legacyMode")->setValueNotifyingHost(currentLegacyMode);
 }
 
 

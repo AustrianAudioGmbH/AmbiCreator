@@ -4,8 +4,8 @@
 
 enum eCurrentActiveLayer
 {
-    layerA = 1,
-    layerB = 2
+    layerA = 0,
+    layerB = 1
 };
 
 //==============================================================================
@@ -61,12 +61,11 @@ public:
 //    void setEditorHeight(int height) {editorHeight = height;}
     
     bool isNormalLRFBMode() {
-//        DBG("PROCESSOR LEGACYMODE:"<< juce::String((legacyModePtr->load() < 0.5 ? "TRUE" : "FALSE")));
-        return (legacyModePtr->load() < 0.5 ? true : false);
+        return *legacyModePtr > 0.5f;
     }
 
     void setAbLayer(int desiredLayer);
-    void changeAbLayerState();
+    void changeAbLayerState(int desiredLayer);
     
     Atomic<bool> wrongBusConfiguration = false;
     Atomic<bool> channelActive[4] = { true, true, true, true };
@@ -76,11 +75,13 @@ public:
     
     static const int EDITOR_DEFAULT_WIDTH = 650;
     static const int EDITOR_DEFAULT_HEIGHT = 500;
+    int abLayerState;
 
 private:
     //==============================================================================
     AudioProcessorValueTreeState params;
-    
+    CriticalSection stateLock; // Protect ValueTree operations
+
     AudioBuffer<float> foaChannelBuffer;
     AudioBuffer<float> rotatorBuffer;
     AudioBuffer<float> legacyModeReorderBuffer;
@@ -94,7 +95,7 @@ private:
     float previousCosPhi;
     float previousSinPhi;
     
-    const float firLatencySec;
+    float firLatencySec;
     double currentSampleRate;
     
     bool isBypassed;
@@ -139,7 +140,6 @@ private:
     ValueTree layerA;
     ValueTree layerB;
     ValueTree allValueTreeStates;
-    int abLayerState;
-    
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmbiCreatorAudioProcessor)
 };
