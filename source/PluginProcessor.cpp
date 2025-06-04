@@ -241,10 +241,17 @@ void AmbiCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
     auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    auto playhead = getPlayHead();
-    juce::AudioPlayHead::CurrentPositionInfo posInfo;
-    if (playhead) playhead->getCurrentPosition(posInfo);
-    isPlaying.set(posInfo.isPlaying);
+    AudioPlayHead* playHead = getPlayHead();
+    AudioPlayHead::PositionInfo playHeadPosition;
+
+    if (playHead != nullptr)
+    {
+        if (auto position = playHead->getPosition())
+        {
+            playHeadPosition = *position;
+        }
+    }
+    isPlaying.set(playHeadPosition.getIsPlaying());
 
     if (isBypassed) {
         isBypassed = false;
