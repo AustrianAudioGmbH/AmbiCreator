@@ -67,7 +67,7 @@ if(HOSTNAME STREQUAL "builder-macos-plugins.local")
 endif()
 
 if(HOSTNAME STREQUAL "builder-win-plugins")
-	set(AAX_SDK_PATH "c:/Users/builder/Desktop/plugins-builder-desktop/Internal/SDKs/aax-sdk-2-8-1/")
+	set(AAX_SDK_PATH "c:/Users/builder/Desktop/Internal/SDKs/aax-sdk-2-8-1/")
 	set(ENV{AAX_SDK_PATH} "${AAX_SDK_PATH}")
 	message(STATUS "Building on Windows with AAX_SDK_PATH=${AAX_SDK_PATH}")
 endif()
