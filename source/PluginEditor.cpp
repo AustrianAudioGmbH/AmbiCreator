@@ -5,9 +5,11 @@
 //==============================================================================
 AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (
     AmbiCreatorAudioProcessor& p,
-    AudioProcessorValueTreeState& vts) :
+    juce::AudioProcessorValueTreeState& vts) :
     AudioProcessorEditor (&p), processor (p), valueTreeState (vts)
 {
+    using namespace juce;
+
     //    setResizable (true, true);
     //    fixedAspectRatioConstrainer.setFixedAspectRatio (double(processor.EDITOR_DEFAULT_WIDTH) / processor.EDITOR_DEFAULT_HEIGHT);
     //    fixedAspectRatioConstrainer.setSizeLimits (processor.EDITOR_DEFAULT_WIDTH, processor.EDITOR_DEFAULT_HEIGHT, 2 * processor.EDITOR_DEFAULT_WIDTH, 2 * processor.EDITOR_DEFAULT_HEIGHT);
@@ -157,8 +159,10 @@ AmbiCreatorAudioProcessorEditor::~AmbiCreatorAudioProcessorEditor()
 }
 
 //==============================================================================
-void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
+void AmbiCreatorAudioProcessorEditor::paint (juce::Graphics& g)
 {
+    using namespace juce;
+
     const int currHeight = getHeight();
     const int currWidth = getWidth();
 
@@ -202,6 +206,8 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
 
 void AmbiCreatorAudioProcessorEditor::resized()
 {
+    using namespace juce;
+
     const float currentWidth = getWidth();
     const float currentHeight = getHeight();
     //    processor.setEditorWidth(currentWidth);
@@ -341,12 +347,14 @@ void AmbiCreatorAudioProcessorEditor::resized()
     }
 }
 
-void AmbiCreatorAudioProcessorEditor::sliderValueChanged (Slider* slider)
+void AmbiCreatorAudioProcessorEditor::sliderValueChanged (juce::Slider* slider)
 {
 }
 
-void AmbiCreatorAudioProcessorEditor::buttonClicked (Button* button)
+void AmbiCreatorAudioProcessorEditor::buttonClicked (juce::Button* button)
 {
+    using namespace juce;
+
     if (button == &tbLegacyMode)
     {
         bool isToggled = button->getToggleState();
@@ -381,7 +389,7 @@ void AmbiCreatorAudioProcessorEditor::buttonClicked (Button* button)
     repaint();
 }
 
-void AmbiCreatorAudioProcessorEditor::comboBoxChanged (ComboBox* cb)
+void AmbiCreatorAudioProcessorEditor::comboBoxChanged (juce::ComboBox* cb)
 {
     if (cb == title.getOutputWidgetPtr()->getCbOutChOrder())
         updateOutputMeterLabelTexts();

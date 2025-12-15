@@ -49,10 +49,12 @@
 
 #pragma once
 
+#include <juce_gui_basics/juce_gui_basics.h>
+
 //==============================================================================
 /*
 */
-class MuteSoloButton : public ToggleButton
+class MuteSoloButton : public juce::ToggleButton
 {
 public:
     enum Type
@@ -66,12 +68,16 @@ public:
 
     void setType (Type newType)
     {
+        using namespace juce;
+
         type = newType;
         setColour (ToggleButton::tickColourId, type == Type::mute ? Colours::red : Colours::yellow);
         repaint();
     }
-    void paint (Graphics& g) override
+    void paint (juce::Graphics& g) override
     {
+        using namespace juce;
+
         Rectangle<int> bounds = getLocalBounds().reduced (1, 1);
         const bool state = getToggleState();
 

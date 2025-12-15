@@ -74,9 +74,23 @@ else ()
 endif ()
 
 juce_add_plugin (
-    "${PROJECT_NAME}" ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/packaging/icon.png" COMPANY_NAME
-    "${COMPANY_NAME}" BUNDLE_ID "${BUNDLE_ID}" COPY_PLUGIN_AFTER_BUILD ON PLUGIN_MANUFACTURER_CODE
-    OIDA PLUGIN_CODE AASC FORMATS "${FORMATS}" PRODUCT_NAME "${PRODUCT_NAME}"
+    "${PROJECT_NAME}"
+    ICON_BIG
+    "${CMAKE_CURRENT_SOURCE_DIR}/packaging/icon.png"
+    COMPANY_NAME
+    "${COMPANY_NAME}"
+    BUNDLE_ID
+    "${BUNDLE_ID}"
+    COPY_PLUGIN_AFTER_BUILD
+    ON
+    PLUGIN_MANUFACTURER_CODE
+    OIDA
+    PLUGIN_CODE
+    AAAC
+    FORMATS
+    "${FORMATS}"
+    PRODUCT_NAME
+    "${PRODUCT_NAME}"
 )
 
 add_library (SharedCode INTERFACE)
@@ -136,11 +150,6 @@ target_link_libraries (
               juce::juce_recommended_config_flags
               juce::juce_recommended_lto_flags
               juce::juce_recommended_warning_flags
-)
-
-add_custom_target (
-    host_header
-    DEPENDS $<TARGET_PROPERTY:${PROJECT_NAME},JUCE_GENERATED_SOURCES_DIRECTORY>/JuceHeader.h
 )
 
 target_link_libraries ("${PROJECT_NAME}" PRIVATE SharedCode)

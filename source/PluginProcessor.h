@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "juce_dsp/juce_dsp.h"
+#include <juce_audio_processors/juce_audio_processors.h>
 
 enum eCurrentActiveLayer
 {
@@ -11,13 +12,22 @@ enum eCurrentActiveLayer
 //==============================================================================
 /**
 */
-class AmbiCreatorAudioProcessor : public AudioProcessor,
-                                  public AudioProcessorValueTreeState::Listener
+class AmbiCreatorAudioProcessor final : public juce::AudioProcessor,
+                                        public juce::AudioProcessorValueTreeState::Listener
 {
 public:
+    static constexpr float MIN_Z_GAIN_DB = -40.0f;
+    static constexpr float GAIN_TO_ZERO_THRESH_DB = 1.0f;
+
+    enum eChannelOrder
+    {
+        ACN = 0, // ACN implies AmbiX, SN3D normalization
+        FUMA = 1 // N3D normalization
+    };
+
     //==============================================================================
     AmbiCreatorAudioProcessor();
-    ~AmbiCreatorAudioProcessor();
+    ~AmbiCreatorAudioProcessor() override;
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
@@ -25,15 +35,15 @@ public:
 
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
 
-    void processBlock (AudioBuffer<float>&, MidiBuffer&) override;
-    void processBlockBypassed (AudioBuffer<float>&, MidiBuffer&) override;
+    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    void processBlockBypassed (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     //==============================================================================
-    AudioProcessorEditor* createEditor() override;
+    juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
 
     //==============================================================================
-    const String getName() const override;
+    const juce::String getName() const override;
 
     bool acceptsMidi() const override;
     bool producesMidi() const override;
@@ -44,15 +54,15 @@ public:
     int getNumPrograms() override;
     int getCurrentProgram() override;
     void setCurrentProgram (int index) override;
-    const String getProgramName (int index) override;
-    void changeProgramName (int index, const String& newName) override;
+    const juce::String getProgramName (int index) override;
+    void changeProgramName (int index, const juce::String& newName) override;
 
     //==============================================================================
-    void getStateInformation (MemoryBlock& destData) override;
+    void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     //==============================================================================
-    void parameterChanged (const String& parameterID, float newValue) override;
+    void parameterChanged (const juce::String& parameterID, float newValue) override;
 
     int getEditorWidth() { return editorWidth; }
     //    void setEditorWidth(int width) {editorWidth = width;}
@@ -63,22 +73,22 @@ public:
     void setAbLayer (int desiredLayer);
     void changeAbLayerState();
 
-    Atomic<bool> wrongBusConfiguration = false;
-    Atomic<bool> channelActive[4] = { true, true, true, true };
-    Atomic<bool> isPlaying = false;
-    Atomic<float> inRms[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    Atomic<float> outRms[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    juce::Atomic<bool> wrongBusConfiguration = false;
+    juce::Atomic<bool> channelActive[4] = { true, true, true, true };
+    juce::Atomic<bool> isPlaying = false;
+    juce::Atomic<float> inRms[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    juce::Atomic<float> outRms[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
     static const int EDITOR_DEFAULT_WIDTH = 650;
     static const int EDITOR_DEFAULT_HEIGHT = 500;
 
 private:
     //==============================================================================
-    AudioProcessorValueTreeState params;
+    juce::AudioProcessorValueTreeState params;
 
-    AudioBuffer<float> foaChannelBuffer;
-    AudioBuffer<float> rotatorBuffer;
-    AudioBuffer<float> legacyModeReorderBuffer;
+    juce::AudioBuffer<float> foaChannelBuffer;
+    juce::AudioBuffer<float> rotatorBuffer;
+    juce::AudioBuffer<float> legacyModeReorderBuffer;
 
     int channelOrder;
     float outGainLin;
@@ -98,27 +108,18 @@ private:
     static constexpr double SQRT_THREE = 1.732050807568877;
 
     // differential (z) compensation filters
-    dsp::IIR::Filter<float> iirLowShelf;
-    AudioBuffer<float> zFirCoeffBuffer;
-    dsp::Convolution zFilterConv;
-    AudioBuffer<float> coincEightXFirCoeffBuffer;
-    AudioBuffer<float> coincEightYFirCoeffBuffer;
-    dsp::Convolution coincXEightFilterConv;
-    dsp::Convolution coincYEightFilterConv;
-    AudioBuffer<float> coincOmniFirCoeffBuffer;
-    dsp::Convolution coincOmniFilterConv;
-
-    static constexpr float MIN_Z_GAIN_DB = -40.0f;
-    static constexpr float GAIN_TO_ZERO_THRESH_DB = 1.0f;
+    juce::dsp::IIR::Filter<float> iirLowShelf;
+    juce::AudioBuffer<float> zFirCoeffBuffer;
+    juce::dsp::Convolution zFilterConv;
+    juce::AudioBuffer<float> coincEightXFirCoeffBuffer;
+    juce::AudioBuffer<float> coincEightYFirCoeffBuffer;
+    juce::dsp::Convolution coincXEightFilterConv;
+    juce::dsp::Convolution coincYEightFilterConv;
+    juce::AudioBuffer<float> coincOmniFirCoeffBuffer;
+    juce::dsp::Convolution coincOmniFilterConv;
 
     int editorWidth;
     int editorHeight;
-
-    enum eChannelOrder
-    {
-        ACN = 0, // ACN implies AmbiX, SN3D normalization
-        FUMA = 1 // N3D normalization
-    };
 
     enum eChannelOrderACN
     {
@@ -129,17 +130,17 @@ private:
     };
 
     void setLowShelfCoefficients (double sampleRate);
-    void ambiRotateAroundZ (AudioBuffer<float>* ambiBuffer);
+    void ambiRotateAroundZ (juce::AudioBuffer<float>* ambiBuffer);
     void updateLatency();
 
     std::atomic<float>* legacyMode;
     // AB Layer handling
-    Identifier nodeA = "layerA";
-    Identifier nodeB = "layerB";
-    Identifier allStates = "savedLayers";
-    ValueTree layerA;
-    ValueTree layerB;
-    ValueTree allValueTreeStates;
+    juce::Identifier nodeA = "layerA";
+    juce::Identifier nodeB = "layerB";
+    juce::Identifier allStates = "savedLayers";
+    juce::ValueTree layerA;
+    juce::ValueTree layerB;
+    juce::ValueTree allValueTreeStates;
     int abLayerState;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmbiCreatorAudioProcessor)

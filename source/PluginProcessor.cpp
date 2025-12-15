@@ -1,63 +1,86 @@
 #include "PluginProcessor.h"
 #include "../resources/irs.h"
 #include "PluginEditor.h"
+#include "juce_audio_processors/juce_audio_processors.h"
+
+static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
+{
+    using namespace juce;
+
+    using APF = AudioParameterFloat;
+    using API = AudioParameterInt;
+    using APB = AudioParameterBool;
+
+    AudioProcessorValueTreeState::ParameterLayout layout;
+
+    layout.add (std::make_unique<API> (
+        "channelOrder",
+        "channel order",
+        AmbiCreatorAudioProcessor::eChannelOrder::ACN,
+        AmbiCreatorAudioProcessor::eChannelOrder::FUMA,
+        AmbiCreatorAudioProcessor::eChannelOrder::ACN,
+        "",
+        [] (int value, int)
+        {
+            return (value == AmbiCreatorAudioProcessor::eChannelOrder::ACN) ? "AmbiX (WYZX)"
+                                                                            : "FuMa (WXYZ)";
+        },
+        nullptr));
+
+    layout.add (std::make_unique<APF> (
+        "outGainDb",
+        "output gain",
+        NormalisableRange<float> (-40.0f, 10.0f, 0.1f),
+        0.0f,
+        "dB",
+        AudioProcessorParameter::genericParameter,
+        [] (float value, int) { return String (value, 1); },
+        nullptr));
+
+    layout.add (std::make_unique<APF> (
+        "zGainDb",
+        "z gain",
+        NormalisableRange<float> (AmbiCreatorAudioProcessor::MIN_Z_GAIN_DB, 10.0f, 0.1f),
+        0.0f,
+        "dB",
+        AudioProcessorParameter::genericParameter,
+        [] (float value, int)
+        {
+            return (value > AmbiCreatorAudioProcessor::MIN_Z_GAIN_DB
+                                + AmbiCreatorAudioProcessor::GAIN_TO_ZERO_THRESH_DB)
+                       ? String (value, 1)
+                       : "-inf";
+        },
+        nullptr));
+
+    layout.add (std::make_unique<APF> (
+        "horRotation",
+        "horizontal rotation",
+        NormalisableRange<float> (-180.0f, 180.0f, 1.0f),
+        0.0f,
+        String (CharPointer_UTF8 ("°")),
+        AudioProcessorParameter::genericParameter,
+        [] (float value, int) { return String (value, 1); },
+        nullptr));
+
+    layout.add (std::make_unique<APB> (
+        "legacyMode",
+        "Legacy Mode",
+        false,
+        "",
+        [] (bool value, [[maybe_unused]] int maximumStringLength)
+        { return (value) ? "on" : "off"; },
+        nullptr));
+
+    return layout;
+}
 
 //==============================================================================
 AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     AudioProcessor (BusesProperties()
-                        .withInput ("Input", AudioChannelSet::ambisonic (1), true)
-                        .withOutput ("Output", AudioChannelSet::ambisonic (1), true)),
-    params (*this,
-            nullptr,
-            "AmbiCreator",
-            { std::make_unique<AudioParameterInt> (
-                  "channelOrder",
-                  "channel order",
-                  eChannelOrder::ACN,
-                  eChannelOrder::FUMA,
-                  eChannelOrder::ACN,
-                  "",
-                  [] (int value, int)
-                  { return (value == eChannelOrder::ACN) ? "AmbiX (WYZX)" : "FuMa (WXYZ)"; },
-                  nullptr),
-              std::make_unique<AudioParameterFloat> (
-                  "outGainDb",
-                  "output gain",
-                  NormalisableRange<float> (-40.0f, 10.0f, 0.1f),
-                  0.0f,
-                  "dB",
-                  AudioProcessorParameter::genericParameter,
-                  [] (float value, int) { return String (value, 1); },
-                  nullptr),
-              std::make_unique<AudioParameterFloat> (
-                  "zGainDb",
-                  "z gain",
-                  NormalisableRange<float> (MIN_Z_GAIN_DB, 10.0f, 0.1f),
-                  0.0f,
-                  "dB",
-                  AudioProcessorParameter::genericParameter,
-                  [] (float value, int)
-                  {
-                      return (value > MIN_Z_GAIN_DB + GAIN_TO_ZERO_THRESH_DB) ? String (value, 1)
-                                                                              : "-inf";
-                  },
-                  nullptr),
-              std::make_unique<AudioParameterFloat> (
-                  "horRotation",
-                  "horizontal rotation",
-                  NormalisableRange<float> (-180.0f, 180.0f, 1.0f),
-                  0.0f,
-                  String (CharPointer_UTF8 ("°")),
-                  AudioProcessorParameter::genericParameter,
-                  [] (float value, int) { return String (value, 1); },
-                  nullptr),
-              std::make_unique<AudioParameterBool> (
-                  "legacyMode",
-                  "Legacy Mode",
-                  false,
-                  "",
-                  [] (bool value, int maximumStringLength) { return (value) ? "on" : "off"; },
-                  nullptr) }),
+                        .withInput ("Input", juce::AudioChannelSet::ambisonic (1), true)
+                        .withOutput ("Output", juce::AudioChannelSet::ambisonic (1), true)),
+    params (*this, nullptr, "AmbiCreator", createParameterLayout()),
     firLatencySec ((static_cast<float> (FIR_LEN) / 2 - 1) / FIR_SAMPLE_RATE),
     currentSampleRate (48000),
     isBypassed (false),
@@ -71,6 +94,8 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     layerB (nodeB),
     allValueTreeStates (allStates)
 {
+    using namespace juce;
+
     channelOrder = static_cast<int> (params.getParameterAsValue ("channelOrder").getValue());
     outGainLin = Decibels::decibelsToGain (
         static_cast<float> (params.getParameterAsValue ("outGainDb").getValue()));
@@ -97,7 +122,7 @@ AmbiCreatorAudioProcessor::~AmbiCreatorAudioProcessor()
 }
 
 //==============================================================================
-const String AmbiCreatorAudioProcessor::getName() const
+const juce::String AmbiCreatorAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
@@ -149,18 +174,19 @@ void AmbiCreatorAudioProcessor::setCurrentProgram (int)
 {
 }
 
-const String AmbiCreatorAudioProcessor::getProgramName (int)
+const juce::String AmbiCreatorAudioProcessor::getProgramName (int)
 {
     return {};
 }
 
-void AmbiCreatorAudioProcessor::changeProgramName (int, const String&)
+void AmbiCreatorAudioProcessor::changeProgramName (int, const juce::String&)
 {
 }
 
 //==============================================================================
 void AmbiCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    using namespace juce;
     currentSampleRate = sampleRate;
 
     if (getTotalNumInputChannels() != 4 || getTotalNumOutputChannels() != 4)
@@ -243,8 +269,10 @@ bool AmbiCreatorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
     return true;
 }
 
-void AmbiCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer&)
+void AmbiCreatorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
+    using namespace juce;
+
     int numSamples = buffer.getNumSamples();
 
     // if legacy mode is disabled (input: LRFB) - audio is always processed with FBLR
@@ -407,7 +435,8 @@ void AmbiCreatorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
         outRms[i] = buffer.getRMSLevel (i, 0, numSamples);
 }
 
-void AmbiCreatorAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer&)
+void AmbiCreatorAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer,
+                                                      juce::MidiBuffer&)
 {
     if (! isBypassed)
     {
@@ -427,14 +456,16 @@ bool AmbiCreatorAudioProcessor::hasEditor() const
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-AudioProcessorEditor* AmbiCreatorAudioProcessor::createEditor()
+juce::AudioProcessorEditor* AmbiCreatorAudioProcessor::createEditor()
 {
     return new AmbiCreatorAudioProcessorEditor (*this, params);
 }
 
 //==============================================================================
-void AmbiCreatorAudioProcessor::getStateInformation (MemoryBlock& destData)
+void AmbiCreatorAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
+    using namespace juce;
+
     //    params.state.setProperty("editorWidth", var(editorWidth), nullptr);
     //    params.state.setProperty("editorHeight", var(editorHeight), nullptr);
     //    std::unique_ptr<XmlElement> xml (params.state.createXml());
@@ -476,6 +507,8 @@ void AmbiCreatorAudioProcessor::getStateInformation (MemoryBlock& destData)
 
 void AmbiCreatorAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
+    using namespace juce;
+
     //    std::unique_ptr<XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
     //    if (xmlState != nullptr)
     //    {
@@ -535,8 +568,10 @@ void AmbiCreatorAudioProcessor::setStateInformation (const void* data, int sizeI
 }
 
 //==============================================================================
-void AmbiCreatorAudioProcessor::parameterChanged (const String& parameterID, float newValue)
+void AmbiCreatorAudioProcessor::parameterChanged (const juce::String& parameterID, float newValue)
 {
+    using namespace juce;
+
     if (parameterID == "channelOrder")
     {
         channelOrder = (static_cast<int> (newValue) == eChannelOrder::FUMA) ? eChannelOrder::FUMA
@@ -562,6 +597,8 @@ void AmbiCreatorAudioProcessor::parameterChanged (const String& parameterID, flo
 //========================= CUSTOM METHODS =====================================
 void AmbiCreatorAudioProcessor::setLowShelfCoefficients (double sampleRate)
 {
+    using namespace juce;
+
     const double wc2 = 8418.4865639164;
     const double wc3 = 62.831853071795862;
     const double T = 1 / sampleRate;
@@ -574,8 +611,10 @@ void AmbiCreatorAudioProcessor::setLowShelfCoefficients (double sampleRate)
     *iirLowShelf.coefficients = dsp::IIR::Coefficients<float> (b0, b1, a0, a1);
 }
 
-void AmbiCreatorAudioProcessor::ambiRotateAroundZ (AudioBuffer<float>* ambiBuffer)
+void AmbiCreatorAudioProcessor::ambiRotateAroundZ (juce::AudioBuffer<float>* ambiBuffer)
 {
+    using namespace juce;
+
     auto numSamples = ambiBuffer->getNumSamples();
     jassert (numSamples == rotatorBuffer.getNumSamples());
 
@@ -649,7 +688,7 @@ void AmbiCreatorAudioProcessor::changeAbLayerState()
 
 //==============================================================================
 // This creates new instances of the plugin..
-AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new AmbiCreatorAudioProcessor();
 }

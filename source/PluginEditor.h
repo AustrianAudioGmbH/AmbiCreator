@@ -1,38 +1,42 @@
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
 #include "../resources/customComponents/LevelMeter.h"
-#include "../resources/customComponents/MuteSoloButton.h"
 #include "../resources/customComponents/ReverseSlider.h"
 #include "../resources/customComponents/SimpleLabel.h"
 #include "../resources/customComponents/TitleBar.h"
 #include "../resources/lookAndFeel/AA_LaF.h"
 #include "PluginProcessor.h"
 
-typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
-typedef AudioProcessorValueTreeState::ButtonAttachment ButtonAttachment;
-typedef AudioProcessorValueTreeState::ComboBoxAttachment ComboBoxAttachment;
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_core/juce_core.h>
+#include <juce_gui_basics/juce_gui_basics.h>
+#include <memory>
+
+typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
+typedef juce::AudioProcessorValueTreeState::ButtonAttachment ButtonAttachment;
+typedef juce::AudioProcessorValueTreeState::ComboBoxAttachment ComboBoxAttachment;
 
 //==============================================================================
 /**
 */
-class AmbiCreatorAudioProcessorEditor : public AudioProcessorEditor,
-                                        private Button::Listener,
-                                        private ComboBox::Listener,
-                                        private Slider::Listener,
-                                        private Timer
+class AmbiCreatorAudioProcessorEditor : public juce::AudioProcessorEditor,
+                                        private juce::Button::Listener,
+                                        private juce::ComboBox::Listener,
+                                        private juce::Slider::Listener,
+                                        private juce::Timer
 {
 public:
-    AmbiCreatorAudioProcessorEditor (AmbiCreatorAudioProcessor&, AudioProcessorValueTreeState&);
-    ~AmbiCreatorAudioProcessorEditor();
+    AmbiCreatorAudioProcessorEditor (AmbiCreatorAudioProcessor&,
+                                     juce::AudioProcessorValueTreeState&);
+    ~AmbiCreatorAudioProcessorEditor() override;
 
     //==============================================================================
-    void paint (Graphics&) override;
+    void paint (juce::Graphics&) override;
     void resized() override;
 
-    void buttonClicked (Button* button) override;
-    void comboBoxChanged (ComboBox* cb) override;
-    void sliderValueChanged (Slider* slider) override;
+    void buttonClicked (juce::Button* button) override;
+    void comboBoxChanged (juce::ComboBox* cb) override;
+    void sliderValueChanged (juce::Slider* slider) override;
 
     int getControlParameterIndex (Component& control) override;
 
@@ -41,19 +45,19 @@ private:
     static const int EDITOR_HEIGHT = 500;
 
     AmbiCreatorAudioProcessor& processor;
-    AudioProcessorValueTreeState& valueTreeState;
+    juce::AudioProcessorValueTreeState& valueTreeState;
 
-    ComponentBoundsConstrainer fixedAspectRatioConstrainer;
+    juce::ComponentBoundsConstrainer fixedAspectRatioConstrainer;
 
     TitleBar<AALogo, ChannelOrderIOWidget> title;
     Footer footer;
     LaF globalLaF;
-    TooltipWindow tooltipWindow;
+    juce::TooltipWindow tooltipWindow;
 
-    Path aaLogoBgPath;
-    Image arrayLegacyImage;
-    Image arrayImage;
-    Rectangle<float> arrayImageArea;
+    juce::Path aaLogoBgPath;
+    juce::Image arrayLegacyImage;
+    juce::Image arrayImage;
+    juce::Rectangle<float> arrayImageArea;
 
     ReverseSlider slOutGain, slHorizontalRotation, slZGain;
     std::unique_ptr<ReverseSlider::SliderAttachment> slAttOutGain, slAttHorizontalRotation,
@@ -85,11 +89,11 @@ private:
 
     const juce::String inMeterLabelText[4] = { "L", "R", "F", "B" };
 
-    ComboBox cbOutChannelOrder;
+    juce::ComboBox cbOutChannelOrder;
 
-    Slider slRotOutGain, slRotZGain;
+    juce::Slider slRotOutGain, slRotZGain;
 
-    TextButton tbAbLayer[2], tbLegacyMode;
+    juce::TextButton tbAbLayer[2], tbLegacyMode;
 
     SimpleLabel lbSlRotOutGain, lbSlRotZGain, lbOutConfig;
 
