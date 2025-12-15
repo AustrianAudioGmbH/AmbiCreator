@@ -28,63 +28,53 @@
 class LevelMeter : public Component
 {
 public:
-    LevelMeter()
-    {
-        colour = Colours::black;
-    }
-    ~LevelMeter()
-    {
-    }
+    LevelMeter() { colour = Colours::black; }
+    ~LevelMeter() {}
 
     void paint (Graphics& g) override
     {
         auto bounds = getLocalBounds();
         float labelWidth = bounds.getWidth();
         float labelHeight = labelWidth;
-        auto labelBounds = bounds.removeFromBottom(labelHeight);
-        g.setColour(Colours::white);
-        g.setFont(getLookAndFeel().getTypefaceForFont(Font(labelHeight)));
+        auto labelBounds = bounds.removeFromBottom (labelHeight);
+        g.setColour (Colours::white);
+        g.setFont (getLookAndFeel().getTypefaceForFont (Font (labelHeight)));
         g.setFont (labelHeight);
-        g.drawText(labelText, labelBounds, Justification::centred);
-        
+        g.drawText (labelText, labelBounds, Justification::centred);
+
         float labelMargin = 6.0f;
-        bounds.removeFromBottom(labelMargin);
-        g.setColour(Colours::black);
-        g.drawRoundedRectangle(bounds.toFloat(), 4.0f, 2.0f);
-        
-        g.setColour(colour);
-        auto innerBounds = bounds.reduced(1).toFloat();
+        bounds.removeFromBottom (labelMargin);
+        g.setColour (Colours::black);
+        g.drawRoundedRectangle (bounds.toFloat(), 4.0f, 2.0f);
+
+        g.setColour (colour);
+        auto innerBounds = bounds.reduced (1).toFloat();
         auto newHeight = innerBounds.getHeight() * (1.0f - normalizedMeterHeight);
-        g.fillRoundedRectangle(innerBounds.withTop(newHeight), 2.0f);
+        g.fillRoundedRectangle (innerBounds.withTop (newHeight), 2.0f);
     }
 
-    void resized() override
+    void resized() override {}
+
+    void setLevel (float newLevel)
     {
-    }
-    
-    void setLevel(float newLevel)
-    {
-        float levelDb = Decibels::gainToDecibels(newLevel, minDb);
+        float levelDb = Decibels::gainToDecibels (newLevel, minDb);
         normalizedMeterHeight = (minDb - levelDb) / minDb;
         repaint();
     }
-    
-    void setColour(Colour newColour)
-    {
-        colour = newColour;
-    }
-    
-    void setLabelText(juce::String newText)
+
+    void setColour (Colour newColour) { colour = newColour; }
+
+    void setLabelText (juce::String newText)
     {
         labelText = newText;
         repaint();
     }
-    
+
 private:
     float normalizedMeterHeight = 0.0f;
     Colour colour;
     juce::String labelText = "";
     const float minDb = -60.0f;
-    
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LevelMeter)
 };
