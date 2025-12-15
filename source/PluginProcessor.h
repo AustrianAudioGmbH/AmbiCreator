@@ -11,7 +11,8 @@ enum eCurrentActiveLayer
 //==============================================================================
 /**
 */
-class AmbiCreatorAudioProcessor  : public AudioProcessor, public AudioProcessorValueTreeState::Listener
+class AmbiCreatorAudioProcessor : public AudioProcessor,
+                                  public AudioProcessorValueTreeState::Listener
 {
 public:
     //==============================================================================
@@ -53,28 +54,30 @@ public:
     int getChannelOrder();
 
     //==============================================================================
-    void parameterChanged (const String &parameterID, float newValue) override;
-    
-    int getEditorWidth() {return editorWidth;}
-//    void setEditorWidth(int width) {editorWidth = width;}
-    int getEditorHeight() {return editorHeight;}
-//    void setEditorHeight(int height) {editorHeight = height;}
-    
-    bool isNormalLRFBMode() {
+    void parameterChanged (const String& parameterID, float newValue) override;
+
+    int getEditorWidth() { return editorWidth; }
+    //    void setEditorWidth(int width) {editorWidth = width;}
+    int getEditorHeight() { return editorHeight; }
+    //    void setEditorHeight(int height) {editorHeight = height;}
+
+    bool isNormalLRFBMode()
+    {
         bool legacyMode = *legacyModePtr > 0.5f;
-        DBG("isNormalLRFBMode: Layer=" << (abLayerState == eCurrentActiveLayer::layerA ? "A" : "B") << ", legacyMode=" << (legacyMode ? "ON" : "OFF"));
+        DBG ("isNormalLRFBMode: Layer=" << (abLayerState == eCurrentActiveLayer::layerA ? "A" : "B")
+                                        << ", legacyMode=" << (legacyMode ? "ON" : "OFF"));
         return legacyMode;
     }
 
-    void setAbLayer(int desiredLayer);
-    void changeAbLayerState(int desiredLayer);
-    
+    void setAbLayer (int desiredLayer);
+    void changeAbLayerState (int desiredLayer);
+
     Atomic<bool> wrongBusConfiguration = false;
     Atomic<bool> channelActive[4] = { true, true, true, true };
     Atomic<bool> isPlaying = false;
     Atomic<float> inRms[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     Atomic<float> outRms[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    
+
     static const int EDITOR_DEFAULT_WIDTH = 650;
     static const int EDITOR_DEFAULT_HEIGHT = 500;
     int abLayerState;
@@ -87,7 +90,7 @@ private:
     AudioBuffer<float> foaChannelBuffer;
     AudioBuffer<float> rotatorBuffer;
     AudioBuffer<float> legacyModeReorderBuffer;
-    
+
     int channelOrder;
     float outGainLin;
     float previousOutGainLin;
@@ -96,15 +99,15 @@ private:
     float horRotationDeg;
     float previousCosPhi;
     float previousSinPhi;
-    
+
     float firLatencySec;
     double currentSampleRate;
-    
+
     bool isBypassed;
-    
+
     // for n3d normalization multiply X,Y,Z by sqrt(3)
     static constexpr double SQRT_THREE = 1.732050807568877;
-        
+
     // differential (z) compensation filters
     dsp::IIR::Filter<float> iirLowShelf;
     AudioBuffer<float> zFirCoeffBuffer;
@@ -115,10 +118,10 @@ private:
     dsp::Convolution coincYEightFilterConv;
     AudioBuffer<float> coincOmniFirCoeffBuffer;
     dsp::Convolution coincOmniFilterConv;
-    
+
     static constexpr float MIN_Z_GAIN_DB = -40.0f;
     static constexpr float GAIN_TO_ZERO_THRESH_DB = 1.0f;
-    
+
     int editorWidth;
     int editorHeight;
 
@@ -129,11 +132,11 @@ private:
         Z = 2,
         X = 3
     };
-    
-    void setLowShelfCoefficients(double sampleRate);
-    void ambiRotateAroundZ(AudioBuffer<float>* ambiBuffer);
+
+    void setLowShelfCoefficients (double sampleRate);
+    void ambiRotateAroundZ (AudioBuffer<float>* ambiBuffer);
     void updateLatency();
-    
+
     std::atomic<float>* legacyModePtr;
     // AB Layer handling
     Identifier nodeA = "layerA";

@@ -33,31 +33,28 @@
 //==============================================================================
 /*
 */
-class TextMultiButton  : public juce::Component
+class TextMultiButton : public juce::Component
 {
 public:
-    TextMultiButton()
-    {
-        setLookAndFeel(&mainLaF);
-    }
+    TextMultiButton() { setLookAndFeel (&mainLaF); }
 
     ~TextMultiButton() override
     {
-        setLookAndFeel(nullptr);
+        setLookAndFeel (nullptr);
         textButtonArray.clear();
     }
 
-    void AddTextButton(TextButton* tb)
+    void AddTextButton (TextButton* tb)
     {
-        textButtonArray.add(tb);
-        addAndMakeVisible(tb);
+        textButtonArray.add (tb);
+        addAndMakeVisible (tb);
     }
 
-    void setButtonsNumber(int btnNrs)
+    void setButtonsNumber (int btnNrs)
     {
         for (int i = 0; i < btnNrs; i++)
         {
-            AddTextButton(new TextButton);
+            AddTextButton (new TextButton);
         }
         resized();
     }
@@ -66,17 +63,20 @@ public:
     {
         for (int i = 0; i < textButtonArray.size(); i++)
         {
-            if (textButtonArray.getUnchecked(i)->getToggleState())
+            if (textButtonArray.getUnchecked (i)->getToggleState())
                 return (i);
         }
 
         return -1;
     }
 
-    void disableAllButtons() {
+    void disableAllButtons()
+    {
         for (int i = 0; i < textButtonArray.size(); i++)
         {
-            textButtonArray.getUnchecked(i)->setToggleState(false, juce::NotificationType::dontSendNotification);
+            textButtonArray.getUnchecked (i)->setToggleState (
+                false,
+                juce::NotificationType::dontSendNotification);
         }
     }
 
@@ -85,25 +85,24 @@ public:
         for (int i = 0; i < textButtonArray.size(); i++)
         {
             if (i != btnNr)
-            textButtonArray.getUnchecked(i)->setToggleState(false, juce::NotificationType::dontSendNotification);
+                textButtonArray.getUnchecked (i)->setToggleState (
+                    false,
+                    juce::NotificationType::dontSendNotification);
         }
     }
-  
-    TextButton &operator[](int i)
-    {
-        return *textButtonArray.getUnchecked(i);
-    }
+
+    TextButton& operator[] (int i) { return *textButtonArray.getUnchecked (i); }
 
     void paint (juce::Graphics& g) override
     {
         g.fillAll (mainLaF.multiTextButtonBackgroundColor);
-        g.setColour(mainLaF.textButtonFrameColor);
+        g.setColour (mainLaF.textButtonFrameColor);
         g.drawRect (getLocalBounds(), 1);
     }
 
     void resized() override
     {
-        Rectangle<int> area(getLocalBounds());
+        Rectangle<int> area (getLocalBounds());
 
         juce::FlexBox fb;
         fb.flexDirection = FlexBox::Direction::row;
@@ -112,11 +111,11 @@ public:
 
         float buttonFlex = 1.f / textButtonArray.size();
 
-        for (TextButton *tb : textButtonArray)
+        for (TextButton* tb : textButtonArray)
         {
-            fb.items.add(juce::FlexItem(*tb).withFlex(buttonFlex));
+            fb.items.add (juce::FlexItem (*tb).withFlex (buttonFlex));
         }
-        fb.performLayout(area);
+        fb.performLayout (area);
     }
 
 private:

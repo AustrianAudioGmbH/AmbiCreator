@@ -31,67 +31,57 @@ public:
     LevelMeter()
     {
         colour = Colours::black;
-        setLookAndFeel(&mainLaF);
-
+        setLookAndFeel (&mainLaF);
     }
-    ~LevelMeter() override
-    {
-        setLookAndFeel(nullptr);
-    }
+    ~LevelMeter() override { setLookAndFeel (nullptr); }
 
     void paint (Graphics& g) override
     {
         auto bounds = getLocalBounds();
         float labelWidth = bounds.getWidth() * 1.0f;
         float labelHeight = labelWidth;
-        auto labelBounds = bounds.removeFromBottom((int)labelHeight);
-        g.setColour(Colours::white);
-        g.setFont(getLookAndFeel().getTypefaceForFont(Font(labelHeight)));
+        auto labelBounds = bounds.removeFromBottom ((int) labelHeight);
+        g.setColour (Colours::white);
+        g.setFont (getLookAndFeel().getTypefaceForFont (Font (labelHeight)));
         g.setFont (labelHeight);
-        g.setColour(mainLaF.mainTextColor);
+        g.setColour (mainLaF.mainTextColor);
 
-        g.drawText(labelText, labelBounds, Justification::centred);
-        
+        g.drawText (labelText, labelBounds, Justification::centred);
+
         float labelMargin = 6.0f;
-        bounds.removeFromBottom((int)labelMargin);
-        g.setColour(mainLaF.mainTextInactiveColor);
-        g.drawRoundedRectangle(bounds.toFloat(), 4.0f, 2.0f);
-        
-        g.setColour(colour);
-        auto innerBounds = bounds.reduced(1).toFloat();
+        bounds.removeFromBottom ((int) labelMargin);
+        g.setColour (mainLaF.mainTextInactiveColor);
+        g.drawRoundedRectangle (bounds.toFloat(), 4.0f, 2.0f);
+
+        g.setColour (colour);
+        auto innerBounds = bounds.reduced (1).toFloat();
         auto newHeight = innerBounds.getHeight() * (1.0f - normalizedMeterHeight);
-        g.fillRoundedRectangle(innerBounds.withTop(newHeight), 2.0f);
+        g.fillRoundedRectangle (innerBounds.withTop (newHeight), 2.0f);
     }
 
-    void resized() override
+    void resized() override {}
+
+    void setLevel (float newLevel)
     {
-    }
-    
-    void setLevel(float newLevel)
-    {
-        float levelDb = Decibels::gainToDecibels(newLevel, minDb);
+        float levelDb = Decibels::gainToDecibels (newLevel, minDb);
         normalizedMeterHeight = (minDb - levelDb) / minDb;
         repaint();
     }
-    
-    void setColour(Colour newColour)
-    {
-        colour = newColour;
-    }
-    
-    void setLabelText(juce::String newText)
+
+    void setColour (Colour newColour) { colour = newColour; }
+
+    void setLabelText (juce::String newText)
     {
         labelText = newText;
         repaint();
     }
-    
+
 private:
     float normalizedMeterHeight = 0.0f;
     Colour colour;
     juce::String labelText = "";
     const float minDb = -60.0f;
     MainLookAndFeel mainLaF;
-
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LevelMeter)
 };
