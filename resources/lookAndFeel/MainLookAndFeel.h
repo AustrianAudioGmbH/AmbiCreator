@@ -7,18 +7,42 @@
 
   ==============================================================================
 */
-
 #pragma once
 
-#include <JuceHeader.h>
+#include "BinaryData.h"
+#include "BinaryFonts.h"
 
-using namespace juce;
+#include <juce_graphics/juce_graphics.h>
+#include <juce_gui_basics/juce_gui_basics.h>
 
-class MainLookAndFeel : public LookAndFeel_V4
+class MainLookAndFeel : public juce::LookAndFeel_V4
 {
+    using Colour = juce::Colour;
+    using Typeface = juce::Typeface;
+    using Font = juce::Font;
+    using FontOptions = juce::FontOptions;
+    using Component = juce::Component;
+    using Graphics = juce::Graphics;
+    using Button = juce::Button;
+    using TextButton = juce::TextButton;
+    using ListBox = juce::ListBox;
+    using Desktop = juce::Desktop;
+    using String = juce::String;
+    using Justification = juce::Justification;
+    using Slider = juce::Slider;
+    using Label = juce::Label;
+    using ToggleButton = juce::ToggleButton;
+    using GroupComponent = juce::GroupComponent;
+    using TextEditor = juce::TextEditor;
+    using ScrollBar = juce::ScrollBar;
+    using Rectangle = juce::Rectangle<float>;
+    using Drawable = juce::Drawable;
+    using Line = juce::Line<float>;
+    using Path = juce::Path;
+    using Point = juce::Point<float>;
+
 public:
     const Colour AARed = Colour (155, 35, 35);
-
     const Colour mainBackground = Colour (17, 18, 19);
     const Colour mainTextColor = Colour (255, 255, 255);
     const Colour mainTextDisabledColor = mainTextColor.withAlpha (0.4f);
@@ -48,8 +72,6 @@ public:
     const Colour textButtonPressedRedBackgroundColor =
         textButtonActiveRedFrameColor.withAlpha (0.1f);
     const Colour toggleButtonActiveRedBackgroundColor = Colour (182, 22, 22).withAlpha (0.7f);
-    const Colour ClText = Colour (0xFFFFFFFF);
-    const Colour ClTextTextboxBackground = Colour (0xFF000000);
 
     Typeface::Ptr normalFont;
     Typeface::Ptr terminatorRegularFont, terminatorBoldFont;
@@ -65,6 +87,9 @@ public:
                                                                 BinaryFonts::InterBold_ttfSize);
 
         setColour (ListBox::backgroundColourId, groupComponentBackgroundColor);
+
+        //        DBG("MainLookAndFeel Scale Factor: " <<
+        //        Desktop::getInstance().getGlobalScaleFactor());
     }
 
     ~MainLookAndFeel() override {}
@@ -80,17 +105,26 @@ public:
         }
     }
 
+    // Helper function to get the scale factor
+    float getScaleFactor (Component* component) const
+    {
+        return component ? Component::getApproximateScaleFactorForComponent (component)
+                         : Desktop::getInstance().getGlobalScaleFactor();
+    }
+
     void drawButtonBackground (Graphics& g,
                                Button& button,
                                const Colour& backgroundColour,
                                bool isMouseOverButton,
                                bool isButtonDown) override
     {
-        (void) backgroundColour;
-        Rectangle<float> buttonArea (0.0f,
-                                     0.0f,
-                                     button.getWidth() * 1.0f,
-                                     button.getHeight() * 1.0f);
+        juce::ignoreUnused (backgroundColour);
+
+        float scale = getScaleFactor (&button);
+        Rectangle buttonArea (0.0f,
+                              0.0f,
+                              static_cast<float> (button.getWidth()),
+                              static_cast<float> (button.getHeight()));
 
         static auto austrianAudioLogoImg =
             juce::Drawable::createFromImageData (BinaryData::austrianAudioLogo_svg,
@@ -123,8 +157,12 @@ public:
             juce::Drawable::createFromImageData (BinaryData::undoPresetIcon_svg,
                                                  BinaryData::undoPresetIcon_svgSize);
 
-        int cornerDirButtons = button.getTopLevelComponent()->proportionOfHeight (0.004f);
-        int reduceYDirButtons = button.getTopLevelComponent()->proportionOfHeight (0.005f);
+        int cornerDirButtons = static_cast<int> (
+            static_cast<float> (button.getTopLevelComponent()->proportionOfHeight (0.004f))
+            / scale);
+        int reduceYDirButtons = static_cast<int> (
+            static_cast<float> (button.getTopLevelComponent()->proportionOfHeight (0.005f))
+            / scale);
 
         if (button.getButtonText() == "Austrian Audio Logo")
         {
@@ -159,14 +197,16 @@ public:
             g.setColour (textButtonFrameColor);
             g.drawRect (buttonArea, 1);
 
-            auto arrowArea = buttonArea
-                                 .reduced (button.proportionOfWidth (0.45f) * 1.0f,
-                                           button.proportionOfHeight (0.33f) * 1.0f)
-                                 .translated (button.proportionOfWidth (0.36f) * 1.0f, 0.0f);
+            auto arrowArea =
+                buttonArea
+                    .reduced (static_cast<float> (button.proportionOfWidth (0.45f)),
+                              static_cast<float> (button.proportionOfHeight (0.33f)))
+                    .translated (static_cast<float> (button.proportionOfWidth (0.36f)), 0.0f);
 
             if (! button.isEnabled())
             {
-                bool result = loadArrowImg->replaceColour (Colours::white, mainTextDisabledColor);
+                bool result =
+                    loadArrowImg->replaceColour (juce::Colours::white, mainTextDisabledColor);
                 if (! result)
                     return;
             }
@@ -255,11 +295,11 @@ public:
             if (! button.isEnabled())
             {
                 bool resultMainImg =
-                    freeFieldImg->replaceColour (Colours::white, mainTextDisabledColor);
+                    freeFieldImg->replaceColour (juce::Colours::white, mainTextDisabledColor);
                 if (! resultMainImg)
                     return;
                 bool resultSignOutImg =
-                    eqFieldCheckSign->replaceColour (Colours::white, mainTextDisabledColor);
+                    eqFieldCheckSign->replaceColour (juce::Colours::white, mainTextDisabledColor);
                 if (! resultSignOutImg)
                     return;
                 bool resultSignInImg =
@@ -270,8 +310,10 @@ public:
             }
 
             auto freeFieldImageArea = buttonArea;
-            freeFieldImageArea.removeFromTop (button.proportionOfHeight (0.11f) * 1.0f);
-            freeFieldImageArea.removeFromBottom (button.proportionOfHeight (0.33f) * 1.0f);
+            freeFieldImageArea.removeFromTop (
+                static_cast<float> (button.proportionOfHeight (0.11f)));
+            freeFieldImageArea.removeFromBottom (
+                static_cast<float> (button.proportionOfHeight (0.33f)));
             freeFieldImg->drawWithin (g,
                                       freeFieldImageArea,
                                       juce::RectanglePlacement::centred,
@@ -279,10 +321,11 @@ public:
 
             if (button.getToggleState() == true)
             {
-                auto eqFieldCheckSignArea = juce::Rectangle<float> (button.getWidth() * 0.77f,
-                                                                    button.getHeight() * 0.05f,
-                                                                    button.getWidth() * 0.18f,
-                                                                    button.getWidth() * 0.18f);
+                auto eqFieldCheckSignArea =
+                    Rectangle (static_cast<float> (button.getWidth()) * 0.77f,
+                               static_cast<float> (button.getHeight()) * 0.05f,
+                               static_cast<float> (button.getWidth()) * 0.18f,
+                               static_cast<float> (button.getWidth()) * 0.18f);
                 eqFieldCheckSign->drawWithin (g,
                                               eqFieldCheckSignArea,
                                               juce::RectanglePlacement::centred,
@@ -308,11 +351,11 @@ public:
             if (! button.isEnabled())
             {
                 bool resultMainImg =
-                    diffuseFieldImg->replaceColour (Colours::white, mainTextDisabledColor);
+                    diffuseFieldImg->replaceColour (juce::Colours::white, mainTextDisabledColor);
                 if (! resultMainImg)
                     return;
                 bool resultSignOutImg =
-                    eqFieldCheckSign->replaceColour (Colours::white, mainTextDisabledColor);
+                    eqFieldCheckSign->replaceColour (juce::Colours::white, mainTextDisabledColor);
                 if (! resultSignOutImg)
                     return;
                 bool resultSignInImg =
@@ -323,8 +366,10 @@ public:
             }
 
             auto diffuseFieldImageArea = buttonArea;
-            diffuseFieldImageArea.removeFromTop (button.proportionOfHeight (0.11f) * 1.0f);
-            diffuseFieldImageArea.removeFromBottom (button.proportionOfHeight (0.33f) * 1.0f);
+            diffuseFieldImageArea.removeFromTop (
+                static_cast<float> (button.proportionOfHeight (0.11f)));
+            diffuseFieldImageArea.removeFromBottom (
+                static_cast<float> (button.proportionOfHeight (0.33f)));
             diffuseFieldImg->drawWithin (g,
                                          diffuseFieldImageArea,
                                          juce::RectanglePlacement::centred,
@@ -332,10 +377,11 @@ public:
 
             if (button.getToggleState() == true)
             {
-                auto eqFieldCheckSignArea = juce::Rectangle<float> (button.getWidth() * 0.77f,
-                                                                    button.getHeight() * 0.05f,
-                                                                    button.getWidth() * 0.18f,
-                                                                    button.getWidth() * 0.18f);
+                auto eqFieldCheckSignArea =
+                    Rectangle (static_cast<float> (button.getWidth()) * 0.77f,
+                               static_cast<float> (button.getHeight()) * 0.05f,
+                               static_cast<float> (button.getWidth()) * 0.18f,
+                               static_cast<float> (button.getWidth()) * 0.18f);
                 eqFieldCheckSign->drawWithin (g,
                                               eqFieldCheckSignArea,
                                               juce::RectanglePlacement::centred,
@@ -348,16 +394,16 @@ public:
             auto reducedRect = buttonArea.reduced (4);
             g.drawRect (reducedRect, 1);
 
-            Rectangle<float> iconArea =
+            Rectangle iconArea =
                 buttonArea
-                    .reduced (button.proportionOfWidth (0.45f) * 1.0f,
-                              button.proportionOfHeight (0.33f) * 1.0f)
-                    .translated (button.proportionOfWidth (0.38f) * 1.0f, 0.0f);
+                    .reduced (static_cast<float> (button.proportionOfWidth (0.45f)),
+                              static_cast<float> (button.proportionOfHeight (0.33f)))
+                    .translated (static_cast<float> (button.proportionOfWidth (0.38f)), 0.0f);
 
             if (! button.isEnabled())
             {
-                bool resultMainImg =
-                    terminateSpillIconImg->replaceColour (Colours::white, mainTextDisabledColor);
+                bool resultMainImg = terminateSpillIconImg->replaceColour (juce::Colours::white,
+                                                                           mainTextDisabledColor);
                 if (! resultMainImg)
                     return;
             }
@@ -380,15 +426,16 @@ public:
             auto reducedRect = buttonArea.reduced (4);
             g.drawRect (reducedRect, 1);
 
-            auto iconArea = buttonArea
-                                .reduced (button.proportionOfWidth (0.45f) * 1.0f,
-                                          button.proportionOfHeight (0.33f) * 1.0f)
-                                .translated (button.proportionOfWidth (0.38f) * 1.0f, 0.0f);
+            auto iconArea =
+                buttonArea
+                    .reduced (static_cast<float> (button.proportionOfWidth (0.45f)),
+                              static_cast<float> (button.proportionOfHeight (0.33f)))
+                    .translated (static_cast<float> (button.proportionOfWidth (0.38f)), 0.0f);
 
             if (! button.isEnabled())
             {
-                bool resultMainImg =
-                    maximizeTargetIconImg->replaceColour (Colours::white, mainTextDisabledColor);
+                bool resultMainImg = maximizeTargetIconImg->replaceColour (juce::Colours::white,
+                                                                           mainTextDisabledColor);
                 if (! resultMainImg)
                     return;
             }
@@ -411,15 +458,16 @@ public:
             auto reducedRect = buttonArea.reduced (4);
             g.drawRect (reducedRect, 1);
 
-            auto iconArea = buttonArea
-                                .reduced (button.proportionOfWidth (0.45f) * 1.0f,
-                                          button.proportionOfHeight (0.33f) * 1.0f)
-                                .translated (button.proportionOfWidth (0.38f) * 1.0f, 0.0f);
+            auto iconArea =
+                buttonArea
+                    .reduced (static_cast<float> (button.proportionOfWidth (0.45f)),
+                              static_cast<float> (button.proportionOfHeight (0.33f)))
+                    .translated (static_cast<float> (button.proportionOfWidth (0.38f)), 0.0f);
 
             if (! button.isEnabled())
             {
-                bool resultMainImg =
-                    maxTargetToSpillIconImg->replaceColour (Colours::white, mainTextDisabledColor);
+                bool resultMainImg = maxTargetToSpillIconImg->replaceColour (juce::Colours::white,
+                                                                             mainTextDisabledColor);
                 if (! resultMainImg)
                     return;
             }
@@ -446,10 +494,7 @@ public:
         }
         else if (button.getButtonText().contains ("TermLine"))
         {
-            Line<float> line (buttonArea.getCentreX(),
-                              0,
-                              buttonArea.getCentreX(),
-                              buttonArea.getHeight());
+            Line line (buttonArea.getCentreX(), 0, buttonArea.getCentreX(), buttonArea.getHeight());
             Path linePath;
             linePath.addLineSegment (line, buttonArea.proportionOfWidth (0.06f));
             g.setColour (textButtonPressedBackgroundColor);
@@ -464,15 +509,15 @@ public:
                 auto reducedButtonArea = buttonArea.reduced (1);
                 auto ellipseArea = reducedButtonArea;
                 ellipseArea.setWidth (
-                    jmin (reducedButtonArea.getWidth(), reducedButtonArea.getHeight()));
+                    juce::jmin (reducedButtonArea.getWidth(), reducedButtonArea.getHeight()));
                 ellipseArea.setHeight (
-                    jmin (reducedButtonArea.getWidth(), reducedButtonArea.getHeight()));
+                    juce::jmin (reducedButtonArea.getWidth(), reducedButtonArea.getHeight()));
                 ellipseArea.setCentre (buttonArea.getCentre());
                 path.addEllipse (ellipseArea);
                 g.setColour (toggleButtonActiveRedBackgroundColor);
                 g.fillPath (path);
                 g.setColour (textButtonActiveRedFrameColor);
-                g.strokePath (path, PathStrokeType (ellipseArea.proportionOfWidth (0.06f)));
+                g.strokePath (path, juce::PathStrokeType (ellipseArea.proportionOfWidth (0.06f)));
             }
             else
             {
@@ -480,23 +525,23 @@ public:
                 auto reducedButtonArea = buttonArea.reduced (1);
                 auto ellipseArea = reducedButtonArea;
                 ellipseArea.setWidth (
-                    jmin (reducedButtonArea.getWidth(), reducedButtonArea.getHeight()));
+                    juce::jmin (reducedButtonArea.getWidth(), reducedButtonArea.getHeight()));
                 ellipseArea.setHeight (
-                    jmin (reducedButtonArea.getWidth(), reducedButtonArea.getHeight()));
+                    juce::jmin (reducedButtonArea.getWidth(), reducedButtonArea.getHeight()));
                 ellipseArea.setCentre (buttonArea.getCentre());
                 path.addEllipse (ellipseArea);
 
                 auto color = textButtonPressedBackgroundColor;
                 if (button.getToggleState())
                 {
-                    //Draw check sign when terminator stage completed
-                    Line<float> line1 (
+                    // Draw check sign when terminator stage completed
+                    Line line1 (
                         Point (ellipseArea.getX() + ellipseArea.proportionOfWidth (0.24f),
                                ellipseArea.getY() + ellipseArea.proportionOfHeight (0.47f)),
                         Point (ellipseArea.getX() + ellipseArea.proportionOfWidth (0.41f),
                                ellipseArea.getY() + ellipseArea.proportionOfHeight (0.67f)));
 
-                    Line<float> line2 (
+                    Line line2 (
                         line1.getEnd(),
                         Point (ellipseArea.getX() + ellipseArea.proportionOfWidth (0.72f),
                                ellipseArea.getY() + ellipseArea.proportionOfHeight (0.26f)));
@@ -510,7 +555,8 @@ public:
                     g.fillPath (path);
                     ;
                     g.setColour (textButtonActiveRedFrameColor);
-                    g.strokePath (path, PathStrokeType (ellipseArea.proportionOfWidth (0.06f)));
+                    g.strokePath (path,
+                                  juce::PathStrokeType (ellipseArea.proportionOfWidth (0.06f)));
 
                     g.setColour (mainTextColor);
                     g.fillPath (signPath);
@@ -550,7 +596,7 @@ public:
                 g.fillRect (buttonArea.reduced (1.0f, 1.0f));
             }
         }
-        //Sync channel buttons
+        // Sync channel buttons
         else if (button.getComponentID() == "5521")
         {
             auto mainColor = button.isEnabled() ? textButtonActiveBlue1FrameColor
@@ -639,7 +685,7 @@ public:
                 g.drawRect (buttonArea.reduced (3.0f, 3.0f), 2);
             }
         }
-        //Close preset and close terminator buttons
+        // Close preset and close terminator buttons
         else if (button.getComponentID() == "5621" || button.getComponentID() == "5721")
         {
             if (isMouseOverButton)
@@ -759,18 +805,18 @@ public:
         }
         else if (button.getButtonText() == "Trim Slider Pointer")
         {
-            g.setColour (Colours::red);
-            int pointerHeight = static_cast<int> (buttonArea.getHeight() * 0.05f);
-            int pointerX = 3;
-            int pointerY = static_cast<int> (buttonArea.getCentreY() - pointerHeight / 2);
-            int pointerWidth = static_cast<int> (buttonArea.getWidth() - 1.f);
+            g.setColour (juce::Colours::red);
+            auto pointerHeight = buttonArea.getHeight() * 0.05f;
+            auto pointerX = 3.0f;
+            auto pointerY = buttonArea.getCentreY() - pointerHeight / 2.0f;
+            auto pointerWidth = buttonArea.getWidth() - 1.0f;
 
             Path path;
-            Point<float> point1 (pointerX * 1.0f, pointerY * 1.0f);
-            Point<float> point2 (pointerWidth - 4.f, pointerY * 1.0f);
-            Point<float> point3 (pointerWidth * 1.0f, buttonArea.getCentreY());
-            Point<float> point4 (pointerWidth - 4.f, (pointerY + pointerHeight) * 1.0f);
-            Point<float> point5 (pointerX * 1.0f, (pointerY + pointerHeight) * 1.0f);
+            Point point1 (pointerX, pointerY);
+            Point point2 (pointerWidth - 4.0f, pointerY);
+            Point point3 (pointerWidth, buttonArea.getCentreY());
+            Point point4 (pointerWidth - 4.0f, pointerY + pointerHeight);
+            Point point5 (pointerX, pointerY + pointerHeight);
 
             path.startNewSubPath (point1);
             path.lineTo (point2);
@@ -787,10 +833,11 @@ public:
             auto imageArea = buttonArea.translated (0, 1);
             undoPresetIconImg->drawWithin (g, imageArea, juce::RectanglePlacement::centred, 1.f);
         }
-        //Nr of bands buttons
+        // Nr of bands buttons
         else
         {
-            //            auto mainColor = button.isEnabled() ? textButtonActiveBlue4FrameColor : textButtonActiveBlue4FrameColor.withAlpha(0.5f);
+            //            auto mainColor = button.isEnabled() ? textButtonActiveBlue4FrameColor :
+            //            textButtonActiveBlue4FrameColor.withAlpha(0.5f);
             if (isMouseOverButton)
             {
                 g.setColour (textButtonHoverRedBackgroundColor);
@@ -817,18 +864,20 @@ public:
                          bool /*isMouseOverButton*/,
                          bool /*isButtonDown*/) override
     {
-        Rectangle<int> buttonArea (0, 0, button.getWidth(), button.getHeight());
+        float scale = getScaleFactor (&button);
+        juce::Rectangle<int> buttonArea (0, 0, button.getWidth(), button.getHeight());
 
         g.setColour (button.isEnabled() ? mainTextColor : mainTextDisabledColor);
 
-        Font font (normalFont);
+        Font font (FontOptions { normalFont });
 
         String text = button.getButtonText();
 
-        int x = buttonArea.getX();
-        int w = buttonArea.getWidth();
-        int h = static_cast<int> (button.getTopLevelComponent()->getHeight() * 0.023f);
-        int y = (buttonArea.getHeight() - h) / 2;
+        auto x = buttonArea.getX();
+        auto w = buttonArea.getWidth();
+        auto h = static_cast<int> (static_cast<float> (button.getTopLevelComponent()->getHeight())
+                                   * 0.023f / scale);
+        auto y = (buttonArea.getHeight() - h) / 2;
 
         auto justification = Justification::centred;
 
@@ -840,12 +889,14 @@ public:
         else if (button.getButtonText() == "Free Field")
         {
             y = buttonArea.proportionOfHeight (0.7f);
-            h = static_cast<int> (button.getTopLevelComponent()->getHeight() * 0.02f);
+            h = static_cast<int> (static_cast<float> (button.getTopLevelComponent()->getHeight())
+                                  * 0.02f / scale);
         }
         else if (button.getButtonText() == "Diffuse Field")
         {
             y = buttonArea.proportionOfHeight (0.7f);
-            h = static_cast<int> (button.getTopLevelComponent()->getHeight() * 0.018f);
+            h = static_cast<int> (static_cast<float> (button.getTopLevelComponent()->getHeight())
+                                  * 0.018f / scale);
         }
         else if (button.getButtonText() == "Terminate Spill"
                  || button.getButtonText() == "Maximize Target"
@@ -868,9 +919,10 @@ public:
                  || button.getButtonText() == "Max Target-to-Spill")
         {
             g.setColour (button.isEnabled() ? mainTextColor : mainTextInactiveColor);
-            font = button.isEnabled() ? terminatorBoldFont : terminatorRegularFont;
+            font = FontOptions (button.isEnabled() ? terminatorBoldFont : terminatorRegularFont);
             justification = Justification::centredLeft;
-            h = static_cast<int> (button.getTopLevelComponent()->getHeight() * 0.015f);
+            h = static_cast<int> (static_cast<float> (button.getTopLevelComponent()->getHeight())
+                                  * 0.015f / scale);
             y = (buttonArea.getHeight() - h) / 2;
         }
         else if (button.getButtonText() == "01" || button.getButtonText() == "02"
@@ -883,9 +935,10 @@ public:
             String tmpText ("");
             tmpText += button.getButtonText().getCharPointer()[1];
             text = tmpText;
-            font = button.isEnabled() ? terminatorBoldFont : terminatorRegularFont;
+            font = FontOptions (button.isEnabled() ? terminatorBoldFont : terminatorRegularFont);
             justification = Justification::centred;
-            h = static_cast<int> (button.getTopLevelComponent()->getHeight() * 0.014f);
+            h = static_cast<int> (static_cast<float> (button.getTopLevelComponent()->getHeight())
+                                  * 0.014f / scale);
             y = (buttonArea.getHeight() - h) / 2;
         }
         else if (button.getButtonText().contains ("TermLine"))
@@ -901,9 +954,10 @@ public:
                    == "Find best compromise between reduction\nof spill and maximizing target signal")
         {
             g.setColour (button.isEnabled() ? mainTextColor : mainTextInactiveColor);
-            font = terminatorRegularFont;
+            font = FontOptions (terminatorRegularFont);
             justification = Justification::centredLeft;
-            h = static_cast<int> (button.getTopLevelComponent()->getHeight() * 0.012f);
+            h = static_cast<int> (static_cast<float> (button.getTopLevelComponent()->getHeight())
+                                  * 0.012f / scale);
             w = buttonArea.proportionOfWidth (1.f);
         }
         else if (button.getButtonText() == "Eight Pattern"
@@ -930,7 +984,7 @@ public:
             return;
         }
 
-        font.setHeight (h * 1.0f);
+        font.setHeight (static_cast<float> (h));
         g.setFont (font);
         g.drawFittedText (text, x, y, w, h, justification, 1);
     }
@@ -945,7 +999,11 @@ public:
         (void) width;
         (void) height;
         (void) position;
-        Rectangle<float> groupArea (0, 0, group.getWidth() * 1.0f, group.getHeight() * 1.0f);
+        float scale = getScaleFactor (&group);
+        Rectangle groupArea (0,
+                             0,
+                             static_cast<float> (group.getWidth()),
+                             static_cast<float> (group.getHeight()));
         g.setColour (groupComponentBackgroundColor);
 
         juce::Path path;
@@ -955,7 +1013,7 @@ public:
         }
         else
         {
-            path.addRoundedRectangle (groupArea, 10.f, 10.f);
+            path.addRoundedRectangle (groupArea, 10.f);
         }
 
         path.closeSubPath();
@@ -964,56 +1022,59 @@ public:
         g.setColour (group.isEnabled() ? mainTextColor : mainTextDisabledColor);
 
         int x = group.proportionOfWidth (0.06f);
-        int y = 10;
+        int y = static_cast<int> (10 / scale);
         int w = group.proportionOfWidth (0.87f);
-        int h = static_cast<int> (group.getTopLevelComponent()->getHeight() * 0.025f);
+        int h = static_cast<int> (static_cast<float> (group.getTopLevelComponent()->getHeight())
+                                  * 0.025f / scale);
 
         if (text == "Preset")
         {
             y = group.proportionOfHeight (0.04f);
         }
 
-        Font font (normalFont);
-        font.setHeight (h * 1.0f);
+        Font font { FontOptions (normalFont) };
+        font.setHeight (static_cast<float> (h));
         g.setFont (font);
         g.drawFittedText (text, x, y, w, h, Justification::left, 1);
     }
 
-#if AA_SLIDER_LAYOUT
     Slider::SliderLayout getSliderLayout (Slider& slider) override
     {
-        Rectangle<int> localBounds (0, 0, slider.getWidth(), slider.getHeight());
+        float scale = getScaleFactor (&slider);
+        juce::Rectangle<int> localBounds (0, 0, slider.getWidth(), slider.getHeight());
         Slider::SliderLayout layout;
 
         if (slider.getSliderStyle() == Slider::SliderStyle::LinearHorizontal)
         {
-            layout.sliderBounds.setBounds (static_cast<int> (localBounds.getWidth() * 0.07f),
-                                           localBounds.getY(),
-                                           static_cast<int> (localBounds.getWidth() * 0.42f),
-                                           localBounds.getHeight());
-            layout.textBoxBounds.setBounds (static_cast<int> (localBounds.getWidth() * 0.71f),
-                                            localBounds.getY(),
-                                            static_cast<int> (localBounds.getWidth() * 0.29f),
-                                            localBounds.getHeight());
-            //            layout.textBoxBounds.reduce(10, 10);
+            layout.sliderBounds.setBounds (
+                static_cast<int> (static_cast<float> (localBounds.getWidth()) * 0.07f),
+                localBounds.getY(),
+                static_cast<int> (static_cast<float> (localBounds.getWidth()) * 0.42f),
+                localBounds.getHeight());
+            layout.textBoxBounds.setBounds (
+                static_cast<int> (static_cast<float> (localBounds.getWidth()) * 0.71f),
+                localBounds.getY(),
+                static_cast<int> (static_cast<float> (localBounds.getWidth()) * 0.29f / scale),
+                static_cast<int> (static_cast<float> (localBounds.getHeight()) / scale));
+            layout.textBoxBounds.reduce (static_cast<int> (10.0f / scale),
+                                         static_cast<int> (10.0f / scale));
         }
         else if (slider.getSliderStyle() == Slider::SliderStyle::LinearVertical)
         {
-            auto layoutWidth = slider.getTopLevelComponent()->getWidth() * 0.027f;
+            auto layoutWidth =
+                static_cast<float> (slider.getTopLevelComponent()->getWidth()) * 0.027f / scale;
 
             layout.sliderBounds.setBounds (
-                static_cast<int> (localBounds.getRight() - layoutWidth + 1),
+                static_cast<int> (static_cast<float> (localBounds.getRight()) - layoutWidth + 1),
                 localBounds.getY(),
                 static_cast<int> (layoutWidth),
                 localBounds.getHeight());
 
-            //            Slider::TextEntryBoxPosition textBoxPos = slider.getTextBoxPosition();
-
-            int textBoxWidth = static_cast<int> (slider.getTopLevelComponent()->getWidth() * 0.05f);
-            int textBoxHeight =
-                static_cast<int> (slider.getTopLevelComponent()->getHeight() * 0.05f); // !J! 0.029f
-            int textBoxX =
-                static_cast<int> (layout.sliderBounds.getTopLeft().getX() - textBoxWidth + 3.f);
+            int textBoxWidth = static_cast<int> (
+                static_cast<float> (slider.getTopLevelComponent()->getWidth()) * 0.05f / scale);
+            int textBoxHeight = static_cast<int> (
+                static_cast<float> (slider.getTopLevelComponent()->getHeight()) * 0.029f / scale);
+            int textBoxX = layout.sliderBounds.getTopLeft().getX() - textBoxWidth + 3;
             layout.textBoxBounds.setBounds (textBoxX,
                                             layout.sliderBounds.getCentreY() - textBoxHeight / 2,
                                             textBoxWidth,
@@ -1022,7 +1083,6 @@ public:
 
         return layout;
     }
-#endif
 
     void drawLinearSlider (Graphics& g,
                            int x,
@@ -1063,15 +1123,20 @@ public:
                                      int width,
                                      int height,
                                      float sliderPos,
-                                     float minSliderPos,
-                                     float maxSliderPos,
+                                     [[maybe_unused]] float minSliderPos,
+                                     [[maybe_unused]] float maxSliderPos,
                                      const Slider::SliderStyle style,
                                      Slider& slider) override
     {
-        (void) minSliderPos;
-        (void) maxSliderPos;
-        const float h = slider.getTopLevelComponent()->getHeight() * 0.005f;
-        const float newDiameter = slider.getTopLevelComponent()->getHeight() * 0.024f;
+        float scale = getScaleFactor (&slider);
+        const auto h =
+            static_cast<float> (slider.getTopLevelComponent()->getHeight()) * 0.005f / scale;
+        const auto newDiameter =
+            static_cast<float> (slider.getTopLevelComponent()->getHeight()) * 0.024f / scale;
+        const auto fx = static_cast<float> (x);
+        const auto fy = static_cast<float> (y);
+        const auto fWidth = static_cast<float> (width);
+        const auto fHeight = static_cast<float> (height);
 
         Path pathBgr;
         Path pathFrg;
@@ -1082,34 +1147,30 @@ public:
 
         if (style == Slider::SliderStyle::LinearHorizontal)
         {
-            Rectangle<float> backgroundRect (x * 1.0f,
-                                             0.5f * height - h / 2,
-                                             width * 1.0f,
-                                             h * 1.0f);
+            Rectangle backgroundRect (fx, 0.5f * fHeight - h / 2, fWidth, h);
             pathBgr.addRoundedRectangle (backgroundRect, h);
-            Rectangle<float> foregroundRect ((width / 2 + x) * 1.0f,
-                                             0.5f * height - h / 2,
-                                             (sliderPos - (width / 2 + x) * 1.0f),
-                                             h * 1.0f);
+            Rectangle foregroundRect (fWidth / 2.0f + fx,
+                                      0.5f * fHeight - h / 2,
+                                      sliderPos - (fWidth / 2.0f + fx),
+                                      h);
             pathFrg.addRectangle (foregroundRect);
         }
         else if (style == Slider::SliderStyle::LinearVertical)
         {
-            Rectangle<float> backgroundRect (x + width / 2 - h / 2,
-                                             y + newDiameter / 2,
-                                             h,
-                                             height - newDiameter);
+            Rectangle backgroundRect (fx + fWidth / 2.0f - h / 2,
+                                      fy + newDiameter / 2,
+                                      h,
+                                      fHeight - newDiameter);
             pathBgr.addRoundedRectangle (backgroundRect, h);
-            auto mappedSliderPos = jmap (sliderPos,
-                                         0.f,
-                                         static_cast<float> (height),
-                                         y + newDiameter / 2,
-                                         height - newDiameter / 2);
-            Rectangle<float> foregroundRect (x + width / 2 - h / 2,
-                                             y + backgroundRect.getHeight() * 0.43f,
-                                             h,
-                                             mappedSliderPos
-                                                 - (y + backgroundRect.getHeight() * 0.43f));
+            auto mappedSliderPos = juce::jmap (sliderPos,
+                                               0.f,
+                                               fHeight,
+                                               fy + newDiameter / 2,
+                                               fHeight - newDiameter / 2);
+            Rectangle foregroundRect (fx + fWidth / 2.0f - h / 2,
+                                      fy + backgroundRect.getHeight() * 0.43f,
+                                      h,
+                                      mappedSliderPos - (fy + backgroundRect.getHeight() * 0.43f));
             pathFrg.addRectangle (foregroundRect);
         }
         g.setColour (pathBgrColor);
@@ -1124,32 +1185,35 @@ public:
                                 int width,
                                 int height,
                                 float sliderPos,
-                                float minSliderPos,
-                                float maxSliderPos,
+                                [[maybe_unused]] float minSliderPos,
+                                [[maybe_unused]] float maxSliderPos,
                                 const Slider::SliderStyle style,
                                 Slider& slider) override
     {
-        (void) minSliderPos;
-        (void) maxSliderPos;
-        const float newDiameter = slider.getTopLevelComponent()->getHeight() * 0.024f;
-        //        const float h = slider.getTopLevelComponent()->getHeight() * 0.005f;
+        float scale = getScaleFactor (&slider);
+        const float fx = static_cast<float> (x);
+        const float fy = static_cast<float> (y);
+        const float fWidth = static_cast<float> (width);
+        const float fHeight = static_cast<float> (height);
+        const float newDiameter =
+            static_cast<float> (slider.getTopLevelComponent()->getHeight()) * 0.024f / scale;
 
         Path p;
         if (style == Slider::SliderStyle::LinearHorizontal)
         {
             p.addEllipse (sliderPos - newDiameter / 2,
-                          height / 2.f - newDiameter / 2.f,
+                          fHeight / 2.f - newDiameter / 2.f,
                           newDiameter,
                           newDiameter);
         }
         else if (style == Slider::SliderStyle::LinearVertical)
         {
-            auto mappedSliderPos = jmap (sliderPos,
-                                         0.f,
-                                         static_cast<float> (height),
-                                         y + newDiameter / 2,
-                                         height - newDiameter / 2);
-            p.addEllipse (x + width / 2 - newDiameter / 2,
+            auto mappedSliderPos = juce::jmap (sliderPos,
+                                               0.f,
+                                               static_cast<float> (height),
+                                               fy + newDiameter / 2,
+                                               fHeight - newDiameter / 2);
+            p.addEllipse (fx + fWidth / 2.0f - newDiameter / 2,
                           mappedSliderPos - newDiameter / 2,
                           newDiameter,
                           newDiameter);
@@ -1162,58 +1226,17 @@ public:
         if (slider.isMouseOver() && slider.isEnabled())
         {
             g.setColour (sliderHoverFrameColor);
-            g.strokePath (p, PathStrokeType (1.0f));
+            g.strokePath (p, juce::PathStrokeType (1.0f / scale));
         }
     }
 
     void drawLabel (Graphics& g, Label& label) override
     {
-        auto alpha = label.isEnabled() ? 0.6f : 0.4f;
-        g.fillAll (label.findColour (Label::backgroundColourId));
-        Rectangle<int> bounds = label.getLocalBounds();
-        auto x = (float) bounds.getX();
-        auto y = (float) bounds.getY();
-        auto w = (float) bounds.getWidth();
-        auto h = (float) bounds.getHeight();
-        Path p;
-        p.addRoundedRectangle (x, y, w, h, h / 2.0f);
-
-        //        g.setColour (ClTextTextboxBackground.withMultipliedAlpha(0.2f));
-        g.setColour (labelBackgroundColor.withMultipliedAlpha (alpha));
-        g.fillPath (p);
-
-        if (! label.isBeingEdited())
-        {
-            const float editingAlpha = label.isEnabled() ? 1.0f : 0.5f;
-            const Font font (normalFont);
-
-            //g.setColour (ClText.withMultipliedAlpha (alpha));
-            g.setColour (ClText.withMultipliedAlpha (editingAlpha));
-            g.setFont (getLabelFont (label));
-
-            Rectangle<int> textArea (label.getBorderSize().subtractedFrom (label.getLocalBounds()));
-
-            g.drawFittedText (label.getText(),
-                              textArea,
-                              label.getJustificationType(),
-                              1,
-                              label.getMinimumHorizontalScale());
-
-            g.setColour (
-                label.findColour (Label::outlineColourId).withMultipliedAlpha (editingAlpha));
-        }
-        else if (label.isEnabled())
-        {
-            g.setColour (label.findColour (Label::outlineColourId));
-        }
-        //g.drawRect (label.getLocalBounds());
-        //g.drawRoundedRectangle (0,0,80,10,7.f,2);
-    }
-
-#if AA_DO_EMBIQ_LABEL
-    void drawLabel (Graphics& g, Label& label) override
-    {
-        Rectangle<float> labelArea (0.0f, 0.0f, label.getWidth() * 1.0f, label.getHeight() * 1.25f);
+        float scale = getScaleFactor (&label);
+        Rectangle labelArea (0.0f,
+                             0.0f,
+                             static_cast<float> (label.getWidth()),
+                             static_cast<float> (label.getHeight()));
 
         g.setColour (labelBackgroundColor);
         auto labelInnerArea =
@@ -1226,11 +1249,11 @@ public:
         int x = static_cast<int> (labelArea.getX());
         int w = static_cast<int> (labelArea.getWidth());
         int h = static_cast<int> (static_cast<float> (label.getTopLevelComponent()->getHeight())
-                                  * 0.018f);
-        int y = static_cast<int> ((labelArea.getHeight() - h) / 2);
+                                  * 0.018f / scale);
+        int y = (static_cast<int> (labelArea.getHeight()) - h) / 2;
 
-        Font font (normalFont);
-        font.setHeight (h * 1.0f);
+        Font font (FontOptions { normalFont });
+        font.setHeight (static_cast<float> (h));
         g.setFont (font);
 
         if (! label.isBeingEdited())
@@ -1238,7 +1261,6 @@ public:
             g.drawFittedText (label.getText(), x, y, w, h, Justification::centred, 1);
         }
     }
-#endif
 
     void fillTextEditorBackground (Graphics& g,
                                    int width,
@@ -1247,26 +1269,27 @@ public:
     {
         (void) width;
         (void) height;
-        Rectangle<float> textEditorArea (0.0f,
-                                         0.0f,
-                                         textEditor.getWidth() * 1.0f,
-                                         textEditor.getHeight() * 1.0f);
+        Rectangle textEditorArea (0.0f,
+                                  0.0f,
+                                  static_cast<float> (textEditor.getWidth()),
+                                  static_cast<float> (textEditor.getHeight()));
         g.setColour (textButtonHoverBackgroundColor);
         g.fillRect (textEditorArea);
     }
 
     void drawTextEditorOutline (Graphics& g, int width, int height, TextEditor& textEditor) override
     {
-        (void) width;
-        (void) height;
-        Rectangle<float> textEditorArea (0.0f,
-                                         0.0f,
-                                         textEditor.getWidth() * 1.0f,
-                                         textEditor.getHeight() * 1.0f);
+        juce::ignoreUnused (width, height);
+
+        float scale = getScaleFactor (&textEditor);
+        Rectangle textEditorArea (0.0f,
+                                  0.0f,
+                                  static_cast<float> (textEditor.getWidth()),
+                                  static_cast<float> (textEditor.getHeight()));
         if (textEditor.isEnabled())
         {
             g.setColour (mainTextColor);
-            g.drawRect (textEditorArea, 1.f);
+            g.drawRect (textEditorArea, 1.f / scale);
         }
     }
 
@@ -1275,19 +1298,21 @@ public:
                            bool isMouseOverButton,
                            bool isButtonDown) override
     {
-        Rectangle<float> toggleButtonBounds (0.0f,
-                                             0.0f,
-                                             button.getWidth() * 1.0f,
-                                             button.getHeight() * 1.0f);
+        float scale = getScaleFactor (&button);
+        Rectangle toggleButtonBounds (0.0f,
+                                      0.0f,
+                                      static_cast<float> (button.getWidth()),
+                                      static_cast<float> (button.getHeight()));
 
-        Font font (normalFont);
+        Font font (FontOptions { normalFont });
 
         int x = static_cast<int> (toggleButtonBounds.getX());
         int w = static_cast<int> (toggleButtonBounds.getWidth());
-        int h = static_cast<int> (button.getTopLevelComponent()->getHeight() * 0.023f);
-        int y = static_cast<int> ((button.getHeight() - h) / 2.0f);
+        int h = static_cast<int> (static_cast<float> (button.getTopLevelComponent()->getHeight())
+                                  * 0.023f / scale);
+        int y = (button.getHeight() - h) / 2;
 
-        font.setHeight (h * 1.0f);
+        font.setHeight (static_cast<float> (h));
         g.setFont (font);
 
         if (button.getButtonText() == "S" || button.getButtonText() == "M")
@@ -1320,7 +1345,7 @@ public:
                 g.fillRect (toggleButtonBounds);
 
                 g.setColour (mainColour.withAlpha (0.5f));
-                g.drawRect (toggleButtonBounds, 1);
+                g.drawRect (toggleButtonBounds, 1.f);
                 g.setColour (textColour);
                 g.drawFittedText (button.getButtonText(), x, y, w, h, Justification::centred, 1);
             }
@@ -1345,7 +1370,7 @@ public:
                 g.fillRect (toggleButtonBounds);
 
                 g.setColour (mainColour.withAlpha (0.5f));
-                g.drawRect (toggleButtonBounds, 1.f);
+                g.drawRect (toggleButtonBounds, 1.f / scale);
                 g.setColour (textColour);
                 g.drawFittedText (button.getButtonText(), x, y, w, h, Justification::centred, 1);
             }
@@ -1355,12 +1380,13 @@ public:
             g.setColour (button.isEnabled() ? textButtonActiveRedFrameColor
                                             : textButtonActiveRedFrameColor.withAlpha (0.5f));
             Path outline;
-            outline.addRoundedRectangle (toggleButtonBounds.reduced ((button.getWidth() * 0.19f),
-                                                                     (button.getHeight() * 0.28f)),
-                                         button.getHeight() * 0.23f,
-                                         button.getHeight() * 0.23f);
+            outline.addRoundedRectangle (
+                toggleButtonBounds.reduced ((static_cast<float> (button.getWidth()) * 0.19f),
+                                            (static_cast<float> (button.getHeight()) * 0.28f)),
+                static_cast<float> (button.getHeight()) * 0.23f,
+                static_cast<float> (button.getHeight()) * 0.23f);
 
-            g.strokePath (outline, PathStrokeType (2.0f));
+            g.strokePath (outline, juce::PathStrokeType (2.0f));
 
             if (button.getToggleState() != true)
             {
@@ -1410,11 +1436,7 @@ public:
                       bool isMouseOverButton,
                       bool isButtonDown) override
     {
-        (void) x;
-        (void) y;
-        (void) isEnabled;
-        (void) isMouseOverButton;
-        (void) isButtonDown;
+        juce::ignoreUnused (x, y, isEnabled, isMouseOverButton, isButtonDown);
 
         const float newDiameter = h * 0.34f;
 
@@ -1448,25 +1470,27 @@ public:
                         bool isMouseOver,
                         bool isMouseDown) override
     {
-        (void) scrollbar;
-        (void) isScrollbarVertical;
-        (void) isMouseOver;
-        (void) isMouseDown;
+        juce::ignoreUnused (scrollbar, isScrollbarVertical, isMouseOver, isMouseDown);
+
+        float scale = getScaleFactor (&scrollbar);
+
+        const float fx = static_cast<float> (x);
+        const float fy = static_cast<float> (y);
+        const float fWidth = static_cast<float> (width);
+        const float fHeight = static_cast<float> (height);
+        const float fThumbStart = static_cast<float> (thumbStartPosition);
+        const float fThumbSize = static_cast<float> (thumbSize);
 
         Path pathBgr;
-        pathBgr.addRoundedRectangle (x * 1.0f,
-                                     y * 1.0f,
-                                     width * 1.0f,
-                                     height * 1.0f,
-                                     (width / 2.0f) * 1.0f);
+        pathBgr.addRoundedRectangle (fx, fy, fWidth, fHeight, (fWidth / 2.0f) / scale);
         g.setColour (textButtonFrameColor);
         g.fillPath (pathBgr);
         Path pathFgr;
         pathFgr.addRoundedRectangle (0.0f,
-                                     thumbStartPosition * 1.0f,
-                                     width * 1.0f,
-                                     thumbSize * 1.0f,
-                                     (width / 2.0f) * 1.0f);
+                                     fThumbStart,
+                                     fWidth * 1.0f,
+                                     fThumbSize,
+                                     (fWidth / 2.0f) * 1.0f / scale);
         g.setColour (sliderHoverFrameColor);
         g.fillPath (pathFgr);
     }
@@ -1474,33 +1498,37 @@ public:
 private:
     void drawPatternImage (Graphics& g,
                            std::unique_ptr<Drawable> image,
-                           Rectangle<float>& buttonArea,
+                           Rectangle& buttonArea,
                            int reduceX,
                            int reduceY,
                            int corner,
                            bool mouseOver,
                            bool mouseDown)
     {
+        // Use global scale factor since no specific component is passed
+        float scale = getScaleFactor (nullptr);
         g.setColour (labelBackgroundColor);
 
-        int deltaX = 0;
+        float deltaX = 0;
 
-        if (SystemStats::getOperatingSystemName() == "iOS")
-            deltaX = static_cast<int> (buttonArea.proportionOfWidth (0.24f));
+        if (juce::SystemStats::getOperatingSystemName() == "iOS")
+            deltaX = buttonArea.proportionOfWidth (0.24f);
 
-        int deltaY = 1;
-        g.fillRoundedRectangle (buttonArea.reduced (deltaX * 1.0f, deltaY * 1.0f), corner * 1.0f);
-        auto imageRect = buttonArea.reduced (reduceX * 1.0f, reduceY * 1.0f);
+        float deltaY = 1 / scale;
+        g.fillRoundedRectangle (buttonArea.reduced (deltaX, deltaY),
+                                static_cast<float> (corner) / scale);
+        auto imageRect = buttonArea.reduced (static_cast<float> (reduceX) / scale,
+                                             static_cast<float> (reduceY) / scale);
         if (mouseOver)
         {
-            bool resultMainImg = image->replaceColour (Colours::white, sliderHoverFrameColor);
+            bool resultMainImg = image->replaceColour (juce::Colours::white, sliderHoverFrameColor);
             if (! resultMainImg)
                 return;
         }
         if (mouseDown)
         {
             bool resultMainImg =
-                image->replaceColour (sliderHoverFrameColor, Colours::white.withAlpha (0.7f));
+                image->replaceColour (sliderHoverFrameColor, juce::Colours::white.withAlpha (0.7f));
             if (! resultMainImg)
                 return;
         }

@@ -67,16 +67,16 @@ set (JUCE_BUILD_LV2 OFF CACHE BOOL "Disable LV2")
 set (JUCE_BUILD_ARA OFF CACHE BOOL "Disable ARA")
 
 # Include Melatonin Inspector only for Debug builds
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-    include (FetchContent)
-    FetchContent_Declare (
-        melatonin_inspector
-        GIT_REPOSITORY https://github.com/sudara/melatonin_inspector.git
-        GIT_TAG origin/main
-        SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/melatonin_inspector
-    )
-    FetchContent_MakeAvailable (melatonin_inspector)
-endif ()
+# if (CMAKE_BUILD_TYPE MATCHES Debug)
+#     include (FetchContent)
+#     FetchContent_Declare (
+#         melatonin_inspector
+#         GIT_REPOSITORY https://github.com/sudara/melatonin_inspector.git
+#         GIT_TAG origin/main
+#         SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/melatonin_inspector
+#     )
+#     FetchContent_MakeAvailable (melatonin_inspector)
+# endif ()
 
 juce_add_plugin (
     "${PROJECT_NAME}"
@@ -147,7 +147,7 @@ target_compile_definitions (
               BUILD_TAG="${GIT_TAG}"
               PRODUCT_NAME_WITHOUT_VERSION="AmbiCreator"
               # Define USE_MELATONIN_INSPECTOR for Debug builds
-              $<$<CONFIG:Debug>:USE_MELATONIN_INSPECTOR>
+              # $<$<CONFIG:Debug>:USE_MELATONIN_INSPECTOR>
 )
 
 target_link_libraries (

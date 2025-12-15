@@ -49,10 +49,14 @@
 
 #pragma once
 
+#include "../lookAndFeel/MainLookAndFeel.h"
+
+#include <juce_gui_basics/juce_gui_basics.h>
+
 //==============================================================================
 /*
 */
-class SimpleLabel : public Component, public SettableTooltipClient
+class SimpleLabel : public juce::Component, public juce::SettableTooltipClient
 {
 public:
     SimpleLabel()
@@ -63,18 +67,18 @@ public:
     }
     ~SimpleLabel() override { setLookAndFeel (nullptr); }
 
-    void setText (String newText)
+    void setText (juce::String newText)
     {
         text = newText;
         repaint();
     }
-    void setText (String newText, bool newBold)
+    void setText (juce::String newText, bool newBold)
     {
         text = newText;
         isBold = newBold;
         repaint();
     }
-    void setText (String newText, bool newBold, Justification newJustification)
+    void setText (juce::String newText, bool newBold, juce::Justification newJustification)
     {
         text = newText;
         isBold = newBold;
@@ -82,13 +86,13 @@ public:
         repaint();
     }
 
-    void setJustification (Justification newJustification)
+    void setJustification (juce::Justification newJustification)
     {
         justification = newJustification;
         repaint();
     }
 
-    void setTextColour (const Colour newColour)
+    void setTextColour (const juce::Colour newColour)
     {
         if (colour != newColour)
         {
@@ -99,18 +103,22 @@ public:
 
     void enablementChanged() override { repaint(); }
 
-    void paint (Graphics& g) override
+    void paint (juce::Graphics& g) override
     {
+        using namespace juce;
+
         Rectangle<int> bounds = getLocalBounds();
         paintSimpleLabel (g, bounds, text, isBold, justification);
     }
 
-    virtual void paintSimpleLabel (Graphics& g,
-                                   Rectangle<int> bounds,
-                                   String labelText,
+    virtual void paintSimpleLabel (juce::Graphics& g,
+                                   juce::Rectangle<int> bounds,
+                                   juce::String labelText,
                                    bool isLabelBold,
-                                   Justification labelJustification)
+                                   juce::Justification labelJustification)
     {
+        using namespace juce;
+
         g.setColour (colour.withMultipliedAlpha (this->isEnabled() ? 1.0f : 0.4f));
         g.setFont (bounds.getHeight() * 1.0f);
         g.setFont (getLookAndFeel().getTypefaceForFont (
@@ -122,17 +130,17 @@ public:
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleLabel)
-    String text = "";
+    juce::String text = "";
     bool isBold = false;
-    Colour colour = Colours::white;
-    Justification justification = Justification::centred;
+    juce::Colour colour = juce::Colours::white;
+    juce::Justification justification = juce::Justification::centred;
     MainLookAndFeel mainLaF;
 };
 
 //==============================================================================
 /*
  */
-class TripleLabel : public Component
+class TripleLabel : public juce::Component
 {
 public:
     TripleLabel()
@@ -142,11 +150,16 @@ public:
         setLookAndFeel (&mainLaF);
     }
 
+    TripleLabel (bool leftBold, bool middleBold, bool rightBold, MainLookAndFeel mainLaF) :
+        leftBold (leftBold), middleBold (middleBold), rightBold (rightBold)
+
+    {
+    }
     ~TripleLabel() override { setLookAndFeel (nullptr); }
 
-    void setText (String newLeftText,
-                  String newMiddleText,
-                  String newRightText,
+    void setText (juce::String newLeftText,
+                  juce::String newMiddleText,
+                  juce::String newRightText,
                   bool newLeftBold,
                   bool newMiddleBold,
                   bool newRightBold)
@@ -161,9 +174,9 @@ public:
         repaint();
     }
 
-    void paint (Graphics& g) override
+    void paint (juce::Graphics& g) override
     {
-        Rectangle<int> bounds = getLocalBounds();
+        juce::Rectangle<int> bounds = getLocalBounds();
         paintTripleLabel (g,
                           bounds,
                           leftText,
@@ -174,15 +187,17 @@ public:
                           rightBold);
     }
 
-    virtual void paintTripleLabel (Graphics& g,
-                                   Rectangle<int> bounds,
-                                   String newLeftText,
-                                   String newMiddleText,
-                                   String newRightText,
+    virtual void paintTripleLabel (juce::Graphics& g,
+                                   juce::Rectangle<int> bounds,
+                                   juce::String newLeftText,
+                                   juce::String newMiddleText,
+                                   juce::String newRightText,
                                    bool newLeftBold,
                                    bool newMiddleBold,
                                    bool newRightBold)
     {
+        using namespace juce;
+
         (void) newRightBold;
         g.setColour (Colours::white);
         Font tempFont;
@@ -209,9 +224,9 @@ public:
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TripleLabel)
-    String leftText = "";
-    String middleText = "";
-    String rightText = "";
+    juce::String leftText = "";
+    juce::String middleText = "";
+    juce::String rightText = "";
     bool leftBold, middleBold, rightBold;
     MainLookAndFeel mainLaF;
 };

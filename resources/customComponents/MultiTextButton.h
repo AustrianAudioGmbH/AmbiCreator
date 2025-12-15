@@ -10,21 +10,7 @@
 
 #pragma once
 
-#include <juce_audio_basics/juce_audio_basics.h>
-#include <juce_audio_devices/juce_audio_devices.h>
-#include <juce_audio_formats/juce_audio_formats.h>
-#include <juce_audio_plugin_client/juce_audio_plugin_client.h>
-#include <juce_audio_processors/juce_audio_processors.h>
-#include <juce_audio_utils/juce_audio_utils.h>
-#include <juce_core/juce_core.h>
-#include <juce_cryptography/juce_cryptography.h>
-#include <juce_data_structures/juce_data_structures.h>
-#include <juce_dsp/juce_dsp.h>
-#include <juce_events/juce_events.h>
-#include <juce_graphics/juce_graphics.h>
 #include <juce_gui_basics/juce_gui_basics.h>
-#include <juce_gui_extra/juce_gui_extra.h>
-#include <juce_opengl/juce_opengl.h>
 
 #include "BinaryData.h"
 
@@ -44,7 +30,7 @@ public:
         textButtonArray.clear();
     }
 
-    void AddTextButton (TextButton* tb)
+    void AddTextButton (juce::TextButton* tb)
     {
         textButtonArray.add (tb);
         addAndMakeVisible (tb);
@@ -54,7 +40,7 @@ public:
     {
         for (int i = 0; i < btnNrs; i++)
         {
-            AddTextButton (new TextButton);
+            AddTextButton (new juce::TextButton);
         }
         resized();
     }
@@ -91,7 +77,7 @@ public:
         }
     }
 
-    TextButton& operator[] (int i) { return *textButtonArray.getUnchecked (i); }
+    juce::TextButton& operator[] (int i) { return *textButtonArray.getUnchecked (i); }
 
     void paint (juce::Graphics& g) override
     {
@@ -102,6 +88,8 @@ public:
 
     void resized() override
     {
+        using namespace juce;
+
         Rectangle<int> area (getLocalBounds());
 
         juce::FlexBox fb;
@@ -120,6 +108,6 @@ public:
 
 private:
     MainLookAndFeel mainLaF;
-    OwnedArray<TextButton> textButtonArray;
+    juce::OwnedArray<juce::TextButton> textButtonArray;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TextMultiButton)
 };

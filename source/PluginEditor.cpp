@@ -7,9 +7,11 @@
 //==============================================================================
 AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (
     AmbiCreatorAudioProcessor& p,
-    AudioProcessorValueTreeState& vts) :
-    AudioProcessorEditor (&p), processor (p), valueTreeState (vts)
+    juce::AudioProcessorValueTreeState& vts) :
+    juce::AudioProcessorEditor (&p), processor (p), valueTreeState (vts)
 {
+    using namespace juce;
+
     //    setResizable (true, true);
     //    fixedAspectRatioConstrainer.setFixedAspectRatio (double(processor.EDITOR_DEFAULT_WIDTH) / processor.EDITOR_DEFAULT_HEIGHT);
     //    fixedAspectRatioConstrainer.setSizeLimits (processor.EDITOR_DEFAULT_WIDTH, processor.EDITOR_DEFAULT_HEIGHT, 2 * processor.EDITOR_DEFAULT_WIDTH, 2 * processor.EDITOR_DEFAULT_HEIGHT);
@@ -203,8 +205,11 @@ AmbiCreatorAudioProcessorEditor::~AmbiCreatorAudioProcessorEditor()
     setLookAndFeel (nullptr);
 }
 
-void AmbiCreatorAudioProcessorEditor::parameterChanged (const String& parameterID, float newValue)
+void AmbiCreatorAudioProcessorEditor::parameterChanged (const juce::String& parameterID,
+                                                        float newValue)
 {
+    using namespace juce;
+
     if (parameterID == "outGainDb")
     {
         DBG ("OutGainDb changed to: " << newValue);
@@ -249,7 +254,7 @@ void AmbiCreatorAudioProcessorEditor::mouseUp (const juce::MouseEvent& event)
 }
 
 //==============================================================================
-void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
+void AmbiCreatorAudioProcessorEditor::paint (juce::Graphics& g)
 {
     const int currHeight = getHeight();
     const int currWidth = getWidth();
@@ -302,6 +307,8 @@ void AmbiCreatorAudioProcessorEditor::paint (Graphics& g)
 
 void AmbiCreatorAudioProcessorEditor::resized()
 {
+    using namespace juce;
+
     const float currentWidth = getWidth();
     const float currentHeight = getHeight();
 
@@ -455,12 +462,14 @@ void AmbiCreatorAudioProcessorEditor::resized()
     }
 }
 
-void AmbiCreatorAudioProcessorEditor::sliderValueChanged (Slider* slider)
+void AmbiCreatorAudioProcessorEditor::sliderValueChanged (juce::Slider* slider)
 {
 }
 
-void AmbiCreatorAudioProcessorEditor::buttonClicked (Button* button)
+void AmbiCreatorAudioProcessorEditor::buttonClicked (juce::Button* button)
 {
+    using namespace juce;
+
     if (button == &tbLegacyMode)
     {
         bool isToggled = button->getToggleState();
@@ -502,7 +511,7 @@ void AmbiCreatorAudioProcessorEditor::buttonClicked (Button* button)
     repaint();
 }
 
-void AmbiCreatorAudioProcessorEditor::comboBoxChanged (ComboBox* cb)
+void AmbiCreatorAudioProcessorEditor::comboBoxChanged (juce::ComboBox* cb)
 {
     if (cb == title.getOutputWidgetPtr()->getCbOutChOrder())
         updateOutputMeterLabelTexts();
@@ -524,6 +533,8 @@ void AmbiCreatorAudioProcessorEditor::updateOutputMeterLabelTexts()
 
 void AmbiCreatorAudioProcessorEditor::timerCallback()
 {
+    using namespace juce;
+
     DBG ("Timer: LegacyMode=" << (processor.isNormalLRFBMode() ? "ON" : "OFF") << ", tbLegacyMode="
                               << (tbLegacyMode.getToggleState() ? "ON" : "OFF"));
 

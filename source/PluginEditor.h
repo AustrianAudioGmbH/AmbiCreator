@@ -2,11 +2,9 @@
 
 #include "../resources/customComponents/LevelMeter.h"
 #include "../resources/customComponents/MultiTextButton.h"
-#include "../resources/customComponents/MuteSoloButton.h"
 #include "../resources/customComponents/ReverseSlider.h"
 #include "../resources/customComponents/SimpleLabel.h"
 #include "../resources/customComponents/TitleBar.h"
-#include "../resources/lookAndFeel/AA_LaF.h"
 #include "../resources/lookAndFeel/MainLookAndFeel.h"
 
 #include "PluginProcessor.h"
@@ -17,9 +15,9 @@
     #include <melatonin_inspector/melatonin_inspector.h>
 #endif
 
-typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
-typedef AudioProcessorValueTreeState::ButtonAttachment ButtonAttachment;
-typedef AudioProcessorValueTreeState::ComboBoxAttachment ComboBoxAttachment;
+typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
+typedef juce::AudioProcessorValueTreeState::ButtonAttachment ButtonAttachment;
+typedef juce::AudioProcessorValueTreeState::ComboBoxAttachment ComboBoxAttachment;
 
 enum eChannelOrder
 {
@@ -38,46 +36,47 @@ class AmbiCreatorAudioProcessorEditor : public juce::AudioProcessorEditor,
                                         private juce::AudioProcessorValueTreeState::Listener
 {
 public:
-    AmbiCreatorAudioProcessorEditor (AmbiCreatorAudioProcessor&, AudioProcessorValueTreeState&);
+    AmbiCreatorAudioProcessorEditor (AmbiCreatorAudioProcessor&,
+                                     juce::AudioProcessorValueTreeState&);
     ~AmbiCreatorAudioProcessorEditor();
 
     //==============================================================================
-    void paint (Graphics&) override;
+    void paint (juce::Graphics&) override;
     void resized() override;
 
-    void buttonClicked (Button* button) override;
+    void buttonClicked (juce::Button* button) override;
     void mouseUp (const juce::MouseEvent& event) override;
 
-    void comboBoxChanged (ComboBox* cb) override;
-    void sliderValueChanged (Slider* slider) override;
+    void comboBoxChanged (juce::ComboBox* cb) override;
+    void sliderValueChanged (juce::Slider* slider) override;
 
     int getControlParameterIndex (Component& control) override;
 
-    void parameterChanged (const String& parameterID, float newValue) override;
+    void parameterChanged (const juce::String& parameterID, float newValue) override;
 
 private:
     static const int EDITOR_WIDTH = 650;
     static const int EDITOR_HEIGHT = 490;
 
     AmbiCreatorAudioProcessor& processor;
-    AudioProcessorValueTreeState& valueTreeState;
+    juce::AudioProcessorValueTreeState& valueTreeState;
 
-    ComponentBoundsConstrainer fixedAspectRatioConstrainer;
+    juce::ComponentBoundsConstrainer fixedAspectRatioConstrainer;
 
     TitleBar<AALogo, ChannelOrderIOWidget> title;
     Footer footer;
 
     MainLookAndFeel ambiCreatorLookAndFeel;
 
-    TooltipWindow tooltipWindow;
+    juce::TooltipWindow tooltipWindow;
 
-    Path aaLogoBgPath;
+    juce::Path aaLogoBgPath;
 
-    Image legacyModeImage;
-    Image fourChannelModeImage;
-    Rectangle<float> arrayImageArea;
+    juce::Image legacyModeImage;
+    juce::Image fourChannelModeImage;
+    juce::Rectangle<float> arrayImageArea;
 
-    GroupComponent outGainGroup, horizontalRotationGroup, zGainGroup;
+    juce::GroupComponent outGainGroup, horizontalRotationGroup, zGainGroup;
     ReverseSlider outGainSlider, horizontalRotationSlider, zGainSlider;
     std::unique_ptr<ReverseSlider::SliderAttachment> outGainAttachment,
         horizontalRotationAttachment, zGainAttachment;
@@ -116,7 +115,7 @@ private:
     // !J! comboboxx is replaced with texmultibutton functioning as a radiobutton
     TextMultiButton tmbOutChannelOrder;
 
-    TextButton tbAbLayer[2], tbLegacyMode;
+    juce::TextButton tbAbLayer[2], tbLegacyMode;
 
 #ifdef AA_CONFIG_ROTARY_UI 0
     Slider slRotOutGain, slRotZGain;

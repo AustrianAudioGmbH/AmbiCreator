@@ -52,8 +52,13 @@
 
 #pragma once
 
+#include "../lookAndFeel/MainLookAndFeel.h"
+
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_gui_basics/juce_gui_basics.h>
+
 #define RS_FLT_EPSILON 1.19209290E-07F
-class ReverseSlider : public Slider
+class ReverseSlider : public juce::Slider
 {
 public:
     ReverseSlider() :
@@ -66,7 +71,7 @@ public:
         setLookAndFeel (&mainLaF);
     }
 
-    ReverseSlider (const String& componentName) :
+    ReverseSlider (const juce::String& componentName) :
         Slider (componentName),
         lastDistanceFromDragStart (0),
         reversed (false),
@@ -85,9 +90,9 @@ public:
         SliderAttachment (juce::AudioProcessorValueTreeState& stateToControl,
                           const juce::String& parameterID,
                           ReverseSlider& sliderToControl) :
-            AudioProcessorValueTreeState::SliderAttachment (stateToControl,
-                                                            parameterID,
-                                                            sliderToControl)
+            juce::AudioProcessorValueTreeState::SliderAttachment (stateToControl,
+                                                                  parameterID,
+                                                                  sliderToControl)
         {
             sliderToControl.setParameter (stateToControl.getParameter (parameterID));
         }
@@ -95,9 +100,9 @@ public:
         SliderAttachment (juce::AudioProcessorValueTreeState& stateToControl,
                           const juce::String& parameterID,
                           Slider& sliderToControl) :
-            AudioProcessorValueTreeState::SliderAttachment (stateToControl,
-                                                            parameterID,
-                                                            sliderToControl)
+            juce::AudioProcessorValueTreeState::SliderAttachment (stateToControl,
+                                                                  parameterID,
+                                                                  sliderToControl)
         {
         }
 
@@ -121,7 +126,7 @@ public:
         }
     }
 
-    void setParameter (const AudioProcessorParameter* p)
+    void setParameter (const juce::AudioProcessorParameter* p)
     {
         if (parameter == p)
             return;
@@ -130,8 +135,10 @@ public:
         repaint();
     }
 
-    String getTextFromValue (double value) override
+    juce::String getTextFromValue (double value) override
     {
+        using namespace juce;
+
         if (parameter == nullptr)
             return Slider::getTextFromValue (value);
 
@@ -148,8 +155,10 @@ public:
         return result;
     }
 
-    double getValueFromText (const String& text) override
+    double getValueFromText (const juce::String& text) override
     {
+        using namespace juce;
+
         if (parameter == nullptr)
             return Slider::getValueFromText (text);
         const NormalisableRange<double> range (getMinimum(),
@@ -171,6 +180,8 @@ public:
 
     double valueToProportionOfLength (double value) override
     {
+        using namespace juce;
+
         double ret = 0;
         if (reversed)
             ret = jlimit (0., 1., 1.0 - Slider::valueToProportionOfLength (value));
@@ -184,7 +195,7 @@ public:
         scrollWheelEnabled = enabled;
         Slider::setScrollWheelEnabled (enabled);
     }
-    void mouseWheelMove (const MouseEvent& e, const MouseWheelDetails& wheel) override
+    void mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel) override
     {
         if (isRotary() && ! getRotaryParameters().stopAtEnd && scrollWheelEnabled)
         {
@@ -208,12 +219,12 @@ public:
         }
         Slider::mouseWheelMove (e, wheel);
     }
-    void mouseDown (const MouseEvent& e) override
+    void mouseDown (const juce::MouseEvent& e) override
     {
         lastDistanceFromDragStart = 0;
         Slider::mouseDown (e);
     }
-    void mouseDrag (const MouseEvent& e) override
+    void mouseDrag (const juce::MouseEvent& e) override
     {
         if (isRotary() && ! getRotaryParameters().stopAtEnd && scrollWheelEnabled)
         {
@@ -301,6 +312,6 @@ private:
     bool reversed;
     bool isDual;
     bool scrollWheelEnabled;
-    const AudioProcessorParameter* parameter { nullptr };
+    const juce::AudioProcessorParameter* parameter { nullptr };
     MainLookAndFeel mainLaF;
 };
