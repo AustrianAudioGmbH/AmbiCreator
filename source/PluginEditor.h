@@ -38,7 +38,8 @@ class AmbiCreatorAudioProcessorEditor : public juce::AudioProcessorEditor,
 public:
     AmbiCreatorAudioProcessorEditor (AmbiCreatorAudioProcessor&,
                                      juce::AudioProcessorValueTreeState&);
-    ~AmbiCreatorAudioProcessorEditor();
+
+    ~AmbiCreatorAudioProcessorEditor() override;
 
     //==============================================================================
     void paint (juce::Graphics&) override;
@@ -58,7 +59,7 @@ private:
     static const int EDITOR_WIDTH = 650;
     static const int EDITOR_HEIGHT = 490;
 
-    AmbiCreatorAudioProcessor& processor;
+    AmbiCreatorAudioProcessor& ambiCreatorProcessor;
     juce::AudioProcessorValueTreeState& valueTreeState;
 
     juce::ComponentBoundsConstrainer fixedAspectRatioConstrainer;
@@ -117,7 +118,7 @@ private:
 
     juce::TextButton tbAbLayer[2], tbLegacyMode;
 
-#ifdef AA_CONFIG_ROTARY_UI 0
+#ifdef AA_CONFIG_ROTARY_UI
     Slider slRotOutGain, slRotZGain;
     SimpleLabel lbSlRotOutGain, lbSlRotZGain;
 #endif

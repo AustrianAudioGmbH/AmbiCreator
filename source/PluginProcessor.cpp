@@ -1,7 +1,6 @@
 #include "PluginProcessor.h"
 #include "../resources/irs.h"
 #include "PluginEditor.h"
-#include "juce_graphics/unicode/sheenbidi/Source/Object.h"
 
 /* We use versionHint of ParameterID from now on - rigorously! */
 #define PD_PARAMETER_V1 1
@@ -16,60 +15,62 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
 
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
-    layout.add (std::make_unique<API> (
-        ParameterID { "channelOrder", PD_PARAMETER_V1 },
-        "channel order",
-        eChannelOrder::ACN,
-        eChannelOrder::FUMA,
-        eChannelOrder::ACN,
-        "",
+    const auto intAttributes = AudioParameterIntAttributes().withStringFromValueFunction (
         [] (int value, int)
-        { return (value == eChannelOrder::ACN) ? "AmbiX (WYZX)" : "FuMa (WXYZ)"; },
-        nullptr));
+        { return (value == eChannelOrder::ACN) ? "AmbiX (WYZX)" : "FuMa (WXYZ)"; });
 
-    layout.add (std::make_unique<APF> (
-        ParameterID { "outGainDb", PD_PARAMETER_V1 },
-        "output gain",
-        NormalisableRange<float> (-40.0f, 10.0f, 0.1f),
-        0.0f,
-        "dB",
-        AudioProcessorParameter::genericParameter,
-        [] (float value, int) { return String (value, 1); },
-        nullptr));
+    layout.add (std::make_unique<API> (ParameterID { "channelOrder", PD_PARAMETER_V1 },
+                                       "channel order",
+                                       eChannelOrder::ACN,
+                                       eChannelOrder::FUMA,
+                                       eChannelOrder::ACN,
+                                       intAttributes));
 
-    layout.add (std::make_unique<APF> (
-        ParameterID { "zGainDb", PD_PARAMETER_V1 },
-        "z gain",
-        NormalisableRange<float> (AmbiCreatorAudioProcessor::MIN_Z_GAIN_DB, 10.0f, 0.1f),
-        0.0f,
-        "dB",
-        AudioProcessorParameter::genericParameter,
+    auto floatAttributes =
+        AudioParameterFloatAttributes()
+            .withStringFromValueFunction ([] (float value, int) { return String (value, 1); })
+            .withLabel ("dB")
+            .withCategory (AudioParameterFloatAttributes::Category::genericParameter);
+
+    layout.add (std::make_unique<APF> (ParameterID { "outGainDb", PD_PARAMETER_V1 },
+                                       "output gain",
+                                       NormalisableRange<float> (-40.0f, 10.0f, 0.1f),
+                                       0.0f,
+                                       floatAttributes));
+
+    floatAttributes = floatAttributes.withStringFromValueFunction (
         [] (float value, int)
         {
             return (value > AmbiCreatorAudioProcessor::MIN_Z_GAIN_DB
                                 + AmbiCreatorAudioProcessor::GAIN_TO_ZERO_THRESH_DB)
                        ? String (value, 1)
                        : "-inf";
-        },
-        nullptr));
+        });
 
     layout.add (std::make_unique<APF> (
-        ParameterID { "horRotation", PD_PARAMETER_V1 },
-        "horizontal rotation",
-        NormalisableRange<float> (-180.0f, 180.0f, 1.0f),
+        ParameterID { "zGainDb", PD_PARAMETER_V1 },
+        "z gain",
+        NormalisableRange<float> (AmbiCreatorAudioProcessor::MIN_Z_GAIN_DB, 10.0f, 0.1f),
         0.0f,
-        String (CharPointer_UTF8 ("°")),
-        AudioProcessorParameter::genericParameter,
-        [] (float value, int) { return String (value, 1); },
-        nullptr));
+        floatAttributes));
 
-    layout.add (std::make_unique<APB> (
-        ParameterID { "legacyMode", PD_PARAMETER_V1 },
-        "Legacy Mode",
-        true,
-        "",
-        [] (bool value, int maximumStringLength) { return (value) ? "on" : "off"; },
-        nullptr));
+    floatAttributes = floatAttributes.withLabel ("°").withStringFromValueFunction (
+        [] (float value, int) { return String (value, 1); });
+
+    layout.add (std::make_unique<APF> (ParameterID { "horRotation", PD_PARAMETER_V1 },
+                                       "horizontal rotation",
+                                       NormalisableRange<float> (-180.0f, 180.0f, 1.0f),
+                                       0.0f,
+                                       floatAttributes));
+
+    const auto boolAttributes = AudioParameterBoolAttributes().withStringFromValueFunction (
+        [] (bool value, [[maybe_unused]] int maximumStringLength)
+        { return (value) ? "on" : "off"; });
+
+    layout.add (std::make_unique<APB> (ParameterID { "legacyMode", PD_PARAMETER_V1 },
+                                       "Legacy Mode",
+                                       true,
+                                       boolAttributes));
 
     return layout;
 }
@@ -109,8 +110,6 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     params.addParameterListener ("legacyMode", this);
 
     legacyModePtr = params.getRawParameterValue ("legacyMode");
-
-    //    DBG("PROCESSOR INIT LEGACY MODE: " << String((legacyModePtr->load() > 0) ? "TRUE" : "FALSE"));
 
     zFirCoeffBuffer.copyFrom (0, 0, DIFF_Z_EIGHT_EQ_COEFFS, FIR_LEN);
     coincEightXFirCoeffBuffer.copyFrom (0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
@@ -196,7 +195,7 @@ void AmbiCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
     currentSampleRate = sampleRate;
     firLatencySec = (static_cast<float> (FIR_LEN) / 2 - 1)
-                    / sampleRate; // Update latency based on actual sample rate
+                    / static_cast<float> (sampleRate); // Update latency based on actual sample rate
 
     if (getTotalNumInputChannels() != 4 || getTotalNumOutputChannels() != 4)
     {
@@ -288,9 +287,7 @@ void AmbiCreatorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 {
     using namespace juce;
 
-    int numSamples = buffer.getNumSamples();
-
-    DBG ("processBlock: LegacyMode=" << (isNormalLRFBMode() ? "ON" : "OFF"));
+    const auto numSamples = buffer.getNumSamples();
 
     if (numSamples == 0 || wrongBusConfiguration.get() || buffer.getNumChannels() != 4
         || getTotalNumInputChannels() != 4 || getTotalNumOutputChannels() != 4)

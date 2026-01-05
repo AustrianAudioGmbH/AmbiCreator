@@ -8,7 +8,7 @@
 AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (
     AmbiCreatorAudioProcessor& p,
     juce::AudioProcessorValueTreeState& vts) :
-    juce::AudioProcessorEditor (&p), processor (p), valueTreeState (vts)
+    juce::AudioProcessorEditor (&p), ambiCreatorProcessor (p), valueTreeState (vts)
 {
     using namespace juce;
 
@@ -145,7 +145,7 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (
     tbLegacyMode.setClickingTogglesState (true);
     tbLegacyMode.addListener (this);
     tbAttLegacyMode.reset (new ButtonAttachment (valueTreeState, "legacyMode", tbLegacyMode));
-    tbLegacyMode.setToggleState (processor.isNormalLRFBMode(),
+    tbLegacyMode.setToggleState (ambiCreatorProcessor.isNormalLRFBMode(),
                                  NotificationType::dontSendNotification);
 
     addAndMakeVisible (&tbAbLayer[0]);
@@ -164,7 +164,7 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (
 
     setAbButtonAlphaFromLayerState (eCurrentActiveLayer::layerA);
 
-    if (processor.abLayerState == eCurrentActiveLayer::layerB)
+    if (ambiCreatorProcessor.abLayerState == eCurrentActiveLayer::layerB)
     {
         tbAbLayer[0].setToggleState (false, NotificationType::dontSendNotification);
         tbAbLayer[1].setToggleState (true, NotificationType::dontSendNotification);
@@ -184,13 +184,9 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (
     helpToolTip.setInterceptsMouseClicks (true, false); // Enable mouse clicks
     helpToolTip.addMouseListener (this, false); // Listen for clicks
 
-    setModeDisplay (processor.isNormalLRFBMode());
+    setModeDisplay (ambiCreatorProcessor.isNormalLRFBMode());
 
-    double ratio = 4.0 / 3.0;
     setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
-    setResizable (true, true);
-    setResizeLimits (EDITOR_WIDTH, EDITOR_HEIGHT / ratio, 1200, 1200 / ratio);
-    getConstrainer()->setFixedAspectRatio (ratio);
 
     startTimer (100);
 }
@@ -233,8 +229,8 @@ void AmbiCreatorAudioProcessorEditor::parameterChanged (const juce::String& para
     {
         bool legacyMode = newValue > 0.5f;
         DBG ("LegacyMode changed to: "
-             << (legacyMode ? "ON" : "OFF")
-             << ", Layer=" << (processor.abLayerState == eCurrentActiveLayer::layerA ? "A" : "B"));
+             << (legacyMode ? "ON" : "OFF") << ", Layer="
+             << (ambiCreatorProcessor.abLayerState == eCurrentActiveLayer::layerA ? "A" : "B"));
         tbLegacyMode.setToggleState (legacyMode, NotificationType::dontSendNotification);
         setModeDisplay (legacyMode);
     }
@@ -262,7 +258,7 @@ void AmbiCreatorAudioProcessorEditor::paint (juce::Graphics& g)
         g.fillAll (ambiCreatorLookAndFeel.mainBackground);
         //        g.drawImage(fourChannelModeImage, arrayImageArea, RectanglePlacement::centred);
 
-        if (processor.isNormalLRFBMode())
+        if (ambiCreatorProcessor.isNormalLRFBMode())
         {
             g.drawImage (legacyModeImage,
                          -40,
@@ -346,7 +342,7 @@ void AmbiCreatorAudioProcessorEditor::resized()
     Rectangle<int> headerArea = area.removeFromTop (headerHeight);
     title.setBounds (headerArea);
 
-    if (processor.isNormalLRFBMode())
+    if (ambiCreatorProcessor.isNormalLRFBMode())
     {
         title.setLineBounds (false,
                              0.0f,
@@ -475,23 +471,23 @@ void AmbiCreatorAudioProcessorEditor::buttonClicked (juce::Button* button)
         bool isToggled = button->getToggleState();
         DBG ("tbLegacyMode clicked: Setting legacyMode to " << (isToggled ? "ON" : "OFF"));
         valueTreeState.getParameter ("legacyMode")->setValueNotifyingHost (isToggled ? 1.0f : 0.0f);
-        setModeDisplay (processor.isNormalLRFBMode());
+        setModeDisplay (ambiCreatorProcessor.isNormalLRFBMode());
     }
     else if (button == &tbAbLayer[0] && button->getToggleState())
     {
-        processor.setAbLayer (eCurrentActiveLayer::layerA);
+        ambiCreatorProcessor.setAbLayer (eCurrentActiveLayer::layerA);
         setAbButtonAlphaFromLayerState (eCurrentActiveLayer::layerA);
         tbAbLayer[0].setToggleState (true, NotificationType::dontSendNotification);
         tbAbLayer[1].setToggleState (false, NotificationType::dontSendNotification);
-        setModeDisplay (processor.isNormalLRFBMode());
+        setModeDisplay (ambiCreatorProcessor.isNormalLRFBMode());
     }
     else if (button == &tbAbLayer[1] && button->getToggleState())
     {
-        processor.setAbLayer (eCurrentActiveLayer::layerB);
+        ambiCreatorProcessor.setAbLayer (eCurrentActiveLayer::layerB);
         setAbButtonAlphaFromLayerState (eCurrentActiveLayer::layerB);
         tbAbLayer[0].setToggleState (false, NotificationType::dontSendNotification);
         tbAbLayer[1].setToggleState (true, NotificationType::dontSendNotification);
-        setModeDisplay (processor.isNormalLRFBMode());
+        setModeDisplay (ambiCreatorProcessor.isNormalLRFBMode());
     }
     else if (button == &tmbOutChannelOrder[0] && button->getToggleState())
     {
@@ -519,12 +515,12 @@ void AmbiCreatorAudioProcessorEditor::comboBoxChanged (juce::ComboBox* cb)
 
 void AmbiCreatorAudioProcessorEditor::updateOutputMeterLabelTexts()
 {
-    if (processor.getChannelOrder() == eChannelOrder::ACN)
+    if (ambiCreatorProcessor.getChannelOrder() == eChannelOrder::ACN)
     {
         for (int i = 0; i < 4; ++i)
             outputMeter[i].setLabelText (outMeterLabelTextACN[i]);
     }
-    else if (processor.getChannelOrder() == eChannelOrder::FUMA)
+    else if (ambiCreatorProcessor.getChannelOrder() == eChannelOrder::FUMA)
     {
         for (int i = 0; i < 4; ++i)
             outputMeter[i].setLabelText (outMeterLabelTextFUMA[i]);
@@ -535,18 +531,15 @@ void AmbiCreatorAudioProcessorEditor::timerCallback()
 {
     using namespace juce;
 
-    DBG ("Timer: LegacyMode=" << (processor.isNormalLRFBMode() ? "ON" : "OFF") << ", tbLegacyMode="
-                              << (tbLegacyMode.getToggleState() ? "ON" : "OFF"));
-
     for (int i = 0; i < 4; ++i)
     {
-        inputMeter[i].setLevel (processor.inRms[i].get());
-        outputMeter[i].setLevel (processor.outRms[i].get());
+        inputMeter[i].setLevel (ambiCreatorProcessor.inRms[i].get());
+        outputMeter[i].setLevel (ambiCreatorProcessor.outRms[i].get());
     }
 
     // show alert message if bus configuration is wrong, i.e. there are
     // not 4 ins and outs
-    if (processor.wrongBusConfiguration.get())
+    if (ambiCreatorProcessor.wrongBusConfiguration.get())
     {
         title.setAlertMessage (wrongBusConfigMessageShort, wrongBusConfigMessageLong);
         title.showAlertSymbol (true);
@@ -554,9 +547,9 @@ void AmbiCreatorAudioProcessorEditor::timerCallback()
     }
 
     // also alert if the processor is playing, but some input channels remain silent
-    if (processor.isPlaying.get())
+    if (ambiCreatorProcessor.isPlaying.get())
     {
-        for (auto& active : processor.channelActive)
+        for (auto& active : ambiCreatorProcessor.channelActive)
         {
             if (! active.get())
             {
@@ -567,7 +560,7 @@ void AmbiCreatorAudioProcessorEditor::timerCallback()
         }
     }
 
-    if (processor.getChannelOrder() == eChannelOrder::ACN)
+    if (ambiCreatorProcessor.getChannelOrder() == eChannelOrder::ACN)
     {
         tmbOutChannelOrder[0].setToggleState (true, NotificationType::dontSendNotification);
         tmbOutChannelOrder[1].setToggleState (false, NotificationType::dontSendNotification);
@@ -578,15 +571,15 @@ void AmbiCreatorAudioProcessorEditor::timerCallback()
         tmbOutChannelOrder[1].setToggleState (true, NotificationType::dontSendNotification);
     }
 
-    setAbButtonAlphaFromLayerState (processor.abLayerState);
-    tbAbLayer[0].setToggleState (processor.abLayerState == eCurrentActiveLayer::layerA,
+    setAbButtonAlphaFromLayerState (ambiCreatorProcessor.abLayerState);
+    tbAbLayer[0].setToggleState (ambiCreatorProcessor.abLayerState == eCurrentActiveLayer::layerA,
                                  NotificationType::dontSendNotification);
-    tbAbLayer[1].setToggleState (processor.abLayerState == eCurrentActiveLayer::layerB,
+    tbAbLayer[1].setToggleState (ambiCreatorProcessor.abLayerState == eCurrentActiveLayer::layerB,
                                  NotificationType::dontSendNotification);
 
-    tbLegacyMode.setToggleState (processor.isNormalLRFBMode(),
+    tbLegacyMode.setToggleState (ambiCreatorProcessor.isNormalLRFBMode(),
                                  NotificationType::dontSendNotification);
-    setModeDisplay (processor.isNormalLRFBMode());
+    setModeDisplay (ambiCreatorProcessor.isNormalLRFBMode());
 
     title.showAlertSymbol (false);
 }

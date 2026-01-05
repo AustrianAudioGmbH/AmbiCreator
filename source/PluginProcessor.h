@@ -1,6 +1,7 @@
 #pragma once
-#include "juce_dsp/juce_dsp.h"
+
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
 
 enum eCurrentActiveLayer
 {
@@ -66,8 +67,6 @@ public:
     bool isNormalLRFBMode()
     {
         bool legacyMode = *legacyModePtr > 0.5f;
-        DBG ("isNormalLRFBMode: Layer=" << (abLayerState == eCurrentActiveLayer::layerA ? "A" : "B")
-                                        << ", legacyMode=" << (legacyMode ? "ON" : "OFF"));
         return legacyMode;
     }
 
