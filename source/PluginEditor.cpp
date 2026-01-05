@@ -186,11 +186,7 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (
 
     setModeDisplay (processor.isNormalLRFBMode());
 
-    double ratio = 4.0 / 3.0;
     setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
-    setResizable (true, true);
-    setResizeLimits (EDITOR_WIDTH, EDITOR_HEIGHT / ratio, 1200, 1200 / ratio);
-    getConstrainer()->setFixedAspectRatio (ratio);
 
     startTimer (100);
 }

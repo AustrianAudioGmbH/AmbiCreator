@@ -100,30 +100,21 @@ juce_add_plugin (
 
 add_library (SharedCode INTERFACE)
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    message ("Building on MacOS (Darwin)")
-    set (CMAKE_XCODE_GENERATE_SCHEME "TRUE")
-    set (CMAKE_OSX_ARCHITECTURES arm64 x86_64)
-    set (CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum version of the target platform"
-                                                   FORCE
-    )
+if (APPLE)
     target_link_options (SharedCode INTERFACE -Wl)
-    if (CMAKE_OSX_DEPLOYMENT_TARGET)
-        message ("The minimum macOS version is set to " $CACHE{CMAKE_OSX_DEPLOYMENT_TARGET}.)
-    endif ()
-else ()
-    message ("Building on Windows")
-    set (FORMATS VST3)
 endif ()
-
-target_compile_features (SharedCode INTERFACE cxx_std_20)
 
 set (SourceFiles source/PluginEditor.h source/PluginProcessor.h source/PluginEditor.cpp
                  source/PluginProcessor.cpp
 )
-file (GLOB_RECURSE SourceLookAndFeelFiles
-      CONFIGURE_DEPENDS" ${CMAKE_CURRENT_SOURCE_DIR}/resources/lookAndFeel/*.h"
-      "${CMAKE_CURRENT_SOURCE_DIR}/resources/lookAndFeel/*.cpp"
+
+file (
+    GLOB_RECURSE
+    SourceLookAndFeelFiles
+    CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/lookAndFeel/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/lookAndFeel/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/lookAndFeel/*.cpp"
 )
 
 target_sources (SharedCode INTERFACE ${SourceFiles} ${SourceLookAndFeelFiles})
@@ -140,7 +131,7 @@ target_compile_definitions (
               JUCE_USE_CURL=0
               JUCE_VST3_CAN_REPLACE_VST2=0
               JUCE_MODAL_LOOPS_PERMITTED=1
-              JUCE_DISPLAY_SPLASH_SCREEN=1
+              # JUCE_DISPLAY_SPLASH_SCREEN=1
               CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
               VERSION="${CURRENT_VERSION}"
               BUILD_COMMIT_HASH="${GIT_COMMIT_HASH}"
