@@ -22,7 +22,8 @@
 
 #pragma once
 
-#include "../lookAndFeel/MainLookAndFeel.h"
+#include "../lookAndFeel/BinaryFonts.h"
+#include "Colours.hpp"
 
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_gui_basics/juce_gui_basics.h>
@@ -30,6 +31,8 @@
 //==============================================================================
 /*
 */
+namespace AAGuiComponents
+{
 class LevelMeter : public juce::Component
 {
 public:
@@ -37,29 +40,30 @@ public:
     {
         using namespace juce;
 
-        colour = Colours::black;
-        setLookAndFeel (&mainLaF);
+        colour = juce::Colours::black;
     }
-    ~LevelMeter() override {}
 
     void paint (juce::Graphics& g) override
     {
         using namespace juce;
 
         auto bounds = getLocalBounds();
-        float labelWidth = bounds.getWidth() * 1.0f;
-        float labelHeight = labelWidth;
-        auto labelBounds = bounds.removeFromBottom ((int) labelHeight);
-        g.setColour (Colours::white);
-        g.setFont (getLookAndFeel().getTypefaceForFont (Font (labelHeight)));
-        g.setFont (labelHeight);
-        g.setColour (mainLaF.mainTextColor);
+        auto labelWidth = bounds.getWidth();
+        auto labelHeight = labelWidth;
+        auto labelBounds = bounds.removeFromBottom (labelHeight);
+        g.setColour (juce::Colours::white);
+        auto fontOptions = FontOptions (Typeface::createSystemTypefaceFor (
+                                            BinaryFonts::NunitoSansSemiBold_ttf,
+                                            BinaryFonts::NunitoSansSemiBold_ttfSize))
+                               .withHeight (static_cast<float> (labelHeight));
+        g.setFont (fontOptions);
+        g.setColour (AAGuiComponents::Colours::mainTextColor);
 
         g.drawText (labelText, labelBounds, Justification::centred);
 
-        float labelMargin = 6.0f;
-        bounds.removeFromBottom ((int) labelMargin);
-        g.setColour (mainLaF.mainTextInactiveColor);
+        auto labelMargin = 6;
+        bounds.removeFromBottom (labelMargin);
+        g.setColour (AAGuiComponents::Colours::mainTextInactiveColor);
         g.drawRoundedRectangle (bounds.toFloat(), 4.0f, 2.0f);
 
         g.setColour (colour);
@@ -74,7 +78,7 @@ public:
     {
         using namespace juce;
 
-        float levelDb = Decibels::gainToDecibels (newLevel, minDb);
+        float levelDb = juce::Decibels::gainToDecibels (newLevel, minDb);
         normalizedMeterHeight = (minDb - levelDb) / minDb;
         repaint();
     }
@@ -92,7 +96,7 @@ private:
     juce::Colour colour;
     juce::String labelText = "";
     const float minDb = -60.0f;
-    MainLookAndFeel mainLaF;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LevelMeter)
 };
+} // namespace AAGuiComponents

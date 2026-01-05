@@ -1,13 +1,14 @@
 #pragma once
 
+#include "../resources/customComponents/ABComponent.hpp"
+#include "../resources/customComponents/Footer.hpp"
 #include "../resources/customComponents/LevelMeter.h"
-#include "../resources/customComponents/MultiTextButton.h"
-#include "../resources/customComponents/ReverseSlider.h"
+#include "../resources/customComponents/Logo.hpp"
+#include "../resources/customComponents/RotarySlider.hpp"
+#include "../resources/customComponents/RotarySliderGroup.hpp"
 #include "../resources/customComponents/SimpleLabel.h"
-#include "../resources/customComponents/TitleBar.h"
-#include "../resources/lookAndFeel/MainLookAndFeel.h"
-
 #include "PluginProcessor.h"
+#include "uiComponents/OutputConfig.hpp"
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
@@ -15,14 +16,14 @@
     #include <melatonin_inspector/melatonin_inspector.h>
 #endif
 
-typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
-typedef juce::AudioProcessorValueTreeState::ButtonAttachment ButtonAttachment;
-typedef juce::AudioProcessorValueTreeState::ComboBoxAttachment ComboBoxAttachment;
+using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
+using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+using ComboBoxAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
 
 enum eChannelOrder
 {
-    ACN = 0, // ACN implies AmbiX, SN3D normalization
-    FUMA = 1 // N3D normalization
+    ACN = 1, // ACN implies AmbiX, SN3D normalization
+    FUMA = 2 // N3D normalization
 };
 
 //==============================================================================
@@ -62,12 +63,10 @@ private:
     AmbiCreatorAudioProcessor& ambiCreatorProcessor;
     juce::AudioProcessorValueTreeState& valueTreeState;
 
-    juce::ComponentBoundsConstrainer fixedAspectRatioConstrainer;
+    AAGuiComponents::AALogo logo;
+    AAGuiComponents::ABComponent abComponent;
 
-    TitleBar<AALogo, ChannelOrderIOWidget> title;
-    Footer footer;
-
-    MainLookAndFeel ambiCreatorLookAndFeel;
+    AAGuiComponents::Footer footer;
 
     juce::TooltipWindow tooltipWindow;
 
@@ -75,20 +74,19 @@ private:
 
     juce::Image legacyModeImage;
     juce::Image fourChannelModeImage;
-    juce::Rectangle<float> arrayImageArea;
+    juce::Rectangle<int> arrayImageArea;
 
-    juce::GroupComponent outGainGroup, horizontalRotationGroup, zGainGroup;
-    ReverseSlider outGainSlider, horizontalRotationSlider, zGainSlider;
-    std::unique_ptr<ReverseSlider::SliderAttachment> outGainAttachment,
-        horizontalRotationAttachment, zGainAttachment;
-
-    std::unique_ptr<ButtonAttachment> cbAttOutChOrder;
+    AAGuiComponents::RotarySliderGroup<AAGuiComponents::RotarySlider> outGainGroup,
+        horizontalRotationGroup, zGainGroup;
+    // ReverseSlider outGainSlider, horizontalRotationSlider, zGainSlider;
+    std::unique_ptr<SliderAttachment> outGainAttachment, horizontalRotationAttachment,
+        zGainAttachment;
 
     // !J! Not needed with Groups:
     //    SimpleLabel outGainLabel, horizontalRotationLabel, zGainLabel;
 
-    LevelMeter inputMeter[4];
-    LevelMeter outputMeter[4];
+    AAGuiComponents::LevelMeter inputMeter[4];
+    AAGuiComponents::LevelMeter outputMeter[4];
 
     const juce::String wrongBusConfigMessageShort = "Wrong Bus Configuration!";
     const juce::String wrongBusConfigMessageLong =
@@ -97,6 +95,7 @@ private:
     const juce::String inputInactiveMessageLong =
         "Make sure to have an active input signal on all four input channels.";
     const juce::String inMeterLabelTextLegacy[4] = { "F", "B", "L", "R" };
+    const juce::String inMeterLabelText[4] = { "L", "R", "F", "B" };
     const juce::String outMeterLabelTextFUMA[4] = { "W", "X", "Y", "Z" };
     const juce::String outMeterLabelTextACN[4] = { "W", "Y", "Z", "X" };
 
@@ -106,23 +105,9 @@ private:
 
     // Components for new AmbiCreator Layout
     void setModeDisplay (bool legacyModeActive);
-    void setAbButtonAlphaFromLayerState (int layerState);
 
-    const juce::String inMeterLabelText[4] = { "L", "R", "F", "B" };
-
-#ifdef AA_CONFIG_COMBOBOX
-    ComboBox cbOutChannelOrder;
-#endif
-    // !J! comboboxx is replaced with texmultibutton functioning as a radiobutton
-    TextMultiButton tmbOutChannelOrder;
-
-    juce::TextButton tbAbLayer[2], tbLegacyMode;
-
-#ifdef AA_CONFIG_ROTARY_UI
-    Slider slRotOutGain, slRotZGain;
-    SimpleLabel lbSlRotOutGain, lbSlRotZGain;
-#endif
-    SimpleLabel outputConfigLabel;
+    AAGuiComponents::OutputConfig outputConfigGroup;
+    AAGuiComponents::TextButton<AAGuiComponents::ButtonColor::red> tbLegacyMode;
 
     std::unique_ptr<SliderAttachment> slAttRotOutGain, slAttRotZGain;
     std::unique_ptr<ComboBoxAttachment> cbAttOutChannelOrder;

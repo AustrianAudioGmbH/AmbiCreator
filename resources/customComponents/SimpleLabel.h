@@ -49,23 +49,22 @@
 
 #pragma once
 
-#include "../lookAndFeel/MainLookAndFeel.h"
+#include "../lookAndFeel/BinaryFonts.h"
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
 //==============================================================================
 /*
 */
-class SimpleLabel : public juce::Component, public juce::SettableTooltipClient
+class SimpleLabel : public juce::Component
 {
 public:
     SimpleLabel()
     {
         // In your constructor, you should add any child components, and
         // initialise any special settings that your component needs.
-        setLookAndFeel (&mainLaF);
     }
-    ~SimpleLabel() override { setLookAndFeel (nullptr); }
+    ~SimpleLabel() override {}
 
     void setText (juce::String newText)
     {
@@ -105,9 +104,7 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-        using namespace juce;
-
-        Rectangle<int> bounds = getLocalBounds();
+        juce::Rectangle<int> bounds = getLocalBounds();
         paintSimpleLabel (g, bounds, text, isBold, justification);
     }
 
@@ -120,9 +117,21 @@ public:
         using namespace juce;
 
         g.setColour (colour.withMultipliedAlpha (this->isEnabled() ? 1.0f : 0.4f));
-        g.setFont (bounds.getHeight() * 1.0f);
-        g.setFont (getLookAndFeel().getTypefaceForFont (
-            Font (bounds.getHeight() * 1.0f, isLabelBold ? 1 : 0)));
+        g.setFont (static_cast<float> (bounds.getHeight()));
+
+        Font font (FontOptions {});
+
+        if (isLabelBold)
+            font = Font (FontOptions (
+                juce::Typeface::createSystemTypefaceFor (BinaryFonts::NunitoSansRegular_ttf,
+                                                         BinaryFonts::NunitoSansRegular_ttfSize)));
+        else
+            font = Font (FontOptions (
+                juce::Typeface::createSystemTypefaceFor (BinaryFonts::NunitoSansSemiBold_ttf,
+                                                         BinaryFonts::NunitoSansSemiBold_ttfSize)));
+
+        font.setHeight (static_cast<float> (bounds.getHeight()));
+        g.setFont (font);
         g.drawText (labelText, bounds, labelJustification, true);
     }
 
@@ -134,7 +143,6 @@ private:
     bool isBold = false;
     juce::Colour colour = juce::Colours::white;
     juce::Justification justification = juce::Justification::centred;
-    MainLookAndFeel mainLaF;
 };
 
 //==============================================================================
@@ -147,15 +155,13 @@ public:
     {
         // In your constructor, you should add any child components, and
         // initialise any special settings that your component needs.
-        setLookAndFeel (&mainLaF);
     }
 
-    TripleLabel (bool leftBold, bool middleBold, bool rightBold, MainLookAndFeel mainLaF) :
-        leftBold (leftBold), middleBold (middleBold), rightBold (rightBold)
-
+    TripleLabel (bool newLeftBold, bool newMiddleBold, bool newRightBold) :
+        leftBold (newLeftBold), middleBold (newMiddleBold), rightBold (newRightBold)
     {
     }
-    ~TripleLabel() override { setLookAndFeel (nullptr); }
+    ~TripleLabel() override {}
 
     void setText (juce::String newLeftText,
                   juce::String newMiddleText,
@@ -176,7 +182,9 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-        juce::Rectangle<int> bounds = getLocalBounds();
+        using namespace juce;
+
+        Rectangle<int> bounds = getLocalBounds();
         paintTripleLabel (g,
                           bounds,
                           leftText,
@@ -198,24 +206,26 @@ public:
     {
         using namespace juce;
 
-        (void) newRightBold;
+        ignoreUnused (newRightBold);
+
         g.setColour (Colours::white);
-        Font tempFont;
-        tempFont.setHeight (bounds.getHeight() * 1.0f);
-        int height = bounds.getHeight();
+        Font tempFont (FontOptions {});
+
+        tempFont.setHeight (static_cast<float> (bounds.getHeight()));
+        auto height = static_cast<float> (bounds.getHeight());
 
         tempFont.setStyleFlags (newLeftBold ? 1 : 0);
-        g.setFont (getLookAndFeel().getTypefaceForFont (tempFont));
+        g.setFont (tempFont);
         g.setFont (height * 1.0f);
         g.drawText (newLeftText, bounds, Justification::left, true);
 
         tempFont.setStyleFlags (newMiddleBold ? 1 : 0);
-        g.setFont (getLookAndFeel().getTypefaceForFont (tempFont));
+        g.setFont (tempFont);
         g.setFont ((height * 1.0f) + (newMiddleBold ? 2.0f : 0.0f));
         g.drawText (newMiddleText, bounds, Justification::centred, true);
 
         tempFont.setStyleFlags (rightBold ? 1 : 0);
-        g.setFont (getLookAndFeel().getTypefaceForFont (tempFont));
+        g.setFont (tempFont);
         g.setFont (height * 1.0f);
         g.drawText (newRightText, bounds, Justification::right, true);
     }
@@ -228,5 +238,4 @@ private:
     juce::String middleText = "";
     juce::String rightText = "";
     bool leftBold, middleBold, rightBold;
-    MainLookAndFeel mainLaF;
 };

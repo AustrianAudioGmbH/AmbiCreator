@@ -9,18 +9,23 @@ set (CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum version of the ta
 execute_process (
     COMMAND git rev-parse --short HEAD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_VARIABLE AA_BUILD_COMMIT_HASH
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
 execute_process (
     COMMAND git describe --tags --abbrev=0
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_TAG
+    OUTPUT_VARIABLE AA_GIT_TAG
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-execute_process (COMMAND uname -n OUTPUT_VARIABLE HOSTNAME OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process (
+    COMMAND git describe --tags --abbrev=0
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/JUCE
+    OUTPUT_VARIABLE AA_JUCE_GIT_TAG
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include (PamplejuceVersion)
@@ -119,8 +124,6 @@ file (
 
 target_sources (SharedCode INTERFACE ${SourceFiles} ${SourceLookAndFeelFiles})
 
-target_include_directories (${PROJECT_NAME} INTERFACE ${juce_generated_headers_directory})
-
 include (Assets)
 
 include (XcodePrettify)
@@ -134,8 +137,9 @@ target_compile_definitions (
               # JUCE_DISPLAY_SPLASH_SCREEN=1
               CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
               VERSION="${CURRENT_VERSION}"
-              BUILD_COMMIT_HASH="${GIT_COMMIT_HASH}"
-              BUILD_TAG="${GIT_TAG}"
+              AA_BUILD_COMMIT_HASH="${AA_BUILD_COMMIT_HASH}"
+              AA_BUILD_TAG="${AA_GIT_TAG}"
+              AA_BUILD_JUCE_VERSION="${AA_JUCE_GIT_TAG}"
               PRODUCT_NAME_WITHOUT_VERSION="AmbiCreator"
               # Define USE_MELATONIN_INSPECTOR for Debug builds
               # $<$<CONFIG:Debug>:USE_MELATONIN_INSPECTOR>

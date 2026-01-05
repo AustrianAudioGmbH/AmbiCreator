@@ -54,8 +54,9 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
         0.0f,
         floatAttributes));
 
-    floatAttributes = floatAttributes.withLabel ("°").withStringFromValueFunction (
-        [] (float value, int) { return String (value, 1); });
+    floatAttributes =
+        floatAttributes.withLabel (std::string ("°"))
+            .withStringFromValueFunction ([] (float value, int) { return String (value, 1); });
 
     layout.add (std::make_unique<APF> (ParameterID { "horRotation", PD_PARAMETER_V1 },
                                        "horizontal rotation",
@@ -283,9 +284,12 @@ bool AmbiCreatorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
     return true;
 }
 
-void AmbiCreatorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+void AmbiCreatorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
+                                              juce::MidiBuffer& midiBuffer)
 {
     using namespace juce;
+
+    ignoreUnused (midiBuffer);
 
     const auto numSamples = buffer.getNumSamples();
 
@@ -465,8 +469,12 @@ void AmbiCreatorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 }
 
 void AmbiCreatorAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer,
-                                                      juce::MidiBuffer&)
+                                                      juce::MidiBuffer& midiBuffer)
 {
+    using namespace juce;
+
+    ignoreUnused (midiBuffer);
+
     if (! isBypassed)
     {
         isBypassed = true;

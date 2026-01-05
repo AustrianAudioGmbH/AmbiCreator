@@ -52,8 +52,6 @@
 
 #pragma once
 
-#include "../lookAndFeel/MainLookAndFeel.h"
-
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 
@@ -68,20 +66,18 @@ public:
         isDual (false),
         scrollWheelEnabled (true)
     {
-        setLookAndFeel (&mainLaF);
     }
 
-    ReverseSlider (const juce::String& componentName) :
-        Slider (componentName),
+    ReverseSlider (const juce::String& componentNameToUse) :
+        Slider (componentNameToUse),
         lastDistanceFromDragStart (0),
         reversed (false),
         isDual (false),
         scrollWheelEnabled (true)
     {
-        setLookAndFeel (&mainLaF);
     }
 
-    ~ReverseSlider() override { setLookAndFeel (nullptr); }
+    ~ReverseSlider() override {}
 
 public:
     class SliderAttachment : public juce::AudioProcessorValueTreeState::SliderAttachment
@@ -157,14 +153,12 @@ public:
 
     double getValueFromText (const juce::String& text) override
     {
-        using namespace juce;
-
         if (parameter == nullptr)
             return Slider::getValueFromText (text);
-        const NormalisableRange<double> range (getMinimum(),
-                                               getMaximum(),
-                                               getInterval(),
-                                               getSkewFactor());
+        const juce::NormalisableRange<double> range (getMinimum(),
+                                                     getMaximum(),
+                                                     getInterval(),
+                                                     getSkewFactor());
         return range.convertFrom0to1 (parameter->getValueForText (text));
     }
 
@@ -313,5 +307,4 @@ private:
     bool isDual;
     bool scrollWheelEnabled;
     const juce::AudioProcessorParameter* parameter { nullptr };
-    MainLookAndFeel mainLaF;
 };
