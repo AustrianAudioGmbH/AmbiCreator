@@ -114,13 +114,9 @@ private:
 
     // differential (z) compensation filters
     juce::dsp::IIR::Filter<float> iirLowShelf;
-    juce::AudioBuffer<float> zFirCoeffBuffer;
     juce::dsp::Convolution zFilterConv;
-    juce::AudioBuffer<float> coincEightXFirCoeffBuffer;
-    juce::AudioBuffer<float> coincEightYFirCoeffBuffer;
     juce::dsp::Convolution coincXEightFilterConv;
     juce::dsp::Convolution coincYEightFilterConv;
-    juce::AudioBuffer<float> coincOmniFirCoeffBuffer;
     juce::dsp::Convolution coincOmniFilterConv;
 
     int editorWidth;

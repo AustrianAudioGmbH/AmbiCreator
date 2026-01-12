@@ -85,10 +85,6 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     firLatencySec ((static_cast<float> (FIR_LEN) / 2 - 1) / FIR_SAMPLE_RATE),
     currentSampleRate (48000),
     isBypassed (false),
-    zFirCoeffBuffer (1, FIR_LEN),
-    coincEightXFirCoeffBuffer (1, FIR_LEN),
-    coincEightYFirCoeffBuffer (1, FIR_LEN),
-    coincOmniFirCoeffBuffer (1, FIR_LEN),
     editorWidth (EDITOR_DEFAULT_WIDTH),
     editorHeight (EDITOR_DEFAULT_HEIGHT),
     layerA (nodeA),
@@ -111,11 +107,6 @@ AmbiCreatorAudioProcessor::AmbiCreatorAudioProcessor() :
     params.addParameterListener ("legacyMode", this);
 
     legacyModePtr = params.getRawParameterValue ("legacyMode");
-
-    zFirCoeffBuffer.copyFrom (0, 0, DIFF_Z_EIGHT_EQ_COEFFS, FIR_LEN);
-    coincEightXFirCoeffBuffer.copyFrom (0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
-    coincEightYFirCoeffBuffer.copyFrom (0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
-    coincOmniFirCoeffBuffer.copyFrom (0, 0, COINC_OMNI_EQ_COEFFS, FIR_LEN);
 }
 
 AmbiCreatorAudioProcessor::~AmbiCreatorAudioProcessor()
@@ -232,16 +223,26 @@ void AmbiCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     iirLowShelf.reset();
     setLowShelfCoefficients (sampleRate);
 
+    AudioBuffer<float> zFilterIR (1, FIR_LEN);
+    AudioBuffer<float> xFilterIR (1, FIR_LEN);
+    AudioBuffer<float> yFilterIR (1, FIR_LEN);
+    AudioBuffer<float> omniFilterIR (1, FIR_LEN);
+
+    zFilterIR.copyFrom (0, 0, DIFF_Z_EIGHT_EQ_COEFFS, FIR_LEN);
+    xFilterIR.copyFrom (0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
+    yFilterIR.copyFrom (0, 0, COINC_EIGHT_EQ_COEFFS, FIR_LEN);
+    omniFilterIR.copyFrom (0, 0, COINC_OMNI_EQ_COEFFS, FIR_LEN);
+
     // prepare fir filters
     zFilterConv.prepare (spec); // must be called before loading an ir
-    zFilterConv.loadImpulseResponse (std::move (zFirCoeffBuffer),
+    zFilterConv.loadImpulseResponse (std::move (zFilterIR),
                                      FIR_SAMPLE_RATE,
                                      dsp::Convolution::Stereo::no,
                                      dsp::Convolution::Trim::no,
                                      dsp::Convolution::Normalise::no);
     zFilterConv.reset();
     coincXEightFilterConv.prepare (spec); // must be called before loading an ir
-    coincXEightFilterConv.loadImpulseResponse (std::move (coincEightXFirCoeffBuffer),
+    coincXEightFilterConv.loadImpulseResponse (std::move (xFilterIR),
                                                FIR_SAMPLE_RATE,
                                                dsp::Convolution::Stereo::no,
                                                dsp::Convolution::Trim::no,
@@ -249,7 +250,7 @@ void AmbiCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     coincXEightFilterConv.reset();
 
     coincYEightFilterConv.prepare (spec); // must be called before loading an ir
-    coincYEightFilterConv.loadImpulseResponse (std::move (coincEightYFirCoeffBuffer),
+    coincYEightFilterConv.loadImpulseResponse (std::move (yFilterIR),
                                                FIR_SAMPLE_RATE,
                                                dsp::Convolution::Stereo::no,
                                                dsp::Convolution::Trim::no,
@@ -257,7 +258,7 @@ void AmbiCreatorAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     coincYEightFilterConv.reset();
 
     coincOmniFilterConv.prepare (spec); // must be called before loading an ir
-    coincOmniFilterConv.loadImpulseResponse (std::move (coincOmniFirCoeffBuffer),
+    coincOmniFilterConv.loadImpulseResponse (std::move (omniFilterIR),
                                              FIR_SAMPLE_RATE,
                                              dsp::Convolution::Stereo::no,
                                              dsp::Convolution::Trim::no,
