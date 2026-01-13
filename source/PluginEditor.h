@@ -113,10 +113,6 @@ private:
     std::unique_ptr<ComboBoxAttachment> cbAttOutChannelOrder;
     std::unique_ptr<ButtonAttachment> tbAttLegacyMode;
 
-    const float titleLineX1Start = 0.0f;
-    const float titleLineX1End = 0.116f;
-    const float titleLineX2Start = 0.186f;
-
     SimpleLabel helpToolTip;
 
     const juce::String helpText = {
