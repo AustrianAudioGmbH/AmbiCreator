@@ -98,7 +98,7 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (
     tbLegacyMode.addListener (this);
     tbAttLegacyMode =
         std::make_unique<ButtonAttachment> (valueTreeState, "legacyMode", tbLegacyMode);
-    tbLegacyMode.setToggleState (ambiCreatorProcessor.isNormalLRFBMode(),
+    tbLegacyMode.setToggleState (ambiCreatorProcessor.getLegacyModeActive(),
                                  NotificationType::dontSendNotification);
 
     abComponent[0].setToggleState (true, NotificationType::dontSendNotification);
@@ -126,7 +126,7 @@ AmbiCreatorAudioProcessorEditor::AmbiCreatorAudioProcessorEditor (
     helpToolTip.setVisible (false);
     helpToolTip.setEnabled (false);
 
-    setModeDisplay (ambiCreatorProcessor.isNormalLRFBMode());
+    setModeDisplay (ambiCreatorProcessor.getLegacyModeActive());
 
     setSize (EDITOR_WIDTH, EDITOR_HEIGHT);
 
@@ -206,7 +206,7 @@ void AmbiCreatorAudioProcessorEditor::paint (juce::Graphics& g)
     g.fillAll (AAGuiComponents::Colours::mainBackground);
     //        g.drawImage(fourChannelModeImage, arrayImageArea, RectanglePlacement::centred);
 
-    if (ambiCreatorProcessor.isNormalLRFBMode())
+    if (ambiCreatorProcessor.getLegacyModeActive())
     {
         g.setOpacity (0.7f);
         g.drawImageWithin (legacyModeImage,
@@ -356,17 +356,17 @@ void AmbiCreatorAudioProcessorEditor::buttonClicked (juce::Button* button)
         bool isToggled = button->getToggleState();
         DBG ("tbLegacyMode clicked: Setting legacyMode to " << (isToggled ? "ON" : "OFF"));
         valueTreeState.getParameter ("legacyMode")->setValueNotifyingHost (isToggled ? 1.0f : 0.0f);
-        setModeDisplay (ambiCreatorProcessor.isNormalLRFBMode());
+        setModeDisplay (ambiCreatorProcessor.getLegacyModeActive());
     }
     else if (button == &abComponent[0] && ! button->getToggleState())
     {
         ambiCreatorProcessor.setAbLayer (eCurrentActiveLayer::layerB);
-        setModeDisplay (ambiCreatorProcessor.isNormalLRFBMode());
+        setModeDisplay (ambiCreatorProcessor.getLegacyModeActive());
     }
     else if (button == &abComponent[1] && ! button->getToggleState())
     {
         ambiCreatorProcessor.setAbLayer (eCurrentActiveLayer::layerA);
-        setModeDisplay (ambiCreatorProcessor.isNormalLRFBMode());
+        setModeDisplay (ambiCreatorProcessor.getLegacyModeActive());
     }
 }
 
@@ -400,9 +400,9 @@ void AmbiCreatorAudioProcessorEditor::timerCallback()
         outputMeter[i].setLevel (ambiCreatorProcessor.outRms[i].get());
     }
 
-    tbLegacyMode.setToggleState (ambiCreatorProcessor.isNormalLRFBMode(),
+    tbLegacyMode.setToggleState (ambiCreatorProcessor.getLegacyModeActive(),
                                  NotificationType::dontSendNotification);
-    setModeDisplay (ambiCreatorProcessor.isNormalLRFBMode());
+    setModeDisplay (ambiCreatorProcessor.getLegacyModeActive());
 }
 
 // implement this for AAX automation shortchut

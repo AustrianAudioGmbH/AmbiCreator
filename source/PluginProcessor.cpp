@@ -307,7 +307,15 @@ void AmbiCreatorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     // In legacy mode, input channels are expected in order: Left (0), Right (1), Front (2), Back (3)
     // Reordered to: Front (0), Back (1), Left (2), Right (3)
-    if (isNormalLRFBMode())
+    if (getLegacyModeActive())
+    {
+        for (int i = 0; i < buffer.getNumChannels(); ++i)
+        {
+            inRms[i].set (buffer.getRMSLevel (i, 0, numSamples));
+            channelActive[i].set (inRms[i].get() >= 0.000000001f);
+        }
+    }
+    else
     {
         legacyModeReorderBuffer.copyFrom (0, 0, buffer, 0, 0, numSamples); // L
         legacyModeReorderBuffer.copyFrom (1, 0, buffer, 1, 0, numSamples); // R
@@ -323,14 +331,6 @@ void AmbiCreatorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         for (int i = 0; i < buffer.getNumChannels(); ++i)
         {
             inRms[i].set (legacyModeReorderBuffer.getRMSLevel (i, 0, numSamples));
-            channelActive[i].set (inRms[i].get() >= 0.000000001f);
-        }
-    }
-    else
-    {
-        for (int i = 0; i < buffer.getNumChannels(); ++i)
-        {
-            inRms[i].set (buffer.getRMSLevel (i, 0, numSamples));
             channelActive[i].set (inRms[i].get() >= 0.000000001f);
         }
     }
@@ -583,14 +583,14 @@ void AmbiCreatorAudioProcessor::changeAbLayerState (int desiredLayer)
         layerB = params.copyState();
         params.replaceState (layerA.createCopy());
         abLayerState = eCurrentActiveLayer::layerA;
-        DBG ("Layer A loaded: legacyMode=" << (isNormalLRFBMode() ? "ON" : "OFF"));
+        DBG ("Layer A loaded: legacyMode=" << (getLegacyModeActive() ? "ON" : "OFF"));
     }
     else
     {
         layerA = params.copyState();
         params.replaceState (layerB.createCopy());
         abLayerState = eCurrentActiveLayer::layerB;
-        DBG ("Layer B loaded: legacyMode=" << (isNormalLRFBMode() ? "ON" : "OFF"));
+        DBG ("Layer B loaded: legacyMode=" << (getLegacyModeActive() ? "ON" : "OFF"));
     }
 
     MessageManager::callAsync (

@@ -67,9 +67,9 @@ public:
     int getEditorHeight() { return editorHeight; }
     //    void setEditorHeight(int height) {editorHeight = height;}
 
-    bool isNormalLRFBMode()
+    bool getLegacyModeActive()
     {
-        bool legacyMode = *legacyModePtr > 0.5f;
+        bool legacyMode = legacyModePtr->load (std::memory_order_relaxed) > 0.5f;
         return legacyMode;
     }
 
