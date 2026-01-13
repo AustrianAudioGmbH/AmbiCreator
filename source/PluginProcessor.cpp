@@ -70,7 +70,7 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
 
     layout.add (std::make_unique<APB> (ParameterID { "legacyMode", PD_PARAMETER_V1 },
                                        "Legacy Mode",
-                                       true,
+                                       false,
                                        boolAttributes));
 
     return layout;
