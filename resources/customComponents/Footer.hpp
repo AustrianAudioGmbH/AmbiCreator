@@ -66,7 +66,7 @@ public:
 
         Rectangle<int> bounds = getLocalBounds();
         g.setColour (juce::Colours::white.withAlpha (0.5f));
-        const auto options = FontOptions().withTypeface (
+        const auto options = FontOptions (
             Typeface::createSystemTypefaceFor (BinaryFonts::NunitoSansRegular_ttf,
                                                BinaryFonts::NunitoSansRegular_ttfSize));
         g.setFont (options);
