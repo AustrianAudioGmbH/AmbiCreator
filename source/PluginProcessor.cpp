@@ -339,12 +339,12 @@ void AmbiCreatorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    AudioPlayHead* playHead = getPlayHead();
+    AudioPlayHead* localPlayHead = getPlayHead();
     AudioPlayHead::PositionInfo playHeadPosition;
 
-    if (playHead != nullptr)
+    if (localPlayHead != nullptr)
     {
-        if (auto position = playHead->getPosition())
+        if (auto position = localPlayHead->getPosition())
         {
             playHeadPosition = *position;
         }
@@ -551,23 +551,6 @@ void AmbiCreatorAudioProcessor::setStateInformation (const void* data, int sizeI
             layerB = params.copyState();
             abLayerState = eCurrentActiveLayer::layerA;
         }
-
-        MessageManager::callAsync (
-            [this]
-            {
-                static const StringArray paramIDs = { "outGainDb",
-                                                      "horRotation",
-                                                      "zGainDb",
-                                                      "channelOrder",
-                                                      "legacyMode" };
-                for (const auto& id : paramIDs)
-                {
-                    if (auto* param = params.getParameter (id))
-                    {
-                        param->setValueNotifyingHost (param->getValue());
-                    }
-                }
-            });
     }
 }
 
@@ -578,9 +561,14 @@ void AmbiCreatorAudioProcessor::changeAbLayerState (int desiredLayer)
     ScopedLock lock (stateLock); // Protect ValueTree operations
     DBG ("Switching to layer: " << (desiredLayer == eCurrentActiveLayer::layerA ? "A" : "B"));
 
+    // legacyMode property is not affected by layer switching
+    const auto legacyMode = getLegacyModeActive();
+
     if (desiredLayer == eCurrentActiveLayer::layerA)
     {
         layerB = params.copyState();
+        // legacy mode is exempt from A/B switching
+        layerA.getChildWithProperty ("id", "legacyMode").setProperty ("value", legacyMode, nullptr);
         params.replaceState (layerA.createCopy());
         abLayerState = eCurrentActiveLayer::layerA;
         DBG ("Layer A loaded: legacyMode=" << (getLegacyModeActive() ? "ON" : "OFF"));
@@ -588,27 +576,12 @@ void AmbiCreatorAudioProcessor::changeAbLayerState (int desiredLayer)
     else
     {
         layerA = params.copyState();
+        // legacy mode is exempt from A/B switching
+        layerB.getChildWithProperty ("id", "legacyMode").setProperty ("value", legacyMode, nullptr);
         params.replaceState (layerB.createCopy());
         abLayerState = eCurrentActiveLayer::layerB;
         DBG ("Layer B loaded: legacyMode=" << (getLegacyModeActive() ? "ON" : "OFF"));
     }
-
-    MessageManager::callAsync (
-        [this]
-        {
-            static const StringArray paramIDs = { "outGainDb",
-                                                  "horRotation",
-                                                  "zGainDb",
-                                                  "channelOrder",
-                                                  "legacyMode" };
-            for (const auto& id : paramIDs)
-            {
-                if (auto* param = params.getParameter (id))
-                {
-                    param->setValueNotifyingHost (param->getValue());
-                }
-            }
-        });
 }
 
 //==============================================================================
@@ -721,9 +694,7 @@ void AmbiCreatorAudioProcessor::updateLatency()
 void AmbiCreatorAudioProcessor::setAbLayer (int desiredLayer)
 {
     if (desiredLayer != abLayerState)
-    {
         changeAbLayerState (desiredLayer);
-    }
 }
 
 //==============================================================================
