@@ -356,7 +356,7 @@ void AmbiCreatorAudioProcessorEditor::buttonClicked (juce::Button* button)
         bool isToggled = button->getToggleState();
         DBG ("tbLegacyMode clicked: Setting legacyMode to " << (isToggled ? "ON" : "OFF"));
         valueTreeState.getParameter ("legacyMode")->setValueNotifyingHost (isToggled ? 1.0f : 0.0f);
-        setModeDisplay (ambiCreatorProcessor.getLegacyModeActive());
+        setModeDisplay (isToggled);
     }
     else if (button == &abComponent[0] && ! button->getToggleState())
     {
