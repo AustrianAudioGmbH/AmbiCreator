@@ -28,9 +28,8 @@ git submodule update --init --recursive
 After that, create a build directory, configure & compile with
 
 ```bash
-mkdir build && cd build
-cmake ..
-cmake --build . --config Release
+cmake -B build
+cmake --build build --config Release
 ```
 
 ## Acknowledgements:
